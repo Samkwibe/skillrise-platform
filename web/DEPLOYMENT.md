@@ -93,7 +93,7 @@ aws logs filter-log-events \
   --limit 50
 ```
 
-Common causes: **out of memory** (we set `NODE_OPTIONS=--max-old-space-size=6144` in `apprunner.yaml`), **`npm ci` vs lockfile** (run `npm ci` locally in `web/` to verify), or **Node runtime** (try `runtime: nodejs20` in `apprunner.yaml` if `nodejs22` is unsupported in the region).
+Common causes: **out of memory** (we set `NODE_OPTIONS=--max-old-space-size=3072` in `apprunner.yaml`), **`npm ci` vs lockfile** (run `npm ci` locally in `web/` to verify), or **Node runtime** (`runtime: nodejs20` in `apprunner.yaml` to match App Runner’s supported build image).
 
 ---
 
