@@ -78,7 +78,22 @@ The Next.js app lives in **`web/`** at the repo root (e.g. `Samkwibe/skillrise-p
 
 If **Source directory** is left as repository root, the build will fail (`package.json` is only under `web/`) with errors like *Failed to execute 'build' command*.
 
-The included [`apprunner.yaml`](apprunner.yaml) runs `npm install`, `npm run build`, and `npm start` on port `3000`. Ensure runtime env vars (e.g. from App Runner or Secrets Manager) match production needs.
+The included [`apprunner.yaml`](apprunner.yaml) runs `npm ci`, `npm run build`, and `npm start` on port `3000`, with extra Node heap for the build. **You do not need any env vars for the build step** to succeed (we confirmed `npm run build` works with no `.env.local` or `.env.production`).
+
+### If the build still fails
+
+The console message *Failed to execute 'build' command* is generic. Get the real error from **CloudWatch**: App Runner → your service → **Logs** → build log group (or **Observability** → **CloudWatch**), and open the log stream for the failed deployment (e.g. ID `cde19817-…`).
+
+**CLI (replace region, log group, stream as shown in the App Runner / CloudWatch console):**
+```bash
+aws logs filter-log-events \
+  --region us-east-1 \
+  --log-group-name "SERVICE_LOG_GROUP_FROM_CONSOLE" \
+  --filter-pattern "error" \
+  --limit 50
+```
+
+Common causes: **out of memory** (we set `NODE_OPTIONS=--max-old-space-size=6144` in `apprunner.yaml`), **`npm ci` vs lockfile** (run `npm ci` locally in `web/` to verify), or **Node runtime** (try `runtime: nodejs20` in `apprunner.yaml` if `nodejs22` is unsupported in the region).
 
 ---
 

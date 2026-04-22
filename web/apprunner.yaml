@@ -1,12 +1,20 @@
-# AWS App Runner — place this in the app root when "Source directory" = web (monorepo).
-# See: https://docs.aws.amazon.com/apprunner/latest/dg/config-file.html
+# AWS App Runner — use with repository "Source directory" = web
+# https://docs.aws.amazon.com/apprunner/latest/dg/config-file.html
 version: 1.0
+# If builds fail on nodejs22 in your region, try: runtime: nodejs20
 runtime: nodejs22
 build:
+  # Build-time env: no app secrets are required for `next build` (verified locally without .env*).
+  # NODE_OPTIONS helps avoid OOM on large Next.js / Turbopack builds.
+  env:
+    - name: NODE_OPTIONS
+      value: "--max-old-space-size=6144"
+    - name: NEXT_TELEMETRY_DISABLED
+      value: "1"
   commands:
-    pre-build:
-      - npm install --no-audit --no-fund
+    # Single `build` phase: install + compile (avoids any pre-build/build split issues)
     build:
+      - npm ci --no-audit --no-fund
       - npm run build
 run:
   command: npm start
