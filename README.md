@@ -10,4 +10,4 @@ Learning platform. The **Next.js** app is in [`web/`](web/).
 
 ## GitHub (Samkwibe)
 
-Create an empty repository under [github.com/Samkwibe](https://github.com/Samkwibe), add it as `origin`, then push the `main` branch.
+Repository: [github.com/Samkwibe/skillrise-platform](https://github.com/Samkwibe/skillrise-platform). Remote: `git@github.com:Samkwibe/skillrise-platform.git` (`origin`).
