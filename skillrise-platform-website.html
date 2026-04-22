@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillRise — Learn. Teach. Rise Together.</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g:#1fc87e;--gd:#0c6b44;--gl:rgba(31,200,126,.1);
+  --ink:#06080d;--s1:#0c1018;--s2:#121820;--s3:#1a2230;--s4:#222c3c;
+  --t1:#edf2ff;--t2:#8a98bc;--t3:#465070;
+  --amber:#f5a623;--red:#e84343;--blue:#4a8ef5;--purple:#9b6cf5;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --r:14px;--rl:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--t1);overflow-x:hidden;font-size:16px;line-height:1.65;}
+a{text-decoration:none;color:inherit;}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,5vw,72px);height:66px;background:rgba(6,8,13,.88);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;color:var(--g);}
+.nav-logo span{color:var(--t1);}
+.nav-tagline{font-size:11px;color:var(--t3);font-style:italic;margin-top:2px;}
+.nav-links{display:flex;align-items:center;gap:28px;}
+.nav-links a{font-size:14px;font-weight:500;color:var(--t2);transition:color .15s;}
+.nav-links a:hover{color:var(--t1);}
+.nav-ctas{display:flex;gap:9px;align-items:center;}
+.ntgl{display:none;background:none;border:none;color:var(--t1);font-size:22px;cursor:pointer;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'DM Sans',sans-serif;font-weight:700;cursor:pointer;transition:all .2s;border:none;}
+.bp{background:var(--g);color:var(--ink);padding:11px 22px;border-radius:10px;font-size:14px;}
+.bp:hover{background:#23e08c;transform:translateY(-1px);}
+.bg{background:transparent;color:var(--t1);padding:10px 20px;border-radius:10px;font-size:14px;border:1px solid var(--border2);}
+.bg:hover{border-color:var(--g);color:var(--g);}
+.btn-xl{padding:15px 34px;font-size:16px;border-radius:12px;}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px;}
+
+/* ── LAYOUT ── */
+section{padding:clamp(56px,7vw,108px) clamp(18px,5vw,72px);}
+.mx{max-width:1180px;margin:0 auto;}
+.stag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--g);background:var(--gl);padding:5px 13px;border-radius:20px;margin-bottom:14px;}
+.sh{font-family:'Syne',sans-serif;font-size:clamp(26px,3.8vw,44px);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:14px;}
+.ss{font-size:clamp(14px,1.8vw,17px);color:var(--t2);max-width:580px;line-height:1.65;}
+.center{text-align:center;}.center .ss{margin:0 auto;}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;align-items:center;padding-top:66px;position:relative;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 60% 40%,rgba(31,200,126,.07),transparent 70%),radial-gradient(ellipse 50% 50% at 5% 90%,rgba(155,108,245,.04),transparent 60%);}
+.hero-grid{position:absolute;inset:0;opacity:.03;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:56px 56px;}
+.hero-inner{position:relative;z-index:1;display:flex;align-items:center;gap:48px;max-width:1180px;margin:0 auto;width:100%;}
+.hero-text{flex:1;min-width:0;}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--g);background:var(--gl);border:1px solid rgba(31,200,126,.18);padding:6px 13px;border-radius:20px;margin-bottom:22px;}
+.h1{font-family:'Syne',sans-serif;font-size:clamp(34px,6vw,70px);font-weight:800;line-height:1.05;letter-spacing:-.03em;margin-bottom:22px;}
+.h1 .hl{color:var(--g);}
+.h1 .strike{position:relative;color:var(--t3);}
+.h1 .strike::after{content:'';position:absolute;left:0;top:50%;width:100%;height:3px;background:var(--red);transform:translateY(-50%);}
+.hsub{font-size:clamp(15px,1.8vw,19px);color:var(--t2);max-width:520px;margin-bottom:30px;line-height:1.6;}
+.hero-btns{display:flex;gap:11px;flex-wrap:wrap;margin-bottom:36px;}
+.trust-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.trust-pill{font-size:12px;color:var(--t3);background:rgba(255,255,255,.04);border:1px solid var(--border);padding:5px 12px;border-radius:20px;}
+.trust-pill strong{color:var(--g);}
+
+/* ── PHONE MOCKUP ── */
+.hero-vis{flex-shrink:0;width:clamp(260px,36%,420px);}
+.phone-frame{background:var(--s2);border:1px solid var(--border2);border-radius:34px;padding:12px;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px var(--border);position:relative;}
+.phone-screen{background:var(--s1);border-radius:25px;overflow:hidden;}
+.ps-h{background:linear-gradient(135deg,#071a10,#0e3524);padding:20px 16px 16px;}
+.ps-g{font-size:10px;color:rgba(255,255,255,.45);margin-bottom:3px;}
+.ps-t{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:12px;}
+.ps-stat{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.09);border-radius:8px;padding:7px 11px;}
+.psn{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--g);}
+.psl{font-size:10px;color:rgba(255,255,255,.55);}
+.ps-body{padding:12px 14px;background:var(--s1);}
+.ps-s{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;margin-bottom:8px;}
+.fc-mini{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:10px 12px;margin-bottom:7px;}
+.fc-mini-top{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.fc-av-s{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;}
+.fc-mini-name{font-size:10px;font-weight:700;color:var(--t1);}
+.fc-mini-role{font-size:9px;color:rgba(255,255,255,.35);}
+.fc-vol-s{font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(31,200,126,.1);color:var(--g);margin-left:auto;}
+.fc-mini-title{font-size:11px;font-weight:700;color:var(--t1);margin-bottom:3px;}
+.fc-mini-sub{font-size:10px;color:rgba(255,255,255,.4);}
+.ps-bnav{display:flex;background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.05);}
+.ps-bni{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0;font-size:8px;color:rgba(255,255,255,.25);gap:2px;}
+.ps-bni.a{color:var(--g);}
+.fb{position:absolute;background:var(--s2);border:1px solid var(--border2);border-radius:11px;padding:9px 12px;font-size:11px;font-weight:600;box-shadow:0 8px 20px rgba(0,0,0,.35);white-space:nowrap;z-index:2;}
+.fb1{top:-18px;right:-18px;color:var(--g);}
+.fb2{bottom:30px;left:-25px;color:var(--amber);}
+.fb3{bottom:-10px;right:8px;color:var(--purple);}
+
+/* ── MOVEMENT STRIP ── */
+.movement{background:var(--s1);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:clamp(32px,4vw,52px) clamp(18px,5vw,72px);}
+.movement .mx{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;}
+.mv-item{padding:clamp(20px,3vw,36px) 24px;border-right:1px solid var(--border);text-align:center;}
+.mv-item:last-child{border-right:none;}
+.mv-n{font-family:'Syne',sans-serif;font-size:clamp(26px,4vw,38px);font-weight:800;color:var(--g);}
+.mv-l{font-size:14px;color:var(--t3);margin-top:4px;}
+
+/* ── MISSION SECTION ── */
+.mission-split{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+@media(max-width:768px){.mission-split{grid-template-columns:1fr;}}
+.mission-visual{background:var(--s2);border:1px solid var(--border);border-radius:var(--rl);padding:28px;position:relative;overflow:hidden;}
+.mv-before{background:linear-gradient(135deg,#1a0808,#2d0e0e);border:1px solid rgba(232,67,67,.15);border-radius:12px;padding:16px;margin-bottom:12px;}
+.mv-after{background:linear-gradient(135deg,#071a10,#0e3524);border:1px solid rgba(31,200,126,.15);border-radius:12px;padding:16px;}
+.mv-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+.mv-items{display:flex;flex-direction:column;gap:7px;}
+.mv-row{display:flex;align-items:center;gap:9px;font-size:13px;}
+.mission-points{display:flex;flex-direction:column;gap:20px;}
+.mp{display:flex;gap:16px;align-items:flex-start;}
+.mp-dot{width:40px;height:40px;border-radius:50%;background:var(--gl);border:1px solid rgba(31,200,126,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+.mp h4{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:6px;}
+.mp p{font-size:14px;color:var(--t3);line-height:1.6;}
+
+/* ── THREE AUDIENCES ── */
+.aud-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;margin-top:40px;}
+.aud-card{border-radius:var(--rl);padding:28px;border:1px solid var(--border);position:relative;overflow:hidden;cursor:default;transition:transform .2s,border-color .2s;}
+.aud-card:hover{transform:translateY(-3px);}
+.aud-card.learner{background:linear-gradient(135deg,#071a10,#0d2a1c);}
+.aud-card.learner{border-color:rgba(31,200,126,.15);}
+.aud-card.teacher{background:linear-gradient(135deg,#170e00,#2a1a00);}
+.aud-card.teacher{border-color:rgba(245,166,35,.15);}
+.aud-card.youth{background:linear-gradient(135deg,#0e0a20,#1a1040);}
+.aud-card.youth{border-color:rgba(155,108,245,.15);}
+.aud-icon{font-size:36px;margin-bottom:16px;}
+.aud-card h3{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;}
+.aud-card .sub{font-size:14px;opacity:.6;margin-bottom:18px;}
+.aud-list{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;}
+.al-row{display:flex;align-items:flex-start;gap:9px;font-size:14px;}
+.al-check{font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px;}
+.aud-cta{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;padding:10px 20px;border-radius:9px;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;}
+
+/* ── HOW TEACH WORKS ── */
+.teach-flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;margin-top:44px;position:relative;}
+.teach-flow::before{content:'';position:absolute;top:24px;left:12%;right:12%;height:1px;background:linear-gradient(90deg,transparent,var(--border2),var(--border2),transparent);}
+.tf-step{text-align:center;padding:0 16px;position:relative;z-index:1;}
+.tf-num{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:16px;}
+.tf-step h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px;}
+.tf-step p{font-size:13px;color:var(--t3);line-height:1.6;}
+
+/* ── SKILLFEED PREVIEW ── */
+.sf-preview{background:var(--s1);border-top:1px solid var(--border);}
+.sf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:40px;}
+.sf-card{background:var(--ink);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;transition:transform .2s,border-color .2s;}
+.sf-card:hover{transform:translateY(-3px);border-color:rgba(31,200,126,.2);}
+.sf-top{display:flex;align-items:center;gap:9px;padding:13px 14px 10px;}
+.sf-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.sf-name{font-size:13px;font-weight:700;}
+.sf-role{font-size:11px;color:var(--t3);}
+.sf-vol{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(31,200,126,.1);color:var(--g);margin-left:auto;flex-shrink:0;}
+.sf-thumb{height:100px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;}
+.sf-body{padding:11px 14px 14px;}
+.sf-body h4{font-size:14px;font-weight:700;margin-bottom:4px;}
+.sf-body p{font-size:12px;color:var(--t3);margin-bottom:9px;}
+.sf-stats{display:flex;gap:12px;font-size:11px;color:var(--t3);}
+
+/* ── TESTIMONIALS ── */
+.test-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;margin-top:40px;}
+.tcard{background:var(--s1);border:1px solid var(--border);border-radius:var(--rl);padding:24px;}
+.tcard blockquote{font-size:14px;color:var(--t2);line-height:1.7;margin-bottom:18px;font-style:italic;}
+.tcard blockquote::before{content:'"';font-family:'Syne',sans-serif;font-size:28px;color:var(--g);display:block;line-height:1;margin-bottom:6px;}
+.tperson{display:flex;align-items:center;gap:11px;}
+.tav{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;}
+.tname{font-weight:700;font-size:14px;}
+.trole{font-size:12px;color:var(--t3);}
+.twage{font-size:12px;font-weight:700;color:var(--g);margin-top:2px;}
+.ttype{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;margin-top:2px;}
+
+/* ── PLEDGE SECTION ── */
+.pledge-sec{background:linear-gradient(135deg,#0e0620,#150935,#0e0620);border-top:1px solid rgba(155,108,245,.12);border-bottom:1px solid rgba(155,108,245,.12);}
+.pledge-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+@media(max-width:768px){.pledge-inner{grid-template-columns:1fr;}}
+.pledge-card{background:rgba(255,255,255,.04);border:1px solid rgba(155,108,245,.15);border-radius:var(--rl);padding:24px;}
+.pledge-check{display:flex;flex-direction:column;gap:12px;}
+.pc-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(255,255,255,.03);border-radius:10px;}
+.pc-cb{width:20px;height:20px;border-radius:5px;border:2px solid rgba(155,108,245,.4);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.pc-cb.checked{background:var(--purple);border-color:var(--purple);}
+.pc-cb.checked::after{content:'✓';font-size:11px;color:white;font-weight:700;}
+.pc-text{font-size:13px;color:var(--t2);}
+.pc-text.checked{color:var(--t1);}
+
+/* ── IMPACT NUMBERS ── */
+.impact-strip{background:var(--s1);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:clamp(28px,4vw,48px) clamp(18px,5vw,72px);}
+.impact-items{display:flex;flex-wrap:wrap;gap:0;}
+.ii{flex:1;min-width:140px;padding:clamp(16px,2.5vw,28px) 20px;border-right:1px solid var(--border);text-align:center;}
+.ii:last-child{border-right:none;}
+.ii-n{font-family:'Syne',sans-serif;font-size:clamp(24px,3.5vw,36px);font-weight:800;}
+.ii-l{font-size:13px;color:var(--t3);margin-top:4px;}
+
+/* ── DOWNLOAD ── */
+.dl-sec{background:linear-gradient(135deg,#06100a,#0a1e10,#06100a);border-top:1px solid rgba(31,200,126,.12);text-align:center;position:relative;overflow:hidden;}
+.dl-sec::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:500px;height:360px;background:radial-gradient(ellipse,rgba(31,200,126,.1),transparent 70%);}
+.dl-inner{position:relative;z-index:1;}
+.store-badges{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px;}
+.sbadge{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:11px;padding:11px 20px;cursor:pointer;transition:all .2s;}
+.sbadge:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.22);}
+.sbic{font-size:26px;}
+.sbtext small{display:block;font-size:9px;color:rgba(255,255,255,.45);margin-bottom:1px;}
+.sbtext strong{display:block;font-size:14px;font-weight:700;color:#fff;}
+.qr{background:white;border-radius:10px;width:80px;height:80px;display:flex;align-items:center;justify-content:center;margin:20px auto 0;font-size:10px;color:#333;font-weight:700;}
+
+/* ── FOOTER ── */
+footer{background:var(--s1);border-top:1px solid var(--border);padding:clamp(36px,5vw,60px) clamp(18px,5vw,72px) clamp(20px,3vw,36px);}
+.ft{max-width:1180px;margin:0 auto;}
+.ft-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:36px;margin-bottom:36px;}
+.ft-logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--g);}
+.ft-logo span{color:var(--t1);}
+.ft-desc{font-size:13px;color:var(--t3);line-height:1.6;max-width:270px;margin-top:10px;}
+.ft-mission{font-size:12px;color:var(--g);margin-top:8px;font-style:italic;}
+.ft-col h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:13px;}
+.ft-col a{display:block;font-size:13px;color:var(--t3);margin-bottom:7px;transition:color .15s;}
+.ft-col a:hover{color:var(--g);}
+.ft-bottom{border-top:1px solid var(--border);padding-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.ft-copy{font-size:12px;color:var(--t3);}
+.ft-links{display:flex;gap:18px;}
+.ft-links a{font-size:12px;color:var(--t3);transition:color .15s;}
+.ft-links a:hover{color:var(--g);}
+
+/* ── MOB MENU ── */
+.mmenu{position:fixed;inset:0;background:var(--s1);z-index:200;padding:22px;display:none;flex-direction:column;}
+.mmenu.open{display:flex;}
+.mmenu-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;}
+.mmenu a{display:block;font-family:'Syne',sans-serif;font-size:21px;font-weight:700;color:var(--t2);padding:13px 0;border-bottom:1px solid var(--border);transition:color .15s;}
+.mmenu a:hover{color:var(--g);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){.hero-inner{flex-direction:column;text-align:center;}.hero-vis{width:100%;max-width:300px;margin:0 auto;}.hsub,.hero-btns{margin-left:auto;margin-right:auto;}.hero-btns{justify-content:center;}.nav-links{display:none;}.ntgl{display:block;}.ft-top{grid-template-columns:1fr 1fr;}}
+@media(max-width:560px){.mv-item{min-width:50%;}.teach-flow::before{display:none;}.ft-top{grid-template-columns:1fr;}.ft-bottom{flex-direction:column;text-align:center;}.trust-row{justify-content:center;}}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.hero-vis{animation:float 4.5s ease-in-out infinite;}
+.hero-text>*{animation:fadeUp .55s ease forwards;opacity:0;}
+.eyebrow{animation-delay:.08s;}.h1{animation-delay:.18s;}.hsub{animation-delay:.28s;}.hero-btns{animation-delay:.38s;}.trust-row{animation-delay:.48s;}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav class="nav">
+  <div>
+    <a href="#" class="nav-logo">Skill<span>Rise</span></a>
+    <div class="nav-tagline">Learn. Teach. Rise Together.</div>
+  </div>
+  <div class="nav-links">
+    <a href="#mission">Our mission</a>
+    <a href="#teach">Teach free</a>
+    <a href="#youth">For teens</a>
+    <a href="#stories">Stories</a>
+    <a href="#pledge">The pledge</a>
+    <a href="#employers">Employers</a>
+  </div>
+  <div class="nav-ctas">
+    <a href="#download" class="btn bp btn-sm">Get started free</a>
+    <button class="ntgl" onclick="tmenu()">☰</button>
+  </div>
+</nav>
+
+<div class="mmenu" id="mm">
+  <div class="mmenu-top"><div class="nav-logo">Skill<span style="color:var(--t1)">Rise</span></div><button style="background:none;border:none;color:var(--t1);font-size:22px;cursor:pointer" onclick="tmenu()">✕</button></div>
+  <a href="#mission" onclick="tmenu()">Our mission</a>
+  <a href="#teach" onclick="tmenu()">Teach for free</a>
+  <a href="#youth" onclick="tmenu()">For teenagers</a>
+  <a href="#stories" onclick="tmenu()">Success stories</a>
+  <a href="#pledge" onclick="tmenu()">The pledge</a>
+  <a href="#employers" onclick="tmenu()">For employers</a>
+  <div style="margin-top:22px;display:flex;flex-direction:column;gap:10px;">
+    <a href="#download" class="btn bp" style="justify-content:center;" onclick="tmenu()">Get started free</a>
+  </div>
+</div>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-inner mx">
+    <div class="hero-text">
+      <div class="eyebrow">📵 The alternative to endless scrolling</div>
+      <h1 class="h1">
+        Stop <span class="strike">scrolling.</span><br>
+        Start <span class="hl">rising.</span>
+      </h1>
+      <p class="hsub">SkillRise is a free platform where anyone can learn a practical skill, get certified, and get hired — and where people with knowledge teach others for free, simply to help their community rise.</p>
+      <div class="hero-btns">
+        <a href="#download" class="btn bp btn-xl">Start learning free →</a>
+        <a href="#teach" class="btn bg btn-xl">Teach for free</a>
+      </div>
+      <div class="trust-row">
+        <div class="trust-pill">📱 Free on iOS & Android</div>
+        <div class="trust-pill">🎓 <strong>3,400+</strong> volunteer teachers</div>
+        <div class="trust-pill">★ <strong>4.9</strong> / 12,000+ graduates</div>
+      </div>
+    </div>
+    <div class="hero-vis">
+      <div style="position:relative;">
+        <div class="fb fb1">🎓 New lesson posted!</div>
+        <div class="fb fb2">📵 4.2 hrs of scrolling replaced</div>
+        <div class="fb fb3">★ Sofia P., 16, just graduated!</div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="ps-h">
+              <div class="ps-g">SkillFeed — replacing your For You page</div>
+              <div class="ps-t">Real people teaching real skills. No ads. No drama. No algorithm traps.</div>
+              <div class="ps-stat"><div class="psn">47</div><div class="psl">free lessons today</div></div>
+            </div>
+            <div class="ps-body">
+              <div class="ps-s">Today's lessons from your community</div>
+              <div class="fc-mini">
+                <div class="fc-mini-top">
+                  <div class="fc-av-s" style="background:linear-gradient(135deg,#0e7a4e,#1fc87e)">JM</div>
+                  <div><div class="fc-mini-name">John Martinez</div><div class="fc-mini-role">Master Electrician</div></div>
+                  <div class="fc-vol-s">Volunteer</div>
+                </div>
+                <div class="fc-mini-title">How to safely test a circuit breaker</div>
+                <div class="fc-mini-sub">3 min · 847 learners watched today</div>
+              </div>
+              <div class="fc-mini">
+                <div class="fc-mini-top">
+                  <div class="fc-av-s" style="background:linear-gradient(135deg,#6d28d9,#9b6cf5)">SC</div>
+                  <div><div class="fc-mini-name">Sarah Chen</div><div class="fc-mini-role">Web Dev · Teaching teens</div></div>
+                  <div class="fc-vol-s">Volunteer</div>
+                </div>
+                <div class="fc-mini-title">Build a website in 10 minutes</div>
+                <div class="fc-mini-sub">4 min · ★ Youth Zone · 1,340 watched</div>
+              </div>
+            </div>
+            <div class="ps-bnav">
+              <div class="ps-bni a"><div style="font-size:13px">◈</div>Feed</div>
+              <div class="ps-bni"><div style="font-size:13px">⊕</div>Learn</div>
+              <div class="ps-bni"><div style="font-size:13px">🎓</div>Teach</div>
+              <div class="ps-bni"><div style="font-size:13px">★</div>Youth</div>
+              <div class="ps-bni"><div style="font-size:13px">◐</div>Jobs</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MOVEMENT STRIP ═══ -->
+<div class="movement">
+  <div class="mx">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;">
+      <div class="mv-item"><div class="mv-n">3,400+</div><div class="mv-l">Volunteer teachers</div></div>
+      <div class="mv-item"><div class="mv-n">48,000+</div><div class="mv-l">Lives changed</div></div>
+      <div class="mv-item"><div class="mv-n">100%</div><div class="mv-l">Free — forever</div></div>
+      <div class="mv-item"><div class="mv-n">12,000+</div><div class="mv-l">Graduates hired</div></div>
+      <div class="mv-item" style="border-right:none"><div class="mv-n">1.2M hrs</div><div class="mv-l">Scrolling replaced</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MISSION ═══ -->
+<section id="mission">
+  <div class="mx">
+    <div class="mission-split">
+      <div class="mission-points">
+        <div class="stag">Our mission</div>
+        <h2 class="sh">We believe people deserve better than an algorithm designed to waste their time.</h2>
+        <div class="mp">
+          <div class="mp-dot">📵</div>
+          <div><h4>Replace scrolling with learning</h4><p>The average person spends 7 hours a day on screens — mostly passively. SkillRise gives that time purpose. Every session replaces a session of mindless content with a skill that compounds over time.</p></div>
+        </div>
+        <div class="mp">
+          <div class="mp-dot">🎓</div>
+          <div><h4>Knowledge should flow freely in a community</h4><p>Skilled professionals — plumbers, coders, nurses, teachers, chefs — have knowledge that can transform someone's life. We make it easy to share that knowledge in 30 minutes, for free, to people who need it most.</p></div>
+        </div>
+        <div class="mp">
+          <div class="mp-dot">🏘️</div>
+          <div><h4>Every neighborhood can lift itself</h4><p>When someone in your community learns a skill, gets certified, and gets hired — that success inspires 3 more people. SkillRise creates virtuous cycles of growth that start locally and spread outward.</p></div>
+        </div>
+      </div>
+      <div class="mission-visual">
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:14px;">Before &amp; After SkillRise</div>
+        <div class="mv-before">
+          <div class="mv-label" style="color:var(--red)">Before — typical evening</div>
+          <div class="mv-items">
+            <div class="mv-row" style="color:var(--t3)"><span style="font-size:16px">📱</span>45 min — TikTok / Instagram</div>
+            <div class="mv-row" style="color:var(--t3)"><span style="font-size:16px">📺</span>90 min — streaming, half-asleep</div>
+            <div class="mv-row" style="color:var(--t3)"><span style="font-size:16px">💭</span>Felt restless, like nothing got done</div>
+          </div>
+        </div>
+        <div class="mv-after">
+          <div class="mv-label" style="color:var(--g)">After — SkillRise evening</div>
+          <div class="mv-items">
+            <div class="mv-row" style="color:var(--t1)"><span style="font-size:16px">⚡</span>30 min — Electrical module 6</div>
+            <div class="mv-row" style="color:var(--t1)"><span style="font-size:16px">📺</span>20 min — Live session w/ John</div>
+            <div class="mv-row" style="color:var(--g)"><span style="font-size:16px">✓</span>Certificate unlocked. 4 job matches.</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;background:rgba(31,200,126,.06);border:1px solid rgba(31,200,126,.12);border-radius:10px;padding:13px 16px;">
+          <div style="font-size:13px;color:var(--t2);line-height:1.6;">"I deleted TikTok and replaced it with SkillRise. Six weeks later I had a job offer. The irony is, I'm happier now." — Marcus J., graduate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THREE AUDIENCES ═══ -->
+<section style="background:var(--s1);border-top:1px solid var(--border);">
+  <div class="mx">
+    <div class="center">
+      <div class="stag">Who SkillRise is for</div>
+      <h2 class="sh">Whether you need to learn,<br>teach, or start young — you belong here.</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card learner">
+        <div class="aud-icon">📚</div>
+        <h3 style="color:#fff">Learners</h3>
+        <p class="sub" style="color:rgba(255,255,255,.5)">Adults seeking jobs, career changes, or personal growth</p>
+        <div class="aud-list">
+          <div class="al-row"><div class="al-check" style="color:var(--g)">✓</div><div>Learn practical skills in 3–8 weeks</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--g)">✓</div><div>Earn verified certificates</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--g)">✓</div><div>Match to local jobs instantly</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--g)">✓</div><div>Join a neighborhood cohort</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--g)">✓</div><div>Everything is free to start</div></div>
+        </div>
+        <a href="#download"><button class="aud-cta" style="background:var(--g);color:var(--ink)">Start learning free →</button></a>
+      </div>
+      <div class="aud-card teacher">
+        <div class="aud-icon">🎓</div>
+        <h3 style="color:#fff">Volunteer Teachers</h3>
+        <p class="sub" style="color:rgba(255,255,255,.5)">Professionals who want to give back to their community</p>
+        <div class="aud-list">
+          <div class="al-row"><div class="al-check" style="color:var(--amber)">✓</div><div>Record a lesson on your phone</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--amber)">✓</div><div>Host live sessions for free</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--amber)">✓</div><div>Build full courses with our team</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--amber)">✓</div><div>Track your real-world impact</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--amber)">✓</div><div>No pay needed — your legacy is enough</div></div>
+        </div>
+        <a href="#teach"><button class="aud-cta" style="background:var(--amber);color:var(--ink)">Volunteer to teach →</button></a>
+      </div>
+      <div class="aud-card youth">
+        <div class="aud-icon">★</div>
+        <h3 style="color:#fff">Teens & Students</h3>
+        <p class="sub" style="color:rgba(255,255,255,.5)">High schoolers aged 13–18 building their future now</p>
+        <div class="aud-list">
+          <div class="al-row"><div class="al-check" style="color:var(--purple)">✓</div><div>Age-appropriate tracks (13+)</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--purple)">✓</div><div>Coding, design, money, speaking</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--purple)">✓</div><div>School-recognized certificates</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--purple)">✓</div><div>Replace social media time</div></div>
+          <div class="al-row"><div class="al-check" style="color:var(--purple)">✓</div><div>Build a portfolio for college &amp; jobs</div></div>
+        </div>
+        <a href="#youth"><button class="aud-cta" style="background:var(--purple);color:#fff">Explore Youth Zone →</button></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW TEACHING WORKS ═══ -->
+<section id="teach">
+  <div class="mx">
+    <div class="center">
+      <div class="stag">For volunteer teachers</div>
+      <h2 class="sh">You have skills someone needs.<br>30 minutes of your time. A lifetime of their impact.</h2>
+      <p class="ss">SkillRise makes it as easy as possible to share what you know. No equipment required. No experience teaching required. Just show up and be real.</p>
+    </div>
+    <div class="teach-flow">
+      <div class="tf-step">
+        <div class="tf-num" style="background:rgba(31,200,126,.1);border:1px solid rgba(31,200,126,.2)">📱</div>
+        <h3>Record on your phone</h3>
+        <p>Film yourself doing what you know. Kitchen table, job site, wherever you are. We add captions and publish it.</p>
+      </div>
+      <div class="tf-step">
+        <div class="tf-num" style="background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2)">📺</div>
+        <h3>Go live in minutes</h3>
+        <p>Host a live session for your neighborhood. We handle the tech. You just teach. No experience needed.</p>
+      </div>
+      <div class="tf-step">
+        <div class="tf-num" style="background:rgba(74,142,245,.1);border:1px solid rgba(74,142,245,.2)">📚</div>
+        <h3>Build a full course</h3>
+        <p>Work with our editorial team to create a structured track. We help with design, structure, and assessment.</p>
+      </div>
+      <div class="tf-step">
+        <div class="tf-num" style="background:rgba(155,108,245,.1);border:1px solid rgba(155,108,245,.2)">📊</div>
+        <h3>See your impact</h3>
+        <p>Watch your student count grow. See when someone you taught gets hired. That number is your legacy.</p>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:36px;">
+      <a href="#download" class="btn bp btn-xl">Start teaching for free →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SKILLFEED PREVIEW ═══ -->
+<div class="sf-preview">
+  <div class="mx" style="padding:clamp(56px,7vw,108px) 0;">
+    <div class="center" style="margin-bottom:8px;">
+      <div class="stag">SkillFeed</div>
+      <h2 class="sh">Like your For You page —<br>but every video makes you better.</h2>
+      <p class="ss">Short lessons from volunteer community members. No ads. No doomscrolling. A daily limit reminds you to actually go practice what you learned.</p>
+    </div>
+    <div class="sf-grid">
+      <div class="sf-card">
+        <div class="sf-top"><div class="sf-av" style="background:linear-gradient(135deg,#0e7a4e,#1fc87e)">JM</div><div><div class="sf-name">John Martinez</div><div class="sf-role">Master Electrician</div></div><div class="sf-vol">Volunteer</div></div>
+        <div class="sf-thumb" style="background:linear-gradient(135deg,#0a2a1a,#0d3d25)">⚡</div>
+        <div class="sf-body"><h4>How to test a circuit breaker safely</h4><p>Step-by-step for beginners. Everything you need before touching a panel.</p><div class="sf-stats"><span>♥ 847</span><span>💬 34</span><span>3 min</span></div></div>
+      </div>
+      <div class="sf-card">
+        <div class="sf-top"><div class="sf-av" style="background:linear-gradient(135deg,#b45309,#f59e0b)">ML</div><div><div class="sf-name">Maya Lawson</div><div class="sf-role">Financial Coach</div></div><div class="sf-vol">Volunteer</div></div>
+        <div class="sf-thumb" style="background:linear-gradient(135deg,#1a1000,#2d1e00)">💰</div>
+        <div class="sf-body"><h4>Build your first real budget — for $15-25/hr earners</h4><p>Not theory. A real budget that actually works for people who are starting out.</p><div class="sf-stats"><span>♥ 2,104</span><span>💬 91</span><span>5 min</span></div></div>
+      </div>
+      <div class="sf-card">
+        <div class="sf-top"><div class="sf-av" style="background:linear-gradient(135deg,#6d28d9,#9b6cf5)">SC</div><div><div class="sf-name">Sarah Chen</div><div class="sf-role">Web Developer · Teens</div></div><div class="sf-vol">Volunteer</div></div>
+        <div class="sf-thumb" style="background:linear-gradient(135deg,#0d0a2a,#1a1060)">💻</div>
+        <div class="sf-body"><h4>Build a website in 10 minutes — no experience needed</h4><p>Perfect for high schoolers. Have something real to show colleges and employers.</p><div class="sf-stats"><span>♥ 1,340</span><span>💬 56</span><span>★ Youth</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ YOUTH SECTION ═══ -->
+<section id="youth" style="background:linear-gradient(135deg,#0e0a20,#100c28);">
+  <div class="mx">
+    <div class="mission-split">
+      <div>
+        <div class="stag">Youth Zone ★</div>
+        <h2 class="sh" style="color:#fff">For teenagers who are tired of being told to just scroll less.</h2>
+        <p class="ss" style="margin-bottom:24px;">SkillRise gives teens and high school students a real alternative — practical tracks designed for ages 13–18 that build confidence, skills, and a future that no college degree can take away.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:36px;height:36px;border-radius:9px;background:rgba(155,108,245,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">💻</div><div><div style="font-weight:700;font-size:15px;">Coding, design &amp; tech skills</div><div style="font-size:13px;color:rgba(255,255,255,.4);">Age 13+ · Beginner-friendly · All free</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:36px;height:36px;border-radius:9px;background:rgba(245,166,35,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">💰</div><div><div style="font-weight:700;font-size:15px;">Money, budgeting &amp; business basics</div><div style="font-size:13px;color:rgba(255,255,255,.4);">Age 15+ · Life skills that school doesn't teach</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:36px;height:36px;border-radius:9px;background:rgba(31,200,126,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🔌</div><div><div style="font-weight:700;font-size:15px;">Trade skills that pay from day one</div><div style="font-size:13px;color:rgba(255,255,255,.4);">Age 16+ · Electrical, plumbing, HVAC basics</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><div style="width:36px;height:36px;border-radius:9px;background:rgba(74,142,245,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🗣️</div><div><div style="font-weight:700;font-size:15px;">Communication &amp; public speaking</div><div style="font-size:13px;color:rgba(255,255,255,.4);">Age 13+ · For school, interviews, life</div></div></div>
+        </div>
+        <div style="display:flex;gap:11px;flex-wrap:wrap;">
+          <a href="#download" class="btn bp btn-xl">Join Youth Zone →</a>
+          <a href="#" class="btn bg btn-xl" style="border-color:rgba(255,255,255,.15)">For schools</a>
+        </div>
+      </div>
+      <div>
+        <div style="background:rgba(155,108,245,.06);border:1px solid rgba(155,108,245,.15);border-radius:var(--rl);padding:24px;margin-bottom:16px;">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--purple);margin-bottom:12px;">📵 The Social Media Swap — 30 Day Challenge</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.55);margin-bottom:16px;line-height:1.6;">Trade 30 minutes of social media for 30 minutes of SkillRise. In 30 days you'll have a real skill. In 90 days you could have your first income.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.04);border-radius:8px;padding:10px 12px;"><div style="width:18px;height:18px;border-radius:4px;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:700">✓</div><div style="font-size:13px;">30 minutes less scrolling per day</div></div>
+            <div style="display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.04);border-radius:8px;padding:10px 12px;"><div style="width:18px;height:18px;border-radius:4px;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:700">✓</div><div style="font-size:13px;">30 minutes on SkillRise every day</div></div>
+            <div style="display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.04);border-radius:8px;padding:10px 12px;"><div style="width:18px;height:18px;border-radius:4px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.4)">·</div><div style="font-size:13px;color:rgba(255,255,255,.4);">By Day 30 — a real skill unlocked</div></div>
+          </div>
+          <button class="btn btn-xl btn-block" style="background:var(--purple);color:white;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:700;border-radius:10px;cursor:pointer;border:none;">Take the 30-day challenge</button>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rl);padding:20px;">
+          <div style="font-size:13px;font-weight:700;color:var(--t2);margin-bottom:12px;">For teachers &amp; schools</div>
+          <div style="font-size:13px;color:var(--t3);margin-bottom:14px;line-height:1.6;">Assign SkillRise to students as part of career education. Free for all schools. Track progress, award certificates, and see which students are on track for employment.</div>
+          <a href="#" class="btn bg btn-sm">School partnership program →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TESTIMONIALS ═══ -->
+<section id="stories" style="background:var(--s1);border-top:1px solid var(--border);">
+  <div class="mx">
+    <div class="center">
+      <div class="stag">Real stories</div>
+      <h2 class="sh">People whose lives actually changed</h2>
+      <p class="ss">These aren't marketing stories. These are real people from real neighborhoods who replaced scrolling with learning and changed the course of their lives.</p>
+    </div>
+    <div class="test-grid">
+      <div class="tcard">
+        <blockquote>I was working retail at $14/hr and scrolling for 3 hours a night. Six weeks after completing Electrical Basics on SkillRise, I had three job offers. I started at Apex Electric at $27/hr. I deleted Instagram the day I enrolled and never went back.</blockquote>
+        <div class="tperson"><div class="tav" style="background:linear-gradient(135deg,#0e7a4e,#1fc87e)">TW</div><div><div class="tname">Tanya Williams</div><div class="trole">Apprentice Electrician, Manchester NH</div><div class="twage">$14/hr → $27/hr</div></div></div>
+      </div>
+      <div class="tcard">
+        <blockquote>I teach electrical safety on SkillRise — 30-minute videos, completely free. I've had 847 students. One of them is now a licensed electrician. That's what I'll tell my kids I did with my life. Not what I posted.</blockquote>
+        <div class="tperson"><div class="tav" style="background:linear-gradient(135deg,#0e7a4e,#1fc87e)">JM</div><div><div class="tname">John Martinez</div><div class="trole">Master Electrician · Volunteer Teacher</div><div class="ttype" style="background:rgba(245,166,35,.1);color:var(--amber)">Volunteer Teacher</div></div></div>
+      </div>
+      <div class="tcard">
+        <blockquote>I'm 16. I used SkillRise's coding track during summer vacation instead of TikTok. I just landed my first freelance client — a local restaurant wanted a website. I made $400. My mom cried. I cried. Then I enrolled in the next track.</blockquote>
+        <div class="tperson"><div class="tav" style="background:linear-gradient(135deg,#6d28d9,#9b6cf5)">SP</div><div><div class="tname">Sofia P., age 16</div><div class="trole">High School Student, Manchester NH</div><div class="ttype" style="background:rgba(155,108,245,.1);color:var(--purple)">★ Youth Zone Graduate</div></div></div>
+      </div>
+      <div class="tcard">
+        <blockquote>As a single dad I couldn't do a 2-year program. I studied SkillRise on my phone at night. The Caregiver track was 4 weeks. I got hired before I finished the last module. That's what this platform is — real results, real fast.</blockquote>
+        <div class="tperson"><div class="tav" style="background:linear-gradient(135deg,#1d4ed8,#4a8ef5)">RJ</div><div><div class="tname">Rico James</div><div class="trole">Senior Caregiver, City Medical</div><div class="twage">Unemployed → $22/hr</div></div></div>
+      </div>
+      <div class="tcard">
+        <blockquote>I graduated from SkillRise's web dev track, got hired, and now I teach on SkillFeed. The cycle is beautiful. Someone teaches you, you teach someone else. That's what a real community looks like.</blockquote>
+        <div class="tperson"><div class="tav" style="background:linear-gradient(135deg,#c2410c,#f97316)">AP</div><div><div class="tname">Aliya Parker</div><div class="trole">Web Developer &amp; Volunteer Teacher</div><div class="ttype" style="background:rgba(245,166,35,.1);color:var(--amber)">Graduate turned Volunteer</div></div></div>
+      </div>
+      <div class="tcard">
+        <blockquote>My school started using SkillRise in career class. Our teacher assigned it instead of homework. Half my class is now working toward a real certificate. Three kids in my year already have job interviews lined up before graduation.</blockquote>
+        <div class="tperson"><div class="tav" style="background:linear-gradient(135deg,#c2410c,#f97316)">MK</div><div><div class="tname">Marcus K., age 17</div><div class="trole">High School Junior, Manchester NH</div><div class="ttype" style="background:rgba(155,108,245,.1);color:var(--purple)">★ Youth Zone Graduate</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THE PLEDGE ═══ -->
+<section class="pledge-sec" id="pledge">
+  <div class="mx">
+    <div class="pledge-inner">
+      <div>
+        <div class="stag">The pledge</div>
+        <h2 class="sh" style="color:#fff">Make the switch. <br>Your future self is worth 30 minutes.</h2>
+        <p class="ss" style="margin-bottom:24px;">Over 48,000 people have taken the SkillRise pledge — to replace at least 30 minutes of social media time every day with purposeful learning. It takes 30 days to feel the difference. It takes 90 days to change your life.</p>
+        <a href="#download"><button class="btn btn-xl" style="background:var(--purple);color:white;font-size:16px;font-family:'DM Sans',sans-serif;font-weight:700;border-radius:12px;cursor:pointer;border:none;">Take the pledge →</button></a>
+      </div>
+      <div class="pledge-card">
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:16px;color:var(--purple)">I pledge to...</div>
+        <div class="pledge-check">
+          <div class="pc-row"><div class="pc-cb checked"></div><div class="pc-text checked">Spend 30 fewer minutes on social media every day</div></div>
+          <div class="pc-row"><div class="pc-cb checked"></div><div class="pc-text checked">Open SkillRise before opening Instagram or TikTok</div></div>
+          <div class="pc-row"><div class="pc-cb checked"></div><div class="pc-text checked">Complete one module before bed each weekday</div></div>
+          <div class="pc-row"><div class="pc-cb"></div><div class="pc-text">Earn my first certificate within 60 days</div></div>
+          <div class="pc-row"><div class="pc-cb"></div><div class="pc-text">Share at least one lesson with someone who needs it</div></div>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(155,108,245,.15);display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.35);">
+          <span>48,213 people have signed</span>
+          <span style="color:var(--purple)">+127 today</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ IMPACT NUMBERS ═══ -->
+<div class="impact-strip">
+  <div class="mx">
+    <div class="impact-items">
+      <div class="ii"><div class="ii-n" style="color:var(--g)">1.2M hrs</div><div class="ii-l">of scrolling replaced with learning</div></div>
+      <div class="ii"><div class="ii-n" style="color:var(--amber)">3,400+</div><div class="ii-l">volunteer teachers giving freely</div></div>
+      <div class="ii"><div class="ii-n" style="color:var(--blue)">2,800+</div><div class="ii-l">teenagers graduated Youth Zone</div></div>
+      <div class="ii"><div class="ii-n" style="color:var(--g)">12,000+</div><div class="ii-l">community members hired</div></div>
+      <div class="ii"><div class="ii-n" style="color:var(--purple)">100%</div><div class="ii-l">free — funded by employers, not ads</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EMPLOYER ═══ -->
+<section id="employers">
+  <div class="mx">
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--rl);padding:clamp(28px,4vw,52px);display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:240px;">
+        <div class="stag">For employers</div>
+        <h2 class="sh" style="font-size:clamp(22px,3vw,32px)">Stop sorting resumes.<br>Hire people who are ready.</h2>
+        <p style="font-size:14px;color:var(--t3);margin-top:9px;max-width:420px;line-height:1.65;">Join 340+ local businesses using SkillRise to find pre-certified, community-invested candidates. Every hire comes with a 90-day guarantee.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;">
+          <a href="#" class="btn bp">Post your first job free</a>
+          <a href="#" class="btn bg">Talk to our team</a>
+        </div>
+      </div>
+      <div style="text-align:center;flex-shrink:0;">
+        <div style="font-size:60px;margin-bottom:10px">🏗️</div>
+        <div style="font-size:13px;color:var(--t3);margin-bottom:3px">Average time to hire</div>
+        <div style="font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:var(--g)">11 days</div>
+        <div style="font-size:12px;color:var(--t3)">vs. 42 day industry average</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DOWNLOAD ═══ -->
+<section class="dl-sec" id="download">
+  <div class="mx dl-inner center">
+    <div class="stag">Download free</div>
+    <h2 class="sh" style="color:#fff">Stop scrolling. Start rising.<br>Your neighborhood is waiting.</h2>
+    <p class="ss" style="color:rgba(255,255,255,.45)">Free to download. Free to learn. Free to certify. Free to teach. SkillRise only earns when you get hired — so we're 100% on your side.</p>
+    <div class="store-badges">
+      <div class="sbadge"><div class="sbic">🍎</div><div class="sbtext"><small>Download on the</small><strong>App Store</strong></div></div>
+      <div class="sbadge"><div class="sbic">▶</div><div class="sbtext"><small>Get it on</small><strong>Google Play</strong></div></div>
+    </div>
+    <div class="qr">📱 QR code</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.25);margin-top:10px;">Scan to download · iOS &amp; Android · Free</div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="ft">
+    <div class="ft-top">
+      <div>
+        <div class="ft-logo">Skill<span>Rise</span></div>
+        <div class="ft-desc">Learn a skill, get certified, get hired — or teach what you know for free, to help someone rise. For everyone. In every neighborhood.</div>
+        <div class="ft-mission">"Replace scrolling with rising."</div>
+      </div>
+      <div class="ft-col">
+        <h4>Platform</h4>
+        <a href="#">Skill Tracks</a>
+        <a href="#">SkillFeed</a>
+        <a href="#">Youth Zone</a>
+        <a href="#">Certificates</a>
+        <a href="#">Jobs Board</a>
+        <a href="#">AI Tutor</a>
+      </div>
+      <div class="ft-col">
+        <h4>Community</h4>
+        <a href="#">Teach for free</a>
+        <a href="#">Volunteer teachers</a>
+        <a href="#">For schools</a>
+        <a href="#">For employers</a>
+        <a href="#">The Pledge</a>
+      </div>
+      <div class="ft-col">
+        <h4>Company</h4>
+        <a href="#">About us</a>
+        <a href="#">Our mission</a>
+        <a href="#">Press</a>
+        <a href="#">Careers</a>
+        <a href="#">Privacy</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+    <div class="ft-bottom">
+      <div class="ft-copy">© 2026 SkillRise Inc. — Learn. Teach. Rise Together.</div>
+      <div class="ft-links"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Cookies</a></div>
+    </div>
+  </div>
+</footer>
+
+<script>
+function tmenu(){document.getElementById('mm').classList.toggle('open');}
+if('IntersectionObserver' in window){
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}});},{threshold:.08});
+  document.querySelectorAll('.aud-card,.tcard,.sf-card,.tf-step,.mp').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(16px)';el.style.transition='opacity .5s ease,transform .5s ease';obs.observe(el);});
+}
+</script>
+</body>
+</html>

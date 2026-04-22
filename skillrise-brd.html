@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillRise — Business Requirements Document</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f1117;
+    --ink-2: #3a3d4a;
+    --ink-3: #6b6f80;
+    --surface: #ffffff;
+    --surface-2: #f5f6f8;
+    --surface-3: #ecedf1;
+    --accent: #0d6e5e;
+    --accent-light: #e0f2ee;
+    --accent-mid: #1a9e88;
+    --amber: #c47a0e;
+    --amber-light: #fef3dc;
+    --blue: #1a56a8;
+    --blue-light: #e5eef9;
+    --border: #e0e2e8;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--surface-2);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .page-wrap { max-width: 860px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* Cover */
+  .cover {
+    background: var(--ink);
+    color: white;
+    border-radius: 16px;
+    padding: 52px 48px;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.18;
+  }
+  .cover-tag {
+    display: inline-block;
+    background: var(--accent-mid);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+  .cover h1 {
+    font-size: 38px;
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .cover h1 span { color: var(--accent-mid); }
+  .cover-sub { font-size: 16px; color: rgba(255,255,255,0.65); margin-bottom: 32px; font-weight: 300; }
+  .cover-meta { display: flex; gap: 32px; flex-wrap: wrap; }
+  .cover-meta-item label { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: rgba(255,255,255,0.45); display: block; margin-bottom: 2px; }
+  .cover-meta-item span { font-size: 14px; color: rgba(255,255,255,0.85); font-weight: 500; }
+
+  /* TOC */
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 40px; }
+  .toc h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); margin-bottom: 16px; font-weight: 600; }
+  .toc ol { list-style: none; counter-reset: toc; }
+  .toc li { counter-increment: toc; display: flex; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--surface-3); font-size: 14px; }
+  .toc li:last-child { border-bottom: none; }
+  .toc li::before { content: "0" counter(toc); font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent-mid); margin-right: 14px; min-width: 24px; }
+  .toc li a { color: var(--ink-2); text-decoration: none; font-weight: 500; }
+  .toc li a:hover { color: var(--accent); }
+
+  /* Sections */
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px 40px; margin-bottom: 24px; }
+  .section-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .section-num { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--accent-mid); font-weight: 500; padding-top: 4px; min-width: 28px; }
+  .section-header h2 { font-size: 22px; font-weight: 600; line-height: 1.2; }
+  .section-header p { font-size: 14px; color: var(--ink-3); margin-top: 4px; font-weight: 300; }
+
+  h3 { font-size: 16px; font-weight: 600; margin: 28px 0 12px; color: var(--ink); }
+  h3:first-child { margin-top: 0; }
+  p { color: var(--ink-2); margin-bottom: 12px; font-size: 14px; }
+  p:last-child { margin-bottom: 0; }
+
+  /* Requirement rows */
+  .req-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 16px 0; }
+  .req-table thead tr { background: var(--surface-2); }
+  .req-table th { text-align: left; padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); font-weight: 600; border-bottom: 1px solid var(--border); }
+  .req-table td { padding: 12px 14px; border-bottom: 1px solid var(--surface-3); vertical-align: top; color: var(--ink-2); line-height: 1.55; }
+  .req-table tr:last-child td { border-bottom: none; }
+  .req-table tr:hover td { background: var(--surface-2); }
+  .req-id { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent-mid); font-weight: 500; white-space: nowrap; }
+  .priority { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+  .p-must { background: #fee2e2; color: #991b1b; }
+  .p-should { background: var(--amber-light); color: var(--amber); }
+  .p-could { background: var(--blue-light); color: var(--blue); }
+
+  /* User role cards */
+  .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 16px 0; }
+  .role-card { background: var(--surface-2); border-radius: var(--radius); padding: 18px 20px; border: 1px solid var(--border); }
+  .role-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 10px; }
+  .role-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .role-card p { font-size: 12.5px; color: var(--ink-3); margin: 0; }
+
+  /* Journey flow */
+  .journey { display: flex; flex-direction: column; gap: 0; margin: 16px 0; }
+  .journey-step { display: flex; gap: 16px; }
+  .journey-line { display: flex; flex-direction: column; align-items: center; }
+  .j-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .j-line { width: 2px; flex: 1; min-height: 20px; background: var(--border); margin: 4px 0; }
+  .journey-step:last-child .j-line { display: none; }
+  .journey-body { padding-bottom: 20px; padding-top: 4px; }
+  .journey-body h4 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .journey-body p { font-size: 13px; color: var(--ink-3); margin: 0; }
+
+  /* Metric chips */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 16px 0; }
+  .kpi { background: var(--surface-2); border-radius: var(--radius); padding: 16px 18px; border: 1px solid var(--border); }
+  .kpi-val { font-size: 26px; font-weight: 700; color: var(--accent); }
+  .kpi-label { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+  /* Tech stack */
+  .stack-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 16px 0; }
+  .stack-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+  .stack-card .layer { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--accent-mid); font-weight: 600; margin-bottom: 4px; }
+  .stack-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .stack-card p { font-size: 12px; color: var(--ink-3); margin: 0; }
+
+  /* Timeline */
+  .phase-list { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+  .phase { display: flex; gap: 16px; align-items: flex-start; background: var(--surface-2); border-radius: var(--radius); padding: 16px 20px; border: 1px solid var(--border); }
+  .phase-badge { background: var(--ink); color: white; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+  .phase-body h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .phase-body p { font-size: 13px; color: var(--ink-3); margin: 0; }
+
+  /* Revenue */
+  .rev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+  .rev-card { border-left: 3px solid var(--accent); padding: 14px 18px; background: var(--accent-light); border-radius: 0 var(--radius) var(--radius) 0; }
+  .rev-card h4 { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+  .rev-card p { font-size: 12.5px; color: var(--ink-2); margin: 0; }
+
+  /* Risks */
+  .risk-row { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--surface-3); font-size: 13.5px; }
+  .risk-row:last-child { border-bottom: none; }
+  .risk-level { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+  .risk-high { background: #fee2e2; color: #991b1b; }
+  .risk-med { background: var(--amber-light); color: var(--amber); }
+  .risk-low { background: var(--blue-light); color: var(--blue); }
+  .risk-body strong { display: block; font-weight: 600; font-size: 13.5px; margin-bottom: 2px; }
+  .risk-body span { color: var(--ink-3); font-size: 13px; }
+
+  @media (max-width: 600px) {
+    .page-wrap { padding: 24px 16px 60px; }
+    .cover { padding: 36px 28px; }
+    .cover h1 { font-size: 28px; }
+    .section { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="cover-tag">Business Requirements Document</div>
+    <h1>Skill<span>Rise</span></h1>
+    <p class="cover-sub">Learn a skill. Get certified. Get hired — in your neighborhood.</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item"><label>Version</label><span>1.0</span></div>
+      <div class="cover-meta-item"><label>Date</label><span>April 2026</span></div>
+      <div class="cover-meta-item"><label>Status</label><span>Draft for Review</span></div>
+      <div class="cover-meta-item"><label>Document Type</label><span>BRD</span></div>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#s1">Executive summary</a></li>
+      <li><a href="#s2">Problem statement</a></li>
+      <li><a href="#s3">Users & stakeholders</a></li>
+      <li><a href="#s4">User journey</a></li>
+      <li><a href="#s5">Functional requirements</a></li>
+      <li><a href="#s6">Non-functional requirements</a></li>
+      <li><a href="#s7">Key performance indicators</a></li>
+      <li><a href="#s8">Technology stack</a></li>
+      <li><a href="#s9">Revenue model</a></li>
+      <li><a href="#s10">Phased delivery plan</a></li>
+      <li><a href="#s11">Risks & mitigations</a></li>
+    </ol>
+  </div>
+
+  <!-- S1: Executive Summary -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <div>
+        <h2>Executive summary</h2>
+        <p>What SkillRise is and why it matters</p>
+      </div>
+    </div>
+    <p>SkillRise is a mobile-first platform that integrates skill education, accredited certification, and local job placement into a single end-to-end experience. It is designed for everyday people in any neighborhood — especially those locked out of employment by lack of formal credentials, not lack of ability.</p>
+    <p>The platform removes three barriers simultaneously: access to affordable training, recognized proof of competency, and a direct pathway to employers who are actively hiring. By partnering with local businesses to co-design skill tracks, SkillRise ensures that every certified learner is job-ready from day one.</p>
+    <p>The core user experience is: <strong>pick a track → learn with your community → earn a verified certificate → get matched to local jobs and apply in one tap.</strong> No resume required to start. No degree gatekeeping. No long wait between completing training and finding work.</p>
+  </div>
+
+  <!-- S2: Problem Statement -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <div>
+        <h2>Problem statement</h2>
+        <p>The gap SkillRise closes</p>
+      </div>
+    </div>
+    <h3>For learners</h3>
+    <p>Millions of adults are capable of skilled work but lack the credentials to prove it. Traditional education is expensive, time-consuming, and geographically inaccessible. Online courses exist in abundance but rarely connect learners to real jobs at the end. People complete certifications that employers have never heard of, or apply for jobs they're qualified for but can't get past a keyword filter.</p>
+    <h3>For employers</h3>
+    <p>Local businesses — especially SMEs in trades, logistics, healthcare support, hospitality, and tech — struggle to hire reliably. Platforms like Indeed flood them with unqualified applicants. They spend hours screening people who don't have the foundational skills they need. Many would prefer to hire locally and to train specific skills, but have no efficient way to do it.</p>
+    <h3>For communities</h3>
+    <p>Unemployment and underemployment create cascading social problems. When people can't access economic opportunity, neighborhoods decline. Existing workforce development programs are underfunded, bureaucratic, and rarely digital-first. There is no modern, mobile-native platform that treats skill-building as both a community and economic activity.</p>
+  </div>
+
+  <!-- S3: Users & Stakeholders -->
+  <div class="section" id="s3">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <div>
+        <h2>Users & stakeholders</h2>
+        <p>Who the platform serves</p>
+      </div>
+    </div>
+    <div class="role-grid">
+      <div class="role-card">
+        <div class="role-icon" style="background:#e0f2ee;color:#0d6e5e">L</div>
+        <h4>Learner</h4>
+        <p>Primary user. Adult seeking new skills and employment. May be unemployed, underemployed, or seeking a career change. Needs a mobile-first, low-friction experience.</p>
+      </div>
+      <div class="role-card">
+        <div class="role-icon" style="background:#e5eef9;color:#1a56a8">E</div>
+        <h4>Employer</h4>
+        <p>Local business posting jobs and optionally co-designing skill tracks. Wants pre-vetted, job-ready candidates they can trust to meet a skills bar.</p>
+      </div>
+      <div class="role-card">
+        <div class="role-icon" style="background:#fef3dc;color:#c47a0e">I</div>
+        <h4>Instructor</h4>
+        <p>Subject-matter expert who designs and delivers course content. May be an individual professional, trade body, or community college partner.</p>
+      </div>
+      <div class="role-card">
+        <div class="role-icon" style="background:#f0e9fe;color:#5b21b6">A</div>
+        <h4>Platform admin</h4>
+        <p>Internal team managing content quality, certification integrity, employer partnerships, and community health. Requires a back-office dashboard.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4: User Journey -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <div>
+        <h2>User journey</h2>
+        <p>End-to-end learner flow</p>
+      </div>
+    </div>
+    <div class="journey">
+      <div class="journey-step">
+        <div class="journey-line">
+          <div class="j-dot" style="background:#e0f2ee;color:#0d6e5e">1</div>
+          <div class="j-line"></div>
+        </div>
+        <div class="journey-body">
+          <h4>Discovery & onboarding</h4>
+          <p>User downloads app, selects their neighborhood, and answers a short quiz about their goals and existing experience. The app recommends matched skill tracks.</p>
+        </div>
+      </div>
+      <div class="journey-step">
+        <div class="journey-line">
+          <div class="j-dot" style="background:#e5eef9;color:#1a56a8">2</div>
+          <div class="j-line"></div>
+        </div>
+        <div class="journey-body">
+          <h4>Enroll in a skill track</h4>
+          <p>User browses tracks, views job demand data and salary ranges for each, then enrolls. Tracks range from 2–8 weeks. Enrollment is free or low-cost.</p>
+        </div>
+      </div>
+      <div class="journey-step">
+        <div class="journey-line">
+          <div class="j-dot" style="background:#fef3dc;color:#c47a0e">3</div>
+          <div class="j-line"></div>
+        </div>
+        <div class="journey-body">
+          <h4>Learn (with community)</h4>
+          <p>Completes modules via video, interactive exercises, and quizzes. Optionally joins a local cohort group — neighbors in the same track can message, meet up, and study together.</p>
+        </div>
+      </div>
+      <div class="journey-step">
+        <div class="journey-line">
+          <div class="j-dot" style="background:#e0f2ee;color:#0d6e5e">4</div>
+          <div class="j-line"></div>
+        </div>
+        <div class="journey-body">
+          <h4>Assessment & certification</h4>
+          <p>Completes a final skills assessment (multiple choice + practical task submission). On passing, receives a verified digital certificate with a unique credential ID.</p>
+        </div>
+      </div>
+      <div class="journey-step">
+        <div class="journey-line">
+          <div class="j-dot" style="background:#f0e9fe;color:#5b21b6">5</div>
+          <div class="j-line"></div>
+        </div>
+        <div class="journey-body">
+          <h4>Job matching & application</h4>
+          <p>App immediately shows matched open roles from local employers. User applies in one tap — their certificate and profile are sent automatically. Employers respond within the app.</p>
+        </div>
+      </div>
+      <div class="journey-step">
+        <div class="journey-line">
+          <div class="j-dot" style="background:#e5eef9;color:#1a56a8">6</div>
+        </div>
+        <div class="journey-body">
+          <h4>Hired & ongoing growth</h4>
+          <p>Once placed, user can continue to new skill tracks, level up existing ones, or mentor newcomers entering the same track they completed.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5: Functional Requirements -->
+  <div class="section" id="s5">
+    <div class="section-header">
+      <div class="section-num">05</div>
+      <div>
+        <h2>Functional requirements</h2>
+        <p>What the system must do</p>
+      </div>
+    </div>
+
+    <h3>Authentication & profiles</h3>
+    <table class="req-table">
+      <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">AUTH-01</td><td>Users can register with email, phone number, or social login (Google/Apple)</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">AUTH-02</td><td>Learner profile stores name, neighborhood, enrolled tracks, certificates, and job application history</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">AUTH-03</td><td>Employer profile stores business name, location, posted roles, and hired candidates</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">AUTH-04</td><td>Identity verification step (ID photo upload) required before certificate issuance</td><td><span class="priority p-should">Should</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Skill tracks & learning</h3>
+    <table class="req-table">
+      <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">LEARN-01</td><td>Learners can browse all available skill tracks filtered by category, duration, and local job demand</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">LEARN-02</td><td>Each track contains ordered modules with video lessons, text content, and embedded quizzes</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">LEARN-03</td><td>Modules are downloadable for offline access on mobile</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">LEARN-04</td><td>Progress is tracked and synced across devices; learner can resume from any device</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">LEARN-05</td><td>Learners can join or form local cohort groups tied to the same track and neighborhood</td><td><span class="priority p-should">Should</span></td></tr>
+        <tr><td class="req-id">LEARN-06</td><td>AI-powered study assistant available within each module for questions and explanations</td><td><span class="priority p-could">Could</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Assessment & certification</h3>
+    <table class="req-table">
+      <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">CERT-01</td><td>Final assessment unlocks after all modules in a track are completed</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">CERT-02</td><td>Assessment includes knowledge quiz and at least one practical task (photo/video submission or scenario exercise)</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">CERT-03</td><td>Passing threshold is 70%. Failed assessments can be retaken after a 48-hour cooldown</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">CERT-04</td><td>On passing, a unique certificate with credential ID is generated and stored in the learner's profile</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">CERT-05</td><td>Certificates are shareable as a link and downloadable as PDF</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">CERT-06</td><td>Public credential verification page (employer enters ID to confirm validity)</td><td><span class="priority p-should">Should</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Jobs & hiring</h3>
+    <table class="req-table">
+      <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">JOBS-01</td><td>On certification, learner is immediately shown matched job postings from local employers</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">JOBS-02</td><td>One-tap job application sends learner profile and certificate to employer automatically</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">JOBS-03</td><td>Learner receives in-app notifications for application status updates and employer messages</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">JOBS-04</td><td>Employers can post job listings specifying required skill tracks and location</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">JOBS-05</td><td>Employers can message applicants and schedule interviews within the app</td><td><span class="priority p-should">Should</span></td></tr>
+        <tr><td class="req-id">JOBS-06</td><td>Learners can view salary ranges, employer reviews, and hiring rate data per role</td><td><span class="priority p-should">Should</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Admin & content management</h3>
+    <table class="req-table">
+      <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">ADMIN-01</td><td>Admin dashboard for managing skill track content, approvals, and publishing</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">ADMIN-02</td><td>Instructor portal to upload and edit course modules, videos, and assessments</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">ADMIN-03</td><td>Employer onboarding and verification flow (business registration, address, trading status)</td><td><span class="priority p-must">Must</span></td></tr>
+        <tr><td class="req-id">ADMIN-04</td><td>Analytics dashboard showing enrollment rates, completion rates, hiring outcomes per track</td><td><span class="priority p-should">Should</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- S6: Non-functional Requirements -->
+  <div class="section" id="s6">
+    <div class="section-header">
+      <div class="section-num">06</div>
+      <div>
+        <h2>Non-functional requirements</h2>
+        <p>How the system must perform</p>
+      </div>
+    </div>
+    <table class="req-table">
+      <thead><tr><th>Category</th><th>Requirement</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:600;white-space:nowrap">Performance</td><td>App must load the home screen within 2 seconds on a 4G connection. Video lessons must begin playback within 3 seconds.</td></tr>
+        <tr><td style="font-weight:600;white-space:nowrap">Offline access</td><td>All downloaded modules must be fully accessible without a network connection. Progress syncs when connection is restored.</td></tr>
+        <tr><td style="font-weight:600;white-space:nowrap">Scalability</td><td>Architecture must support 100,000 concurrent users in MVP and scale to 1M+ without infrastructure redesign.</td></tr>
+        <tr><td style="font-weight:600;white-space:nowrap">Accessibility</td><td>All screens must meet WCAG 2.1 AA. All video content must have captions. Text must be resizable up to 200% without loss of functionality.</td></tr>
+        <tr><td style="font-weight:600;white-space:nowrap">Security</td><td>All user data encrypted at rest and in transit (AES-256 / TLS 1.3). PII handled in compliance with GDPR and CCPA. Certificates use cryptographic signing to prevent forgery.</td></tr>
+        <tr><td style="font-weight:600;white-space:nowrap">Availability</td><td>99.9% uptime SLA. Planned maintenance windows outside peak hours (02:00–04:00 local time).</td></tr>
+        <tr><td style="font-weight:600;white-space:nowrap">Localization</td><td>MVP supports English and Spanish. Architecture must allow additional language packs without code changes.</td></tr>
+        <tr><td style="font-weight:600;white-space:nowrap">Data retention</td><td>Certificates and learning records retained indefinitely on request. Account deletion purges PII within 30 days.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- S7: KPIs -->
+  <div class="section" id="s7">
+    <div class="section-header">
+      <div class="section-num">07</div>
+      <div>
+        <h2>Key performance indicators</h2>
+        <p>How success is measured</p>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-val">70%</div><div class="kpi-label">Course completion rate target</div></div>
+      <div class="kpi"><div class="kpi-val">60%</div><div class="kpi-label">Certified learners hired within 90 days</div></div>
+      <div class="kpi"><div class="kpi-val">&lt;48h</div><div class="kpi-label">Average employer response time to application</div></div>
+      <div class="kpi"><div class="kpi-val">4.5+</div><div class="kpi-label">App store rating target</div></div>
+    </div>
+    <h3>Leading indicators (tracked monthly)</h3>
+    <p>Daily active learners, new enrollments per week, module completion rate, assessment pass rate, employer job posting volume, application-to-interview conversion rate, and cohort formation rate.</p>
+    <h3>Lagging indicators (tracked quarterly)</h3>
+    <p>Learners hired, average time-to-hire, income change for placed learners, employer re-hire rate, Net Promoter Score (learner and employer separately), and cost per successful placement.</p>
+  </div>
+
+  <!-- S8: Tech Stack -->
+  <div class="section" id="s8">
+    <div class="section-header">
+      <div class="section-num">08</div>
+      <div>
+        <h2>Technology stack</h2>
+        <p>Recommended implementation approach</p>
+      </div>
+    </div>
+    <div class="stack-grid">
+      <div class="stack-card">
+        <div class="layer">Mobile</div>
+        <h4>React Native</h4>
+        <p>Single codebase for iOS and Android. Expo for rapid iteration. Offline support via SQLite.</p>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Backend API</div>
+        <h4>Node.js / Express</h4>
+        <p>REST API with GraphQL layer for flexible querying. Hosted on AWS or GCP.</p>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Database</div>
+        <h4>PostgreSQL + Redis</h4>
+        <p>Relational DB for core data. Redis for session management and real-time features.</p>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Video delivery</div>
+        <h4>Cloudflare Stream</h4>
+        <p>Adaptive bitrate streaming. Cost-effective. Global CDN for low-latency delivery worldwide.</p>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Certification</div>
+        <h4>Open Badges 3.0</h4>
+        <p>Industry-standard verifiable credential format. Blockchain-anchored hashes for tamper-proof verification.</p>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Notifications</div>
+        <h4>Firebase + Twilio</h4>
+        <p>Push notifications via Firebase. SMS fallback for job alerts via Twilio.</p>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Payments</div>
+        <h4>Stripe</h4>
+        <p>Employer subscription billing. Learner premium upgrades. Handles all regional tax compliance.</p>
+      </div>
+      <div class="stack-card">
+        <div class="layer">AI features</div>
+        <h4>Anthropic Claude API</h4>
+        <p>In-module study assistant, course recommendation engine, and job-profile matching logic.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- S9: Revenue Model -->
+  <div class="section" id="s9">
+    <div class="section-header">
+      <div class="section-num">09</div>
+      <div>
+        <h2>Revenue model</h2>
+        <p>How SkillRise generates income</p>
+      </div>
+    </div>
+    <div class="rev-grid">
+      <div class="rev-card">
+        <h4>Employer subscription</h4>
+        <p>Monthly SaaS fee for businesses to post jobs and access certified candidate pool. Tiered by number of active listings.</p>
+      </div>
+      <div class="rev-card">
+        <h4>Placement fee</h4>
+        <p>One-time success fee charged to employer when a SkillRise-certified candidate is successfully hired and completes 30 days.</p>
+      </div>
+      <div class="rev-card">
+        <h4>Premium learner plan</h4>
+        <p>Free tier: 1 active track. Premium ($9.99/mo): unlimited tracks, priority job matching, and AI study assistant.</p>
+      </div>
+      <div class="rev-card">
+        <h4>City & government contracts</h4>
+        <p>B2G licensing to municipalities and workforce development agencies who subsidize access for unemployed residents.</p>
+      </div>
+      <div class="rev-card">
+        <h4>Corporate training</h4>
+        <p>Companies pay to train existing employees on new skill tracks, using SkillRise as an internal upskilling platform.</p>
+      </div>
+      <div class="rev-card">
+        <h4>Course co-creation</h4>
+        <p>Employers co-sponsor the development of specific skill tracks tailored to their hiring needs (featured branding in return).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- S10: Phases -->
+  <div class="section" id="s10">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <div>
+        <h2>Phased delivery plan</h2>
+        <p>MVP to full product roadmap</p>
+      </div>
+    </div>
+    <div class="phase-list">
+      <div class="phase">
+        <div class="phase-badge">Phase 1 — Months 1–3</div>
+        <div class="phase-body">
+          <h4>MVP: One neighborhood, five skill tracks</h4>
+          <p>Launch in a single city with 5 curated tracks (e.g. electrical basics, logistics, caregiving, commercial cooking, digital admin). Onboard 10 employer partners. Focus on learning flow, certification engine, and one-tap job application. Target: 500 enrolled learners, 50 certifications, 20 hires.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-badge">Phase 2 — Months 4–6</div>
+        <div class="phase-body">
+          <h4>Expand: Community features + employer portal</h4>
+          <p>Add cohort groups, in-app messaging, and employer dashboard. Expand to 3 cities and 15 skill tracks. Launch instructor portal so external SMEs can submit course content. Target: 5,000 learners, 300 hires.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-badge">Phase 3 — Months 7–12</div>
+        <div class="phase-body">
+          <h4>Scale: B2G + AI personalization</h4>
+          <p>Sign first municipal government contract. Launch AI study assistant and personalized track recommendations. Enable learner-to-mentor pathways. Expand to 10 cities, 40 skill tracks. Target: 50,000 learners, 5,000 hires.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-badge">Phase 4 — Year 2+</div>
+        <div class="phase-body">
+          <h4>National rollout + corporate training</h4>
+          <p>Open platform to any city or region. Launch corporate training product. Pursue international expansion starting with English-speaking markets. Target: 500,000 active learners.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S11: Risks -->
+  <div class="section" id="s11">
+    <div class="section-header">
+      <div class="section-num">11</div>
+      <div>
+        <h2>Risks & mitigations</h2>
+        <p>Known challenges and how to address them</p>
+      </div>
+    </div>
+    <div class="risk-row">
+      <span class="risk-level risk-high">High</span>
+      <div class="risk-body"><strong>Low course completion rates</strong><span>Mitigate with cohort accountability groups, push notification reminders, streak mechanics, and a completion guarantee (refund if you don't get a job interview within 90 days of certifying).</span></div>
+    </div>
+    <div class="risk-row">
+      <span class="risk-level risk-high">High</span>
+      <div class="risk-body"><strong>Employers don't trust the certification</strong><span>Mitigate by co-designing tracks with employers from day one. They set the skills bar. Build in a 90-day satisfaction guarantee — if a hire doesn't work out, next placement is free.</span></div>
+    </div>
+    <div class="risk-row">
+      <span class="risk-level risk-med">Medium</span>
+      <div class="risk-body"><strong>Cold start problem (no employers = no learners)</strong><span>Launch with employer partners pre-secured before public launch. Start in a single neighborhood so density is high. Offer first 6 months free to anchor employers.</span></div>
+    </div>
+    <div class="risk-row">
+      <span class="risk-level risk-med">Medium</span>
+      <div class="risk-body"><strong>Certificate fraud / impersonation</strong><span>Require identity verification before certificate issuance. Use cryptographically signed credentials. Public verification URL lets employers confirm any certificate ID in seconds.</span></div>
+    </div>
+    <div class="risk-row">
+      <span class="risk-level risk-med">Medium</span>
+      <div class="risk-body"><strong>Content quality inconsistency across tracks</strong><span>All instructor content goes through an editorial review process before publishing. Use learner ratings and completion data to surface and retire underperforming content.</span></div>
+    </div>
+    <div class="risk-row">
+      <span class="risk-level risk-low">Low</span>
+      <div class="risk-body"><strong>Regulatory compliance in vocational training</strong><span>Partner with accredited institutions to co-award certificates where local law requires it. Legal review in each new market before launch.</span></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

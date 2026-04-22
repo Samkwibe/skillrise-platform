@@ -1,0 +1,5 @@
+# Root (macOS, IDE)
+.DS_Store
+.cursor/
+
+# Next.js app lives in web/ — see web/.gitignore for node_modules, .next, .env*

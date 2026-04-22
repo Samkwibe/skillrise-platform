@@ -1,0 +1,12 @@
+project        = "skillrise"
+environment    = "prod"
+aws_region     = "us-east-1"
+app_image_tag  = "latest"
+
+# Optional — leave empty to skip writing the secret value (you can add it via the console later).
+openai_api_key = ""
+mongodb_uri    = ""
+
+# "memory" | "mongodb" | "dynamodb"
+data_store  = "dynamodb"
+domain_name = ""

@@ -1,0 +1,758 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  html.dark {
+    --bg: #06080d;
+    --surface-1: #0c1018;
+    --surface-2: #121820;
+    --surface-3: #1a2230;
+    --surface-4: #222c3c;
+    --text-1: #edf2ff;
+    --text-2: #8a98bc;
+    --text-3: #465070;
+    --border-1: rgba(255, 255, 255, 0.07);
+    --border-2: rgba(255, 255, 255, 0.13);
+    --g: #1fc87e;
+    --g-hover: #23e08c;
+    --gd: #0c6b44;
+    --amber: #f5a623;
+    --red: #e84343;
+    --blue: #4a8ef5;
+    --purple: #9b6cf5;
+    --hero-radial: radial-gradient(ellipse 70% 60% at 60% 40%, rgba(31, 200, 126, 0.07), transparent 70%),
+      radial-gradient(ellipse 50% 50% at 5% 90%, rgba(155, 108, 245, 0.04), transparent 60%);
+    --grid-line: rgba(255, 255, 255, 0.07);
+    --card-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+    --shadow-phone: 0 40px 90px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.07);
+    --shadow-float: 0 8px 20px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+
+  html.light {
+    --bg: #f7f8fb;
+    --surface-1: #ffffff;
+    --surface-2: #f0f3f8;
+    --surface-3: #e6eaf2;
+    --surface-4: #d5dce7;
+    --text-1: #0b1120;
+    --text-2: #475068;
+    --text-3: #8490aa;
+    --border-1: rgba(10, 20, 40, 0.08);
+    --border-2: rgba(10, 20, 40, 0.14);
+    --g: #0e9a5f;
+    --g-hover: #0c8953;
+    --gd: #065f3a;
+    --amber: #b7790c;
+    --red: #c42d2d;
+    --blue: #215fc7;
+    --purple: #6b3ed5;
+    --hero-radial: radial-gradient(ellipse 70% 60% at 60% 40%, rgba(31, 200, 126, 0.12), transparent 70%),
+      radial-gradient(ellipse 50% 50% at 5% 90%, rgba(155, 108, 245, 0.07), transparent 60%);
+    --grid-line: rgba(10, 20, 40, 0.08);
+    --card-gradient: linear-gradient(180deg, rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0));
+    --shadow-phone: 0 30px 70px rgba(20, 30, 60, 0.18), 0 0 0 1px rgba(10, 20, 40, 0.08);
+    --shadow-float: 0 6px 14px rgba(20, 30, 60, 0.12);
+    color-scheme: light;
+  }
+
+  /* ==========================================================================
+     Role-scoped design tokens.
+     Each logged-in role looks like a completely different product. Tokens
+     compose on top of the dark/light base so every primitive (cards, inputs,
+     buttons, pills) automatically re-skins when `data-role` flips.
+     ========================================================================== */
+
+  /* Learner — "Modern course platform" (Coursera / Brilliant feel) */
+  html[data-role="learner"].dark {
+    --bg: #0a1628;
+    --surface-1: #13213a;
+    --surface-2: #1b2c4a;
+    --surface-3: #24395c;
+    --surface-4: #304872;
+    --text-1: #eef2fb;
+    --text-2: #9aaac8;
+    --border-1: rgba(255, 255, 255, 0.06);
+    --border-2: rgba(255, 255, 255, 0.12);
+    --g: #f59e0b;
+    --g-hover: #fbbf24;
+    --gd: #b45309;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --role-radius: 20px;
+    --role-font-display: var(--font-syne), serif;
+  }
+  html[data-role="learner"].light {
+    --bg: #faf7f0;
+    --surface-1: #ffffff;
+    --surface-2: #f3ede1;
+    --surface-3: #e8dec8;
+    --surface-4: #d6c9ab;
+    --text-1: #1a1410;
+    --text-2: #5a4f41;
+    --text-3: #8a7c68;
+    --border-1: rgba(40, 30, 20, 0.08);
+    --border-2: rgba(40, 30, 20, 0.14);
+    --g: #d97706;
+    --g-hover: #b45309;
+    --gd: #7c2d12;
+    --role-radius: 20px;
+    --role-font-display: var(--font-syne), serif;
+  }
+
+  /* Teen — "Gamified learning app" (Duolingo / BeReal energy).
+     Always vivid. Ignores user dark/light choice via RoleStyler. */
+  html[data-role="teen"] {
+    --bg: #140a28;
+    --surface-1: #241343;
+    --surface-2: #321c5a;
+    --surface-3: #432576;
+    --surface-4: #5a319d;
+    --text-1: #ffffff;
+    --text-2: #d7c8ff;
+    --text-3: #9e8ccf;
+    --border-1: rgba(192, 132, 252, 0.2);
+    --border-2: rgba(192, 132, 252, 0.4);
+    --g: #c0ff00;
+    --g-hover: #d6ff3d;
+    --gd: #8bba00;
+    --amber: #ffb72b;
+    --red: #ff3ea5;
+    --blue: #22d3ee;
+    --purple: #a855f7;
+    --teen-lime: #c0ff00;
+    --teen-pink: #ff3ea5;
+    --teen-purple: #a855f7;
+    --teen-cyan: #22d3ee;
+    --role-radius: 24px;
+    --role-font-display: var(--font-nunito), "Nunito", ui-rounded, sans-serif;
+    color-scheme: dark;
+  }
+
+  /* Teacher — "Instructor studio" (OBS / Loom Creator).
+     Always broadcast-dark. */
+  html[data-role="teacher"] {
+    --bg: #0a0a0a;
+    --surface-1: #141414;
+    --surface-2: #1c1c1c;
+    --surface-3: #2a2a2a;
+    --surface-4: #3a3a3a;
+    --text-1: #fafafa;
+    --text-2: #b5b5b5;
+    --text-3: #6e6e6e;
+    --border-1: rgba(255, 255, 255, 0.06);
+    --border-2: rgba(255, 255, 255, 0.12);
+    --g: #ef4444;
+    --g-hover: #f87171;
+    --gd: #991b1b;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --purple: #a78bfa;
+    --red: #ef4444;
+    --role-radius: 8px;
+    --role-font-display: var(--font-jetbrains), ui-monospace, monospace;
+    color-scheme: dark;
+  }
+
+  /* Employer — "HR / recruiting dashboard" (Greenhouse / Ashby).
+     Always light mode. */
+  html[data-role="employer"] {
+    --bg: #f8fafc;
+    --surface-1: #ffffff;
+    --surface-2: #f1f5f9;
+    --surface-3: #e2e8f0;
+    --surface-4: #cbd5e1;
+    --text-1: #0f172a;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --border-1: rgba(15, 23, 42, 0.08);
+    --border-2: rgba(15, 23, 42, 0.14);
+    --g: #1d4ed8;
+    --g-hover: #1e40af;
+    --gd: #1e3a8a;
+    --amber: #b45309;
+    --red: #dc2626;
+    --blue: #0ea5e9;
+    --purple: #7c3aed;
+    --role-radius: 10px;
+    --role-font-display: var(--font-dm-sans), sans-serif;
+    color-scheme: light;
+  }
+
+  /* School — "Admin portal" (Google Workspace Admin / Workday).
+     Always light. Tabular numerals. */
+  html[data-role="school"] {
+    --bg: #f1f5f9;
+    --surface-1: #ffffff;
+    --surface-2: #e9eef5;
+    --surface-3: #dce3ec;
+    --surface-4: #c4cdd9;
+    --text-1: #0f1a2b;
+    --text-2: #445368;
+    --text-3: #7a8699;
+    --border-1: rgba(15, 25, 40, 0.08);
+    --border-2: rgba(15, 25, 40, 0.16);
+    --g: #0f766e;
+    --g-hover: #0d645d;
+    --gd: #115e59;
+    --amber: #a16207;
+    --red: #b91c1c;
+    --blue: #1e40af;
+    --purple: #6d28d9;
+    --role-radius: 6px;
+    --role-font-display: var(--font-dm-sans), sans-serif;
+    color-scheme: light;
+  }
+
+  html[data-role="school"],
+  html[data-role="school"] * {
+    font-variant-numeric: tabular-nums;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text-1);
+    @apply font-sans;
+    font-size: 16px;
+    line-height: 1.65;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  button {
+    font-family: inherit;
+  }
+  :focus-visible {
+    outline: 2px solid var(--g);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  ::selection {
+    background: var(--g);
+    color: var(--bg);
+  }
+}
+
+@layer components {
+  .mx-wrap {
+    max-width: 1180px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  @media (min-width: 1920px) {
+    .mx-wrap { max-width: 1440px; }
+  }
+  @media (min-width: 2560px) {
+    .mx-wrap { max-width: 1720px; }
+  }
+  .section-pad {
+    padding-top: clamp(56px, 7vw, 108px);
+    padding-bottom: clamp(56px, 7vw, 108px);
+    padding-left: clamp(18px, 5vw, 72px);
+    padding-right: clamp(18px, 5vw, 72px);
+  }
+  .section-pad-x {
+    padding-left: clamp(18px, 5vw, 72px);
+    padding-right: clamp(18px, 5vw, 72px);
+  }
+  .stag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--g);
+    background: color-mix(in srgb, var(--g) 12%, transparent);
+    padding: 5px 13px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+  .sh {
+    font-family: var(--font-syne), sans-serif;
+    font-size: clamp(26px, 3.8vw, 44px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+  }
+  .ss {
+    font-size: clamp(14px, 1.8vw, 17px);
+    color: var(--text-2);
+    max-width: 580px;
+    line-height: 1.65;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-dm-sans), sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    border: none;
+  }
+  .btn-primary {
+    background: var(--g);
+    color: var(--bg);
+    padding: 11px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+  .btn-primary:hover {
+    background: var(--g-hover);
+    transform: translateY(-1px);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-1);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    border: 1px solid var(--border-2);
+  }
+  .btn-ghost:hover {
+    border-color: var(--g);
+    color: var(--g);
+  }
+  .btn-xl {
+    padding: 15px 34px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+  .btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .reveal.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .card {
+    background: var(--surface-1);
+    background-image: var(--card-gradient);
+    border: 1px solid var(--border-1);
+    border-radius: 14px;
+  }
+  .card-hover {
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--g) 40%, transparent);
+    box-shadow: var(--shadow-float);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--text-1) 6%, transparent);
+    color: var(--text-2);
+  }
+  .pill-g {
+    background: color-mix(in srgb, var(--g) 14%, transparent);
+    color: var(--g);
+  }
+  .pill-amber {
+    background: color-mix(in srgb, var(--amber) 14%, transparent);
+    color: var(--amber);
+  }
+  .pill-purple {
+    background: color-mix(in srgb, var(--purple) 16%, transparent);
+    color: var(--purple);
+  }
+  .pill-blue {
+    background: color-mix(in srgb, var(--blue) 16%, transparent);
+    color: var(--blue);
+  }
+  .pill-red {
+    background: color-mix(in srgb, var(--red) 16%, transparent);
+    color: var(--red);
+  }
+  .input {
+    background: var(--surface-1);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: var(--text-1);
+    width: 100%;
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--g);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--g) 20%, transparent);
+  }
+  .label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-2);
+    margin-bottom: 6px;
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--border-1);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-bar > span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--g), var(--g-hover));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, var(--g), var(--blue) 60%, var(--purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .glass {
+    background: color-mix(in srgb, var(--surface-1) 80%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--border-1);
+  }
+  .micro-hover {
+    transition: transform 0.15s ease;
+  }
+  .micro-hover:hover {
+    transform: translateY(-1px);
+  }
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border: 1px solid var(--border-2);
+    border-radius: 4px;
+    font-family: var(--font-jetbrains), monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    background: var(--surface-2);
+  }
+
+  /* ---- Responsive dashboard container ----
+     Fluid gutters scale with viewport so nothing feels pinned to one width.
+     Caps at 1680px by default so reading lines stay sane on 4K; explicit
+     overrides (.dash-wrap-wide, .dash-wrap-full) push further when a layout
+     actually wants all the pixels (e.g. kanban boards, data tables).        */
+  .dash-wrap {
+    width: 100%;
+    max-width: 1680px;
+    margin-inline: auto;
+    padding-inline: clamp(16px, 3.5vw, 48px);
+  }
+  .dash-wrap-wide {
+    max-width: 1920px;
+  }
+  .dash-wrap-full {
+    max-width: none;
+  }
+  /* Teen shell stays app-like, not dashboard-wide. Grows a bit on large
+     screens so it doesn't look empty on a 4K panel. */
+  .teen-wrap {
+    width: 100%;
+    max-width: 920px;
+    margin-inline: auto;
+    padding-inline: clamp(16px, 3vw, 32px);
+  }
+  @media (min-width: 1920px) {
+    .teen-wrap {
+      max-width: 1200px;
+    }
+  }
+  @media (min-width: 2560px) {
+    .teen-wrap {
+      max-width: 1400px;
+    }
+  }
+  @media (min-width: 2560px) {
+    .dash-wrap {
+      max-width: 2000px;
+    }
+    .dash-wrap-wide {
+      max-width: 2240px;
+    }
+  }
+
+  /* Hide horizontal scroll-bar chrome on swipe-able rails (mobile kanban). */
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .scroll-snap-x > * {
+    scroll-snap-align: start;
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+  /* ---- Role-specific primitives ---- */
+
+  /* Teen — chunky playful tile with colored thick border and drop shadow */
+  .tile-chunky {
+    background: var(--surface-1);
+    border: 3px solid var(--border-2);
+    border-radius: 24px;
+    box-shadow: 6px 6px 0 0 var(--surface-3);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .tile-chunky:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 10px 10px 0 0 var(--surface-3);
+  }
+  .tile-chunky-lime {
+    border-color: var(--teen-lime, #c0ff00);
+  }
+  .tile-chunky-pink {
+    border-color: var(--teen-pink, #ff3ea5);
+  }
+  .tile-chunky-purple {
+    border-color: var(--teen-purple, #a855f7);
+  }
+  .tile-chunky-cyan {
+    border-color: var(--teen-cyan, #22d3ee);
+  }
+
+  /* Teacher — dense studio panel, hairline border, monospace-friendly */
+  .studio-panel {
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: 8px;
+  }
+  .studio-panel-strong {
+    border-color: var(--border-2);
+  }
+  .studio-label {
+    font-family: var(--font-jetbrains), monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .studio-metric {
+    font-family: var(--font-jetbrains), monospace;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 99px;
+    background: var(--red);
+    box-shadow: 0 0 0 0 var(--red);
+    animation: livePulse 1.6s ease-out infinite;
+  }
+
+  /* Employer — kanban column + applicant strip */
+  .kanban-col {
+    background: var(--surface-2);
+    border: 1px solid var(--border-1);
+    border-radius: 10px;
+    padding: 12px;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .kanban-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    cursor: grab;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .kanban-card:hover {
+    border-color: var(--g);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  }
+
+  /* School — admin data table */
+  .admin-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .admin-table thead th {
+    background: var(--surface-2);
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-2);
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-1);
+  }
+  .admin-table tbody td {
+    padding: 10px 12px;
+    font-size: 13.5px;
+    border-bottom: 1px solid var(--border-1);
+    color: var(--text-1);
+  }
+  .admin-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .admin-table tbody tr:hover td {
+    background: var(--surface-2);
+  }
+  .admin-action-bar {
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: 6px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* Learner — circular progress ring label + cover card */
+  .cover-card {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .cover-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--g) 40%, transparent);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
+  }
+}
+
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fadeInUp 0.7s ease-out both;
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.7s ease-out both;
+  }
+  .animate-scale-in {
+    animation: scaleIn 0.5s ease-out both;
+  }
+  .animate-shimmer {
+    background-size: 200% 100%;
+    animation: shimmer 2.4s linear infinite;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+@keyframes livePulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 80%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--red) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 0%, transparent);
+  }
+}
+@keyframes fireFlicker {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-1px) scale(1.04);
+  }
+  50% {
+    transform: translateY(0) scale(0.98);
+  }
+  75% {
+    transform: translateY(-1px) scale(1.03);
+  }
+}
+@keyframes xpFill {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--target-width);
+  }
+}
