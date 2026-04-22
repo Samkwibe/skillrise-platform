@@ -74,11 +74,29 @@ The Next.js app lives in **`web/`** at the repo root (e.g. `Samkwibe/skillrise-p
 | Setting | Value |
 |--------|--------|
 | **Source directory** | `web` (not `/` or empty) |
-| **Configuration file** | Optional: use the repo’s `apprunner.yaml` inside `web/` (already committed) |
+| **Build configuration** | **Use a configuration file** (recommended) — see below |
 
-If **Source directory** is left as repository root, the build will fail (`package.json` is only under `web/`) with errors like *Failed to execute 'build' command*.
+If **Source directory** is left as repository root, the build will fail (`package.json` is only under `web/`).
 
-The included [`apprunner.yaml`](apprunner.yaml) runs `npm ci`, `npm run build`, and `npm start` on port `3000`, with extra Node heap for the build. **You do not need any env vars for the build step** to succeed (we confirmed `npm run build` works with no `.env.local` or `.env.production`).
+### Use the repo `apprunner.yaml` (recommended)
+
+In the App Runner console: **Configuration** → **Configure build** → choose **Use a configuration file** (not *Configure all settings here* with only a custom build command).
+
+- **Configuration file name:** `apprunner.yaml` (it already lives in `web/`; with **Source directory** = `web`, that file is the app root for the build).
+
+The included [`apprunner.yaml`](apprunner.yaml) runs `npm ci`, then `npm run build`, then `npm start` on port `3000`, with build env in the YAML. **You do not need any secrets for the build step** to succeed.
+
+If you use **Configure all settings here** and set the build command to only `npm run build`, **`npm ci` never runs**, `node_modules` is empty, and the build fails with:
+
+```text
+sh: line 1: next: command not found
+```
+
+**Manual workaround (if you do not use the config file):** set the build command to a single line:
+
+```bash
+npm ci --no-audit --no-fund && npm run build
+```
 
 ### If the build still fails
 

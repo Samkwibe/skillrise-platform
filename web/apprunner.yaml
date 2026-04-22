@@ -1,5 +1,6 @@
-# AWS App Runner — use with repository "Source directory" = web
-# https://docs.aws.amazon.com/apprunner/latest/dg/config-file.html
+# AWS App Runner — requires console: Configure build → "Use a configuration file" → apprunner.yaml
+# (If you only set build to "npm run build", npm ci never runs → next: command not found.)
+# Source directory = web. https://docs.aws.amazon.com/apprunner/latest/dg/config-file.html
 version: 1.0
 runtime: nodejs22        # Node 22 is fine, it's your only option here
 
