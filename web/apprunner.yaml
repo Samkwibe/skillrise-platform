@@ -1,7 +1,7 @@
 # AWS App Runner — use with repository "Source directory" = web
 # https://docs.aws.amazon.com/apprunner/latest/dg/config-file.html
 version: 1.0
-runtime: nodejs20
+runtime: nodejs22        # Node 22 is fine, it's your only option here
 
 build:
   env:
