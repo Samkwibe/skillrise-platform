@@ -67,9 +67,24 @@ The image is multi-stage, uses Next.js standalone output, and runs as a non-root
 
 ---
 
-## 6. Deploy to AWS (Terraform + App Runner)
+## 6. AWS App Runner (Git source, monorepo)
 
-Everything Terraform needs lives in `infra/terraform/`:
+The Next.js app lives in **`web/`** at the repo root (e.g. `Samkwibe/skillrise-platform`). If App Runner is connected to that repository, set:
+
+| Setting | Value |
+|--------|--------|
+| **Source directory** | `web` (not `/` or empty) |
+| **Configuration file** | Optional: use the repo’s `apprunner.yaml` inside `web/` (already committed) |
+
+If **Source directory** is left as repository root, the build will fail (`package.json` is only under `web/`) with errors like *Failed to execute 'build' command*.
+
+The included [`apprunner.yaml`](apprunner.yaml) runs `npm install`, `npm run build`, and `npm start` on port `3000`. Ensure runtime env vars (e.g. from App Runner or Secrets Manager) match production needs.
+
+---
+
+## 7. Deploy to AWS (Terraform + ECR + App Runner image)
+
+Everything Terraform needs lives in `infra/terraform/` (container **image** deploy, not Git source from root):
 
 - **DynamoDB** single-table (`skillrise-<env>-table`) with GSI1 for email/secondary lookups
 - **S3** bucket for uploads (encryption + versioning + CORS)
@@ -127,7 +142,7 @@ Set `domain_name = "app.skillrise.dev"` in `terraform.tfvars`, then run `terrafo
 
 ---
 
-## 7. Environment variables reference
+## 8. Environment variables reference
 
 | Variable | Where | Purpose |
 |---|---|---|
@@ -146,7 +161,7 @@ Set `domain_name = "app.skillrise.dev"` in `terraform.tfvars`, then run `terrafo
 
 ---
 
-## 8. Security checklist
+## 9. Security checklist
 
 - Passwords are bcrypt-hashed (`bcryptjs`, cost 12) — never stored plaintext.
 - All auth routes are rate-limited (`lib/security/rate-limit.ts`) and validated with Zod.
@@ -159,7 +174,7 @@ Set `domain_name = "app.skillrise.dev"` in `terraform.tfvars`, then run `terrafo
 
 ---
 
-## 9. Observability
+## 10. Observability
 
 - App Runner streams stdout/stderr to CloudWatch (`/aws/apprunner/skillrise-<env>`).
 - 5xx alarm fires when the service returns >5 errors/minute (2 consecutive periods).
@@ -167,7 +182,7 @@ Set `domain_name = "app.skillrise.dev"` in `terraform.tfvars`, then run `terrafo
 
 ---
 
-## 10. Tearing it down
+## 11. Tearing it down
 
 ```bash
 cd infra/terraform

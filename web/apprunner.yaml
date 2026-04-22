@@ -1,0 +1,14 @@
+# AWS App Runner — place this in the app root when "Source directory" = web (monorepo).
+# See: https://docs.aws.amazon.com/apprunner/latest/dg/config-file.html
+version: 1.0
+runtime: nodejs22
+build:
+  commands:
+    pre-build:
+      - npm install --no-audit --no-fund
+    build:
+      - npm run build
+run:
+  command: npm start
+  network:
+    port: 3000
