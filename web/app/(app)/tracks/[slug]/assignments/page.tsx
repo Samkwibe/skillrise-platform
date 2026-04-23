@@ -4,6 +4,7 @@ import { requireVerifiedUser } from "@/lib/auth";
 import { getTrack } from "@/lib/store";
 import { getDb } from "@/lib/db";
 import { ensureTracksFromDatabase } from "@/lib/course/ensure-tracks";
+import { AssignmentSubmitForm } from "@/components/tracks/assignment-submit-form";
 
 export const dynamic = "force-dynamic";
 
@@ -34,10 +35,20 @@ export default async function CourseAssignmentsPage({ params }: { params: Promis
         {list.length === 0 && <p className="text-t2 text-sm">No assignments yet.</p>}
         {list.map((a) => {
           const s = mine.find((x) => x.assignmentId === a.id);
+          const locked = s?.status === "graded" || s?.status === "returned";
           return (
             <div key={a.id} className="card p-4">
               <div className="font-semibold">{a.title}</div>
               <div className="text-[12px] text-t3">Due {fmt(a.dueAt)} · {a.pointsPossible} pts</div>
+              {a.description && (
+                <p className="text-t2 text-sm mt-2 whitespace-pre-wrap">{a.description}</p>
+              )}
+              {a.rubric && (
+                <p className="text-t3 text-[12px] mt-2">
+                  <span className="font-semibold text-t2">Rubric: </span>
+                  {a.rubric}
+                </p>
+              )}
               {s && (
                 <div className="text-[13px] text-t2 mt-2">
                   Status: {s.status}
@@ -49,6 +60,13 @@ export default async function CourseAssignmentsPage({ params }: { params: Promis
                   )}
                 </div>
               )}
+              <AssignmentSubmitForm
+                trackSlug={slug}
+                assignmentId={a.id}
+                canEdit={!locked}
+                initialText={s?.textBody}
+                initialStatus={s?.status}
+              />
             </div>
           );
         })}

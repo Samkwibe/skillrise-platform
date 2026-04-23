@@ -26,5 +26,11 @@ export async function GET(
   const a = await db.getAssignment(assignmentId);
   if (!a || a.trackSlug !== trackSlug) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const subs = await db.listSubmissionsByAssignment(assignmentId);
-  return NextResponse.json({ submissions: subs });
+  const submissions = await Promise.all(
+    subs.map(async (s) => {
+      const u = await db.findUserById(s.userId);
+      return { ...s, studentName: u?.name ?? "Unknown", studentEmail: u?.email };
+    }),
+  );
+  return NextResponse.json({ submissions, assignment: a });
 }

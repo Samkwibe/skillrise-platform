@@ -39,6 +39,16 @@ export async function POST(
   }
   const prior = await db.getSubmissionByUserAssignment(user.id, assignmentId);
   const asDraft = parsed.data.asDraft;
+  if (!asDraft) {
+    const hasContent =
+      (parsed.data.textBody?.trim().length ?? 0) > 0 || (parsed.data.fileS3Keys?.length ?? 0) > 0;
+    if (!hasContent) {
+      return NextResponse.json(
+        { error: "Add written work or at least one file before submitting. Use Save draft to hold text." },
+        { status: 400 },
+      );
+    }
+  }
   if (!asDraft && (prior?.status === "graded" || prior?.status === "returned")) {
     return NextResponse.json({ error: "This submission is already graded. Ask your instructor to allow a redo." }, { status: 400 });
   }
