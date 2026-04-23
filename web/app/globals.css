@@ -213,13 +213,14 @@
 
   html {
     scroll-behavior: smooth;
+    font-size: 16px;
   }
   body {
     background: var(--bg);
     color: var(--text-1);
     @apply font-sans;
-    font-size: 16px;
-    line-height: 1.65;
+    font-size: 1rem;
+    line-height: 1.5;
     overflow-x: hidden;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
@@ -277,13 +278,13 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: 0.8125rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--g);
     background: color-mix(in srgb, var(--g) 12%, transparent);
-    padding: 5px 13px;
+    padding: 0.375rem 0.875rem;
     border-radius: 20px;
     margin-bottom: 14px;
   }
@@ -296,10 +297,10 @@
     margin-bottom: 14px;
   }
   .ss {
-    font-size: clamp(14px, 1.8vw, 17px);
+    font-size: clamp(0.9375rem, 1.8vw, 1.125rem);
     color: var(--text-2);
     max-width: 580px;
-    line-height: 1.65;
+    line-height: 1.55;
   }
   .btn {
     display: inline-flex;
@@ -311,13 +312,16 @@
     cursor: pointer;
     transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     border: none;
+    min-height: 2.75rem;
+    padding: 0.625rem 1rem;
+    font-size: 1rem;
   }
   .btn-primary {
     background: var(--g);
     color: var(--bg);
-    padding: 11px 22px;
+    padding: 0.625rem 1.25rem;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 1rem;
   }
   .btn-primary:hover {
     background: var(--g-hover);
@@ -326,9 +330,9 @@
   .btn-ghost {
     background: transparent;
     color: var(--text-1);
-    padding: 10px 20px;
+    padding: 0.625rem 1.125rem;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 1rem;
     border: 1px solid var(--border-2);
   }
   .btn-ghost:hover {
@@ -336,13 +340,15 @@
     color: var(--g);
   }
   .btn-xl {
-    padding: 15px 34px;
-    font-size: 16px;
+    min-height: 3rem;
+    padding: 0.75rem 1.75rem;
+    font-size: 1.0625rem;
     border-radius: 12px;
   }
   .btn-sm {
-    padding: 8px 16px;
-    font-size: 13px;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
     border-radius: 8px;
   }
   .reveal {
@@ -373,11 +379,11 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 11px;
+    font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    padding: 4px 10px;
+    padding: 0.3rem 0.65rem;
     border-radius: 999px;
     background: color-mix(in srgb, var(--text-1) 6%, transparent);
     color: var(--text-2);
@@ -406,8 +412,10 @@
     background: var(--surface-1);
     border: 1px solid var(--border-2);
     border-radius: 10px;
-    padding: 11px 14px;
-    font-size: 14px;
+    padding: 0.7rem 0.9rem;
+    min-height: 2.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
     color: var(--text-1);
     width: 100%;
     font-family: inherit;
@@ -420,12 +428,13 @@
   }
   .label {
     display: block;
-    font-size: 12px;
+    font-size: 0.8125rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-2);
-    margin-bottom: 6px;
+    margin-bottom: 0.4rem;
+    line-height: 1.45;
   }
   .progress-bar {
     height: 6px;

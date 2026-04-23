@@ -17,6 +17,7 @@ const PILL: Record<CourseProviderId, string> = {
   khan: "Khan Academy",
   youtube: "YouTube",
   simplilearn: "Simplilearn",
+  udemy: "Udemy",
 };
 
 export function CourseViewClient({ url, provider, title }: Props) {

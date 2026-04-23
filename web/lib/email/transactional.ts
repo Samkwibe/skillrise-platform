@@ -149,3 +149,46 @@ export async function sendPasswordResetEmail(to: string, email: string, rawToken
   const htmlBody = `<p>We received a request to reset your password.</p><p><a href="${link}">Reset password</a></p><p>This link expires in one hour. If you didn’t ask for this, you can ignore this email.</p>`;
   await sendTransactionalEmail({ to, subject, textBody, htmlBody });
 }
+
+export async function sendAssignmentGradedEmail(args: {
+  to: string;
+  courseTitle: string;
+  assignmentTitle: string;
+  score: number;
+  points: number;
+  feedback?: string;
+}) {
+  const subject = `Graded: ${args.assignmentTitle} — ${args.courseTitle}`;
+  const textBody = `Your submission for "${args.assignmentTitle}" in ${args.courseTitle} has been graded.\n\nScore: ${args.score} / ${args.points}\n${args.feedback ? `\nFeedback:\n${args.feedback}\n` : ""}\nOpen SkillRise to view details.`;
+  const htmlBody = `<p>Your submission for <strong>${args.assignmentTitle}</strong> in <strong>${args.courseTitle}</strong> has been graded.</p><p><strong>Score:</strong> ${args.score} / ${args.points}</p>${args.feedback ? `<p><strong>Feedback:</strong><br/>${args.feedback.replace(/\n/g, "<br/>")}</p>` : ""}`;
+  await sendTransactionalEmail({ to: args.to, subject, textBody, htmlBody });
+}
+
+export async function sendCourseAnnouncementEmail(args: {
+  to: string;
+  courseTitle: string;
+  title: string;
+  body: string;
+  trackSlug: string;
+}) {
+  const link = `${APP_BASE}/tracks/${encodeURIComponent(args.trackSlug)}`;
+  const subject = `${args.courseTitle}: ${args.title}`;
+  const textBody = `${args.title}\n\n${args.body}\n\nView the course: ${link}`;
+  const htmlBody = `<h2>${args.title}</h2><p>${args.body.replace(/\n/g, "<br/>")}</p><p><a href="${link}">Open course</a></p>`;
+  await sendTransactionalEmail({ to: args.to, subject, textBody, htmlBody });
+}
+
+export async function sendDirectMessageEmail(args: {
+  to: string;
+  fromName: string;
+  courseTitle: string;
+  preview: string;
+  trackSlug: string;
+  threadId: string;
+}) {
+  const link = `${APP_BASE}/tracks/${encodeURIComponent(args.trackSlug)}/messages?thread=${encodeURIComponent(args.threadId)}`;
+  const subject = `New message in ${args.courseTitle}`;
+  const textBody = `${args.fromName} sent a message in ${args.courseTitle}:\n\n${args.preview.slice(0, 500)}\n\nOpen: ${link}`;
+  const htmlBody = `<p><strong>${args.fromName}</strong> in <strong>${args.courseTitle}</strong>:</p><p>${args.preview.replace(/\n/g, "<br/>").slice(0, 800)}</p><p><a href="${link}">View messages</a></p>`;
+  await sendTransactionalEmail({ to: args.to, subject, textBody, htmlBody });
+}

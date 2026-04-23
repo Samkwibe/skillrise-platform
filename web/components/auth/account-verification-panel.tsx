@@ -12,6 +12,8 @@ type Options = {
   tempSmsInboxUrl?: string;
 };
 
+const DEV_VERIFY_SESSION_KEY = "skillrise:devEmailVerificationLink";
+
 /**
  * First-time account verification: user chooses **email (default)** or **SMS** (when the server has SMS).
  * Google sign-in users never see this shell.
@@ -20,6 +22,7 @@ export function AccountVerificationPanel() {
   const [options, setOptions] = useState<Options | null>(null);
   const [channel, setChannel] = useState<"email" | "sms">("email");
   const [devMail, setDevMail] = useState(false);
+  const [devEmailLink, setDevEmailLink] = useState<string | null>(null);
   const [st, setSt] = useState<"idle" | "loading" | "ok" | "err">("idle");
   const [msg, setMsg] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
@@ -47,6 +50,15 @@ export function AccountVerificationPanel() {
         setChannel(d.preferred);
       })
       .catch(() => setOptions({ emailAvailable: true, smsAvailable: false, preferred: "email" }));
+
+    try {
+      const fromSignup = sessionStorage.getItem(DEV_VERIFY_SESSION_KEY);
+      if (fromSignup) {
+        setDevEmailLink(fromSignup);
+      }
+    } catch {
+      // ignore
+    }
   }, []);
 
   async function setPref(next: "email" | "sms") {
@@ -68,11 +80,19 @@ export function AccountVerificationPanel() {
     setMsg(null);
     try {
       const res = await fetch("/api/auth/resend-verification", { method: "POST" });
-      const data = (await res.json()) as { error?: string; ok?: boolean };
+      const data = (await res.json()) as { error?: string; ok?: boolean; devVerificationLink?: string };
       if (!res.ok) {
         setSt("err");
         setMsg(data.error || "Couldn’t send.");
         return;
+      }
+      if (typeof data.devVerificationLink === "string" && data.devVerificationLink.length > 0) {
+        setDevEmailLink(data.devVerificationLink);
+        try {
+          sessionStorage.setItem(DEV_VERIFY_SESSION_KEY, data.devVerificationLink);
+        } catch {
+          // ignore
+        }
       }
       setSt("ok");
       setMsg("Check your inbox for a new link.");
@@ -164,6 +184,42 @@ export function AccountVerificationPanel() {
         </div>
       )}
 
+      {devEmailLink && (!options || options.emailAvailable) && channel === "email" && (
+        <div className="mt-3 rounded-md border border-g/40 bg-ink/40 px-3 py-2 text-[13px] text-t1 space-y-2">
+          <p className="text-amber-200/90 font-medium">Local dev: email link</p>
+          <p className="text-t2 text-[12px] leading-relaxed break-all">
+            <a href={devEmailLink} className="text-g underline">
+              Open verification link
+            </a>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => {
+                void navigator.clipboard.writeText(devEmailLink);
+              }}
+            >
+              Copy link
+            </button>
+            <button
+              type="button"
+              className="text-[12px] text-t2 underline"
+              onClick={() => {
+                setDevEmailLink(null);
+                try {
+                  sessionStorage.removeItem(DEV_VERIFY_SESSION_KEY);
+                } catch {
+                  // ignore
+                }
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {(!options || options.emailAvailable) && channel === "email" && (
         <div className="mt-3 space-y-2">
           <p className="text-t2 text-[13px]">
@@ -249,8 +305,9 @@ export function AccountVerificationPanel() {
       {devMail && (
         <p className="text-amber-200/80 text-[13px] mt-3 border-t border-amber-500/20 pt-2">
           <strong className="text-amber-100">Server note:</strong> This host is not using Amazon SES inboxes
-          (AUTH_EMAIL_MODE is not <code className="font-mono text-[12px]">ses</code>). Use the{" "}
-          <strong>verification link in the server terminal</strong> for email, or choose SMS if enabled.
+          (AUTH_EMAIL_MODE is not <code className="font-mono text-[12px]">ses</code>). In local development the app
+          shows the link above; you can also inspect the API response in the browser network tab, or choose SMS if
+          enabled.
         </p>
       )}
     </div>

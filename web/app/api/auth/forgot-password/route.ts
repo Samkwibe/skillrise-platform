@@ -3,6 +3,7 @@ import { forgotPasswordSchema, formatZodError } from "@/lib/validators";
 import { getDb } from "@/lib/db";
 import { randomUrlToken, hashToken } from "@/lib/security/tokens";
 import { sendPasswordResetEmail } from "@/lib/email/transactional";
+import { buildPasswordResetUrl, shouldExposeDevEmailLinkInApi } from "@/lib/email/dev-link";
 import { rateLimit, clientKey, rateLimitHeaders } from "@/lib/security/rate-limit";
 import { passwordResetTtlMs } from "@/lib/auth/security-policy";
 
@@ -36,20 +37,25 @@ export async function POST(req: Request) {
   const { email } = parsed.data;
   const db = getDb();
   const user = await db.findUserByEmail(email);
+  let rawToken: string | undefined;
   if (user) {
-    const raw = randomUrlToken();
+    rawToken = randomUrlToken();
     const now = Date.now();
     await db.updateUser(user.id, {
-      passwordResetTokenHash: hashToken(raw),
+      passwordResetTokenHash: hashToken(rawToken),
       passwordResetExpiresAt: now + passwordResetTtlMs(),
     });
     try {
-      await sendPasswordResetEmail(user.email, user.email, raw);
+      await sendPasswordResetEmail(user.email, user.email, rawToken);
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error("[forgot-password] email (user still received generic response)", e);
     }
   }
 
-  return NextResponse.json(GENERIC, { headers: rateLimitHeaders(limit) });
+  const payload: { ok: true; message: string; devPasswordResetLink?: string } = { ...GENERIC };
+  if (user && rawToken && shouldExposeDevEmailLinkInApi()) {
+    payload.devPasswordResetLink = buildPasswordResetUrl(user.email, rawToken);
+  }
+  return NextResponse.json(payload, { headers: rateLimitHeaders(limit) });
 }

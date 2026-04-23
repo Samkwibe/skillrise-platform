@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { store, id, getTrack } from "@/lib/store";
 import { getVerifiedUserForApi } from "@/lib/auth";
+import { ensureTracksFromDatabase } from "@/lib/course/ensure-tracks";
 
 export async function GET() {
   return NextResponse.json({ jobs: store.jobs.filter((j) => j.status === "open") });
@@ -12,6 +13,7 @@ export async function POST(req: Request) {
   if (user.role !== "employer" && user.role !== "admin") {
     return NextResponse.json({ error: "Only employers can post jobs." }, { status: 403 });
   }
+  await ensureTracksFromDatabase();
   const body = await req.json();
   if (!body.title || !body.description) {
     return NextResponse.json({ error: "Title and description are required." }, { status: 400 });

@@ -9,6 +9,8 @@
  *   YOUTUBE_API_KEY  Optional. If set, we query YouTube Data API v3 directly.
  */
 
+import { extractYoutubeVideoId } from "@/lib/courses/youtube-util";
+
 export type SearchVideo = {
   id: string;
   title: string;
@@ -70,7 +72,16 @@ async function searchYouTube(q: string, max: number): Promise<SearchVideo[]> {
   });
 
   const res = await fetch(`${YT_SEARCH}?${params.toString()}`, { cache: "no-store" });
-  if (!res.ok) return [];
+  if (!res.ok) {
+    const errBody = await res.text();
+    // eslint-disable-next-line no-console
+    console.error(
+      "[youtube-search] search failed HTTP %s — %s (Key missing/invalid, API disabled, restrictions, or quota. Server-side calls need a key NOT restricted to browser referrers only.)",
+      res.status,
+      errBody.slice(0, 400),
+    );
+    return [];
+  }
   const data = (await res.json()) as {
     items?: Array<{
       id?: { videoId?: string };
@@ -94,6 +105,11 @@ async function searchYouTube(q: string, max: number): Promise<SearchVideo[]> {
     key,
   });
   const vRes = await fetch(`${YT_VIDEOS}?${vParams.toString()}`, { cache: "no-store" });
+  if (!vRes.ok) {
+    const errBody = await vRes.text();
+    // eslint-disable-next-line no-console
+    console.error("[youtube-search] videos:list failed HTTP %s — %s", vRes.status, errBody.slice(0, 400));
+  }
   const vData = vRes.ok
     ? ((await vRes.json()) as {
         items?: Array<{
@@ -403,7 +419,8 @@ function curatedSearch(q: string, max: number): SearchVideo[] {
   };
 
   const out = hits.length > 0 ? hits : DEFAULT_POOL;
-  return [searchPivot, ...out].slice(0, max).map((v) => ({ ...v, source: "curated" as const }));
+  // Put the “open YouTube search” row last so real watchable hits stay up top.
+  return [...out, searchPivot].slice(0, max).map((v) => ({ ...v, source: "curated" as const }));
 }
 
 /**
@@ -460,6 +477,8 @@ export async function searchFreeVideos(q: string, max = 12): Promise<SearchResul
     if (merged.length >= max) break;
   }
 
+  merged.sort((a, b) => Number(!!b.embedUrl) - Number(!!a.embedUrl));
+
   if (merged.length > 0) {
     return {
       provider: tiered.hits.length > 0 ? "youtube" : "youtube",
@@ -485,7 +504,7 @@ export async function searchFreeVideos(q: string, max = 12): Promise<SearchResul
  * we can. Everything else returns "" so the caller knows it can't be
  * inlined and must link out.
  */
-function toEmbed(url: string): string | null {
+function toEmbed(url: string): string {
   try {
     const u = new URL(url);
     if (u.hostname.includes("youtube.com")) {
@@ -506,7 +525,12 @@ function toEmbed(url: string): string | null {
   } catch {
     // fall through
   }
-  return null;
+  return fallbackYoutubeEmbed(url);
+}
+
+function fallbackYoutubeEmbed(url: string): string {
+  const id = extractYoutubeVideoId(url);
+  return id ? ytEmbed(id) : "";
 }
 
 /** Lightweight suggestions used to pre-populate the search bar. */

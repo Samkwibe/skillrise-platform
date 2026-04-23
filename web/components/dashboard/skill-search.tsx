@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { extractYoutubeVideoId } from "@/lib/courses/youtube-util";
 
 type SearchVideo = {
   id: string;
@@ -31,6 +32,14 @@ const SUGGESTIONS = [
   "UI design",
   "Resume & interviews",
 ];
+
+function embedForSkillVideo(v: SearchVideo): string {
+  if (v.embedUrl?.trim()) return v.embedUrl.trim();
+  const id = extractYoutubeVideoId(v.url);
+  return id
+    ? `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1`
+    : "";
+}
 
 function formatViews(n?: number): string | null {
   if (!n || !Number.isFinite(n)) return null;
@@ -107,7 +116,7 @@ export function SkillSearch() {
           aria-hidden
         />
         <div className="relative">
-          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-t3 mb-2">
+          <div className="flex items-center gap-2 text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-t3 mb-2">
             <span>◎ Skill search</span>
             {provider && (
               <span
@@ -118,10 +127,10 @@ export function SkillSearch() {
               </span>
             )}
           </div>
-          <h2 className="font-display text-[20px] md:text-[22px] font-bold mb-1">
+          <h2 className="font-display text-xl md:text-2xl font-bold mb-1 leading-snug">
             What do you want to learn today?
           </h2>
-          <p className="text-t3 text-[13px] mb-4">
+          <p className="text-t3 text-[0.9375rem] leading-relaxed mb-4">
             Type any skill, job, or topic. We'll pull free videos from across the web so you can
             start learning now.
           </p>
@@ -186,10 +195,10 @@ export function SkillSearch() {
           </div>
 
           {note && !error && (
-            <div className="mt-3 text-[12px] text-t3">{note}</div>
+            <div className="mt-3 text-sm text-t3 leading-relaxed">{note}</div>
           )}
           {error && (
-            <div className="mt-3 text-[12px] text-red" style={{ color: "var(--red)" }}>
+            <div className="mt-3 text-sm text-red leading-relaxed" style={{ color: "var(--red)" }}>
               {error}
             </div>
           )}
@@ -199,7 +208,7 @@ export function SkillSearch() {
       {videos.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
           {videos.map((v) => (
-            <VideoCard key={v.id} video={v} onPlay={() => v.embedUrl && setPlaying(v)} />
+            <VideoCard key={v.id} video={v} onPlay={() => embedForSkillVideo(v) && setPlaying(v)} />
           ))}
         </div>
       )}
@@ -214,7 +223,7 @@ export function SkillSearch() {
 function VideoCard({ video, onPlay }: { video: SearchVideo; onPlay: () => void }) {
   const [imgFailed, setImgFailed] = useState(false);
   const views = formatViews(video.views);
-  const canEmbed = Boolean(video.embedUrl);
+  const canEmbed = Boolean(embedForSkillVideo(video));
 
   return (
     <article className="card card-hover overflow-hidden flex flex-col">
@@ -238,7 +247,7 @@ function VideoCard({ video, onPlay }: { video: SearchVideo; onPlay: () => void }
             onError={() => setImgFailed(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-t3 text-[13px]">
+          <div className="w-full h-full flex items-center justify-center text-t3 text-sm">
             {video.channel}
           </div>
         )}
@@ -259,16 +268,16 @@ function VideoCard({ video, onPlay }: { video: SearchVideo; onPlay: () => void }
           </span>
         )}
         <span
-          className="absolute bottom-2 right-2 text-[11px] px-1.5 py-0.5 rounded"
+          className="absolute bottom-2 right-2 text-xs px-1.5 py-0.5 rounded"
           style={{ background: "rgba(0,0,0,0.75)", color: "#fff" }}
         >
           {video.durationText}
         </span>
       </button>
-      <div className="p-3 flex-1 flex flex-col gap-1">
-        <div className="font-semibold text-[14px] leading-tight line-clamp-2">{video.title}</div>
-        <div className="text-[12px] text-t3 truncate">{video.channel}</div>
-        {views && <div className="text-[11px] text-t3">{views}</div>}
+        <div className="p-3 sm:p-4 flex-1 flex flex-col gap-1.5">
+        <div className="font-semibold text-lg leading-snug line-clamp-2">{video.title}</div>
+        <div className="text-sm text-t3 truncate leading-normal">{video.channel}</div>
+        {views && <div className="text-xs text-t3">{views}</div>}
         <div className="mt-auto pt-2 flex gap-2">
           {canEmbed && (
             <button type="button" onClick={onPlay} className="btn btn-ghost btn-sm">
@@ -290,6 +299,7 @@ function VideoCard({ video, onPlay }: { video: SearchVideo; onPlay: () => void }
 }
 
 function VideoModal({ video, onClose }: { video: SearchVideo; onClose: () => void }) {
+  const src = embedForSkillVideo(video);
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in"
@@ -308,8 +318,8 @@ function VideoModal({ video, onClose }: { video: SearchVideo; onClose: () => voi
           style={{ borderColor: "var(--border-1)" }}
         >
           <div className="min-w-0">
-            <div className="font-semibold text-[14px] truncate">{video.title}</div>
-            <div className="text-[12px] text-t3 truncate">{video.channel}</div>
+            <div className="font-semibold text-base sm:text-lg truncate leading-snug">{video.title}</div>
+            <div className="text-sm text-t3 truncate mt-0.5">{video.channel}</div>
           </div>
           <button
             type="button"
@@ -322,7 +332,7 @@ function VideoModal({ video, onClose }: { video: SearchVideo; onClose: () => voi
         </div>
         <div className="relative w-full" style={{ aspectRatio: "16 / 9" }}>
           <iframe
-            src={`${video.embedUrl}${video.embedUrl.includes("?") ? "&" : "?"}autoplay=1`}
+            src={`${src}${src.includes("?") ? "&" : "?"}autoplay=1`}
             title={video.title}
             className="absolute inset-0 w-full h-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -330,12 +340,12 @@ function VideoModal({ video, onClose }: { video: SearchVideo; onClose: () => voi
             referrerPolicy="strict-origin-when-cross-origin"
           />
         </div>
-        <div className="p-3 flex items-center justify-between gap-2">
+        <div className="p-3 sm:p-4 flex items-center justify-between gap-2">
           <a
             href={video.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[12px] text-t2 underline"
+            className="text-sm text-t2 underline leading-normal"
           >
             Open on YouTube ↗
           </a>

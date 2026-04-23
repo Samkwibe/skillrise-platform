@@ -28,8 +28,13 @@ export default async function TeachStudio() {
         subtitle="Record lessons, host live sessions, build full tracks — and see exactly how many lives you changed."
         right={
           <>
-            <Link href="/teach/record" className="btn btn-primary btn-sm">+ Record a lesson</Link>
+            <Link href="/teach/courses" className="btn btn-primary btn-sm">Course builder</Link>
+            <Link href="/teach/record" className="btn btn-ghost btn-sm">+ Record a lesson</Link>
             <Link href="/teach/live" className="btn btn-ghost btn-sm">+ Schedule live</Link>
+            <Link href="/teach/quizzes" className="btn btn-ghost btn-sm">Video quizzes</Link>
+            <Link href="/teach/ai" className="btn btn-ghost btn-sm">AI assistant</Link>
+            <Link href="/teach/students" className="btn btn-ghost btn-sm">Student success</Link>
+            <Link href="/teach/impact" className="btn btn-ghost btn-sm">Community impact</Link>
           </>
         }
       />

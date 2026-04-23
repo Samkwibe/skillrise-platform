@@ -1,29 +1,70 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getTrack, store, findUserById } from "@/lib/store";
+import { getTrack, findUserById, store, type Job } from "@/lib/store";
 import { requireVerifiedUser } from "@/lib/auth";
 import { Avatar } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { EnrollButton } from "@/components/enroll-button";
+import { groupModulesIntoUnits } from "@/lib/course/outline";
+import { ensureTracksFromDatabase } from "@/lib/course/ensure-tracks";
+import { getDb } from "@/lib/db";
+import { getMissingPrerequisites } from "@/lib/services/prerequisites";
 
 export const dynamic = "force-dynamic";
 
-export default async function TrackDetail({ params }: { params: Promise<{ slug: string }> }) {
+export default async function TrackDetail({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { slug } = await params;
+  const sp = await searchParams;
   const user = await requireVerifiedUser();
+  await ensureTracksFromDatabase();
   const track = getTrack(slug);
   if (!track) return notFound();
 
   const teacher = findUserById(track.teacherId);
-  const enrollment = store.enrollments.find((e) => e.userId === user.id && e.trackSlug === track.slug);
+  const db = getDb();
+  await db.ready();
+  const enrollment = await db.getEnrollment(user.id, track.slug);
+  const prereqMissing = enrollment
+    ? await getMissingPrerequisites(user.id, track)
+    : [];
+  const showPending =
+    (typeof sp?.pending === "string" && sp.pending === "1") || Boolean(enrollment?.pendingApproval);
+  const showPrereq = typeof sp?.prereq === "string" && sp.prereq === "1";
   const pct = enrollment ? Math.round((enrollment.completedModuleIds.length / track.modules.length) * 100) : 0;
-  const jobs = store.jobs.filter((j) => j.requiredTrackSlug === track.slug && j.status === "open");
+  const jobs = store.jobs.filter((j: Job) => j.requiredTrackSlug === track.slug && j.status === "open");
+  const units = groupModulesIntoUnits(track.modules);
+  const prereqTitles = (track.prerequisiteSlugs ?? [])
+    .map((s) => getTrack(s)?.title ?? s)
+    .filter(Boolean);
 
   return (
     <div className="section-pad-x py-10">
       <div className="grid lg:grid-cols-[1fr_360px] gap-8">
         <div>
           <Link href="/tracks" className="text-[13px] text-t3 underline">← All tracks</Link>
+          {showPending && (
+            <div className="mt-3 text-[13px] rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-100">
+              Your enrollment is waiting for instructor approval. You can browse the course outline; lesson access
+              starts after approval.
+            </div>
+          )}
+          {showPrereq && enrollment && prereqMissing.length > 0 && (
+            <div className="mt-3 text-[13px] rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-rose-100">
+              Complete these courses first: {prereqMissing.map((s) => getTrack(s)?.title ?? s).join(", ")}. Then
+              you can open lessons here.
+            </div>
+          )}
+          {prereqTitles.length > 0 && !enrollment && (
+            <div className="mt-3 text-[12px] text-t3">
+              Requires: {prereqTitles.join(" · ")}
+            </div>
+          )}
           <div className="flex items-center gap-3 mt-3 mb-2">
             <div className="w-14 h-14 rounded-[12px] flex items-center justify-center text-[28px]" style={{ background: `rgba(${track.color},0.14)` }}>{track.heroEmoji}</div>
             <div>
@@ -49,34 +90,52 @@ export default async function TrackDetail({ params }: { params: Promise<{ slug: 
           </div>
 
           <h2 className="font-display text-[20px] font-bold mb-3">Curriculum</h2>
-          <div className="flex flex-col gap-2 mb-10">
-            {track.modules.map((m, i) => {
-              const done = enrollment?.completedModuleIds.includes(m.id);
-              return (
-                <div key={m.id} className={`card p-4 flex items-center gap-4 ${done ? "border-g" : ""}`} style={done ? { borderColor: "rgba(31,200,126,0.4)" } : {}}>
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-[13px] shrink-0 ${done ? "bg-g text-ink" : "bg-[rgba(255,255,255,0.08)] text-t2"}`}>
-                    {done ? "✓" : i + 1}
+          <div className="flex flex-col gap-6 mb-10">
+            {(() => {
+              let globalIndex = 0;
+              return units.map((unit) => (
+                <div key={unit.id}>
+                  {units.length > 1 && <h3 className="text-[15px] font-bold text-t2 mb-2">{unit.title}</h3>}
+                  <div className="flex flex-col gap-2">
+                    {unit.lessons.map((m) => {
+                      globalIndex += 1;
+                      const i = globalIndex - 1;
+                      const done = enrollment?.completedModuleIds.includes(m.id);
+                      return (
+                        <div key={m.id} className={`card p-4 flex items-center gap-4 ${done ? "border-g" : ""}`} style={done ? { borderColor: "rgba(31,200,126,0.4)" } : {}}>
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-[13px] shrink-0 ${done ? "bg-g text-ink" : "bg-[rgba(255,255,255,0.08)] text-t2"}`}>
+                            {done ? "✓" : i + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-[14px] flex flex-wrap items-center gap-2">
+                              {m.title}
+                              {m.isPreview && <span className="pill pill-g text-[10px]">Preview</span>}
+                            </div>
+                            <div className="text-[12px] text-t3 truncate">{m.summary}</div>
+                          </div>
+                          <div className="text-[12px] text-t3 hidden sm:block shrink-0">{m.duration}</div>
+                          {enrollment && (
+                            <Link href={`/learn/${track.slug}/${m.id}`} className="btn btn-ghost btn-sm">
+                              {done ? "Review" : "Open"}
+                            </Link>
+                          )}
+                          {!enrollment && m.isPreview && (
+                            <Link href={`/learn/${track.slug}/${m.id}`} className="btn btn-ghost btn-sm">Preview</Link>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-[14px]">{m.title}</div>
-                    <div className="text-[12px] text-t3 truncate">{m.summary}</div>
-                  </div>
-                  <div className="text-[12px] text-t3 hidden sm:block">{m.duration}</div>
-                  {enrollment && (
-                    <Link href={`/learn/${track.slug}/${m.id}`} className="btn btn-ghost btn-sm">
-                      {done ? "Review" : "Open"}
-                    </Link>
-                  )}
                 </div>
-              );
-            })}
+              ));
+            })()}
           </div>
 
           {jobs.length > 0 && (
             <>
               <h2 className="font-display text-[20px] font-bold mb-3">Local jobs waiting for graduates</h2>
               <div className="grid gap-3 mb-6">
-                {jobs.map((j) => (
+                {jobs.map((j: Job) => (
                   <Link key={j.id} href={`/jobs/${j.id}`} className="card card-hover p-4 flex items-center justify-between">
                     <div>
                       <div className="font-semibold">{j.title} · {j.company}</div>
@@ -97,9 +156,26 @@ export default async function TrackDetail({ params }: { params: Promise<{ slug: 
                 <div className="text-[13px] text-t3 mb-1">You're enrolled</div>
                 <div className="font-display text-[28px] font-extrabold mb-2">{pct}%</div>
                 <Progress value={pct} />
-                <Link href={`/learn/${track.slug}/${track.modules.find((m) => !enrollment.completedModuleIds.includes(m.id))?.id ?? track.modules[0].id}`} className="btn btn-primary w-full mt-4 justify-center">
-                  {pct === 100 ? "Review" : "Continue learning"}
-                </Link>
+                <div className="flex flex-col gap-2 mt-2">
+                  <Link
+                    href={`/learn/${track.slug}/${track.modules.find((m) => !enrollment.completedModuleIds.includes(m.id))?.id ?? track.modules[0].id}`}
+                    className="btn btn-primary w-full justify-center"
+                  >
+                    {pct === 100 ? "Review" : "Continue learning"}
+                  </Link>
+                  <Link href={`/tracks/${track.slug}/assignments`} className="btn btn-ghost w-full justify-center text-[13px]">
+                    Assignments
+                  </Link>
+                  <Link href={`/tracks/${track.slug}/announcements`} className="btn btn-ghost w-full justify-center text-[13px]">
+                    Announcements
+                  </Link>
+                  <Link href={`/tracks/${track.slug}/forum`} className="btn btn-ghost w-full justify-center text-[13px]">
+                    Discussion
+                  </Link>
+                  <Link href={`/tracks/${track.slug}/messages`} className="btn btn-ghost w-full justify-center text-[13px]">
+                    Messages
+                  </Link>
+                </div>
               </>
             ) : (
               <>

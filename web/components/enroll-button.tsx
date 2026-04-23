@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function EnrollButton({ trackSlug }: { trackSlug: string }) {
+export function EnrollButton({ trackSlug, inviteToken }: { trackSlug: string; inviteToken?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -17,7 +17,7 @@ export function EnrollButton({ trackSlug }: { trackSlug: string }) {
           const res = await fetch("/api/enrollments", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ trackSlug }),
+            body: JSON.stringify({ trackSlug, inviteToken: inviteToken || undefined }),
           });
           setBusy(false);
           if (!res.ok) {

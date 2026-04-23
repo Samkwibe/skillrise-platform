@@ -7,7 +7,7 @@ import { stableCourseId } from "@/lib/courses/ids";
 
 export const dynamic = "force-dynamic";
 
-const allowed = new Set<CourseProviderId>(["coursera", "openlibrary", "mit", "khan", "youtube", "simplilearn"]);
+const allowed = new Set<CourseProviderId>(["coursera", "openlibrary", "mit", "khan", "youtube", "simplilearn", "udemy"]);
 
 export default async function CourseLearnPage({
   searchParams,
@@ -18,6 +18,7 @@ export default async function CourseLearnPage({
     provider?: string;
     title?: string;
     v?: string;
+    t?: string;
   }>;
 }) {
   await requireVerifiedUser();
@@ -57,6 +58,12 @@ export default async function CourseLearnPage({
   const expectedKey = stableCourseId(provider, url);
   const courseKey = sp.k && sp.k === expectedKey ? sp.k : expectedKey;
   const initVideo = sp.v ? decodeURIComponent(sp.v) : undefined;
+  const resumeAtSec = (() => {
+    const t = sp.t?.trim();
+    if (!t) return 0;
+    const n = Number(t);
+    return Number.isFinite(n) && n > 0 ? Math.min(Math.floor(n), 1_000_000) : 0;
+  })();
 
   return (
     <div className="section-pad-x py-6 md:py-8 max-w-[1400px] mx-auto">
@@ -77,6 +84,7 @@ export default async function CourseLearnPage({
           provider={provider}
           title={title}
           initVideoId={initVideo}
+          resumeAtSec={resumeAtSec}
         />
       </div>
     </div>

@@ -26,7 +26,16 @@ export async function searchYouTubeEducational(query: string, limit: number): Pr
 
   try {
     const res = await fetch(`${SEARCH}?${sp}`, { cache: "no-store" });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      const errBody = await res.text();
+      // eslint-disable-next-line no-console
+      console.error(
+        "[courses/youtube] search failed HTTP %s — %s",
+        res.status,
+        errBody.slice(0, 400),
+      );
+      return [];
+    }
     const data = (await res.json()) as {
       items?: Array<{
         id?: { videoId?: string };

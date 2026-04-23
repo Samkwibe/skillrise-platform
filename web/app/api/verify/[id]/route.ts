@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { store, findUserById, getTrack } from "@/lib/store";
+import { ensureTracksFromDatabase } from "@/lib/course/ensure-tracks";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const cert = store.certificates.find((c) => c.id === id);
   if (!cert) return NextResponse.json({ error: "Credential not found." }, { status: 404 });
   const owner = findUserById(cert.userId);
+  await ensureTracksFromDatabase();
   const track = getTrack(cert.trackSlug);
   return NextResponse.json({
     certificate: {

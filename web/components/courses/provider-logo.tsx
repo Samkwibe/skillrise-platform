@@ -7,6 +7,7 @@ const EMOJI: Record<CourseProviderId, string> = {
   khan: "🧮",
   youtube: "▶️",
   simplilearn: "✨",
+  udemy: "🦉",
 };
 
 const LABEL: Record<CourseProviderId, string> = {
@@ -16,6 +17,7 @@ const LABEL: Record<CourseProviderId, string> = {
   khan: "Khan",
   youtube: "YouTube",
   simplilearn: "Simplilearn",
+  udemy: "Udemy",
 };
 
 export function ProviderMark({

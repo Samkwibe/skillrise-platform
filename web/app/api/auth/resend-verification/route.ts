@@ -4,6 +4,8 @@ import { getDb } from "@/lib/db";
 import { publicUser } from "@/lib/store";
 import { randomUrlToken, hashToken } from "@/lib/security/tokens";
 import { sendEmailVerificationEmail } from "@/lib/email/transactional";
+import { getAuthEmailDispatch } from "@/lib/email/config";
+import { buildEmailVerificationUrl, shouldExposeDevEmailLinkInApi } from "@/lib/email/dev-link";
 import { rateLimit, clientKey, rateLimitHeaders } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -43,17 +45,21 @@ export async function POST(req: Request) {
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error("[resend-verification] email", e);
-    return NextResponse.json(
-      {
-        error:
-          "We could not send the email. Check that AUTH_EMAIL_MODE=ses, AWS_SES_FROM, and SES permissions are set; see server logs for details.",
-      },
-      { status: 503, headers: rateLimitHeaders(limit) },
-    );
+    const detail = e instanceof Error ? e.message : String(e);
+    const hint =
+      getAuthEmailDispatch() === "ses"
+        ? `SES could not send this email (${detail}). Check AWS credentials, AWS_SES_FROM, region, and that the From identity and (in sandbox) the recipient are verified.`
+        : `Could not complete email step (${detail}). If you are running locally, set AUTH_EMAIL_MODE=dev in .env.local unless you are intentionally testing Amazon SES.`;
+    return NextResponse.json({ error: hint }, { status: 503, headers: rateLimitHeaders(limit) });
   }
 
-  return NextResponse.json(
-    { ok: true, user: publicUser(updated) },
-    { status: 200, headers: rateLimitHeaders(limit) },
-  );
+  const payload: {
+    ok: true;
+    user: ReturnType<typeof publicUser>;
+    devVerificationLink?: string;
+  } = { ok: true, user: publicUser(updated) };
+  if (shouldExposeDevEmailLinkInApi()) {
+    payload.devVerificationLink = buildEmailVerificationUrl(user.email, raw);
+  }
+  return NextResponse.json(payload, { status: 200, headers: rateLimitHeaders(limit) });
 }

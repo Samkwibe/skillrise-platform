@@ -4,11 +4,13 @@ import { searchCoursera } from "./providers/coursera";
 import { searchKhan, searchMIT } from "./providers/mit-khan";
 import { searchYouTubeEducational } from "./providers/youtube";
 import { searchSimplilearn } from "./providers/simplilearn";
+import { searchUdemyFree } from "./providers/udemy";
 import { cached } from "@/lib/cache/tiered-cache";
 
 const ALL: CourseProviderId[] = [
   "coursera",
   "youtube",
+  "udemy",
   "openlibrary",
   "mit",
   "khan",
@@ -71,6 +73,10 @@ async function run(
         } else if (p === "simplilearn") {
           const r = await searchSimplilearn(query, perProvider);
           byProvider.push({ id: p, count: r.courses.length, skipped: r.skipped });
+          bucket.push(...r.courses);
+        } else if (p === "udemy") {
+          const r = await searchUdemyFree(query, perProvider);
+          byProvider.push({ id: p, count: r.courses.length, skipped: r.skipped, error: r.error });
           bucket.push(...r.courses);
         }
       } catch (e) {

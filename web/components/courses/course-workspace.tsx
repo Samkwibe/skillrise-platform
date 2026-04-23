@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CourseProviderId } from "@/lib/courses/types";
 import type { LearningHubCourseState, LearningHubNote } from "@/lib/store";
 import { extractYoutubeVideoId } from "@/lib/courses/youtube-util";
+import { resolveCoursePlayTarget } from "@/lib/media/course-play-url";
+import { createYTPlayer, type YTPlayerInstance } from "@/lib/youtube/iframe-api";
 import { ProviderMark, providerLabel } from "@/components/courses/provider-logo";
 
 const ReactPlayer = dynamic(() => import("react-player/lazy"), { ssr: false });
@@ -17,6 +19,8 @@ type Props = {
   title: string;
   imageUrl?: string;
   initVideoId?: string;
+  /** From URL: resume at this time (sec). Merged with saved hub state on load. */
+  resumeAtSec?: number;
 };
 
 function fmtT(sec: number): string {
@@ -27,31 +31,43 @@ function fmtT(sec: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, initVideoId }: Props) {
+export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, initVideoId, resumeAtSec = 0 }: Props) {
   const [hub, setHub] = useState<LearningHubCourseState | null>(null);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const playedRef = useRef(0);
+  const durationRef = useRef(0);
+  const hubRef = useRef<LearningHubCourseState | null>(null);
   const playerRef = useRef<{
     seekTo?: (a: number, t: "seconds" | "fraction" | "seconds") => void;
     getInternalPlayer?: () => { setPlaybackRate?: (n: number) => void };
   } | null>(null);
+  const youtubeIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const youtubePlayerRef = useRef<YTPlayerInstance | null>(null);
+  const [ytHostEl, setYtHostEl] = useState<HTMLDivElement | null>(null);
+  const [useYtApi, setUseYtApi] = useState(true);
+  const ytDidSeek = useRef(false);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [nowSec, setNowSec] = useState(0);
   const [related, setRelated] = useState<
     { id: string; title: string; url: string; provider: string; imageUrl?: string }[]
   >([]);
 
-  const videoId = useMemo(() => {
-    if (initVideoId) return initVideoId;
-    if (provider === "youtube") return extractYoutubeVideoId(url);
-    return extractYoutubeVideoId(url);
-  }, [url, provider, initVideoId]);
+  const videoId = useMemo(
+    () => (initVideoId?.trim() ? initVideoId.trim() : null) || extractYoutubeVideoId(url) || null,
+    [url, initVideoId],
+  );
 
-  const playUrl = videoId
-    ? `https://www.youtube.com/watch?v=${videoId}`
-    : url;
+  useEffect(() => {
+    setUseYtApi(true);
+  }, [videoId]);
+
+  const play = useMemo(() => resolveCoursePlayTarget(url, initVideoId), [url, initVideoId]);
+
+  /** Native iframe is reliable; react-player/lazy often shows an empty black area for YouTube. */
+  const useYoutubeIframe = play.kind === "player" && Boolean(videoId);
+  const useFileOrVimeoPlayer = play.kind === "player" && !videoId;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -79,6 +95,151 @@ export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, ini
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    hubRef.current = hub;
+  }, [hub]);
+
+  /** YouTube IFrame API — accurate time + 10s progress sync. Falls back to basic iframe if the SDK errors. */
+  useEffect(() => {
+    if (!useYoutubeIframe || !videoId || !useYtApi || !ytHostEl) return;
+    const el = ytHostEl;
+    let dead = false;
+    ytDidSeek.current = false;
+    void (async () => {
+      try {
+        await createYTPlayer(
+          el,
+          videoId,
+          (p) => {
+            if (dead) return;
+            youtubePlayerRef.current = p;
+            try {
+              const d = p.getDuration();
+              if (d > 0) durationRef.current = d;
+            } catch {
+              // ignore
+            }
+            if (!ytDidSeek.current) {
+              const start = Math.max(resumeAtSec, hubRef.current?.lastPositionSec ?? 0);
+              if (start > 0) p.seekTo(start, true);
+              ytDidSeek.current = true;
+            }
+            try {
+              setNowSec(p.getCurrentTime());
+            } catch {
+              // ignore
+            }
+          },
+          () => {
+            setUseYtApi(false);
+          },
+        );
+      } catch {
+        setUseYtApi(false);
+      }
+    })();
+    return () => {
+      dead = true;
+      try {
+        youtubePlayerRef.current?.destroy();
+      } catch {
+        // ignore
+      }
+      youtubePlayerRef.current = null;
+    };
+  }, [useYoutubeIframe, videoId, useYtApi, resumeAtSec, ytHostEl]);
+
+  /** Tick "current time" for notes UI + background position. */
+  useEffect(() => {
+    if (!useYoutubeIframe && !useFileOrVimeoPlayer) return;
+    const iv = window.setInterval(() => {
+      try {
+        if (youtubePlayerRef.current) {
+          const t = youtubePlayerRef.current.getCurrentTime();
+          setNowSec(t);
+          playedRef.current = t;
+        }
+      } catch {
+        // ignore
+      }
+    }, 1_000);
+    return () => window.clearInterval(iv);
+  }, [useYoutubeIframe, useFileOrVimeoPlayer, videoId, useYtApi]);
+
+  /** Auto-persist every 10s for embeddable players (YouTube IFrame, Vimeo, file). YouTube iframe fallback has no time API. */
+  useEffect(() => {
+    if (!useYoutubeIframe && !useFileOrVimeoPlayer) return;
+    if (useYoutubeIframe && !useYtApi) return;
+    const tick = () => {
+      const base = hubRef.current;
+      if (!base) return;
+      let pos = 0;
+      let dur = durationRef.current;
+      try {
+        if (youtubePlayerRef.current) {
+          pos = youtubePlayerRef.current.getCurrentTime();
+          const d2 = youtubePlayerRef.current.getDuration();
+          if (d2 > 0) {
+            durationRef.current = d2;
+            dur = d2;
+          }
+        } else {
+          pos = playedRef.current;
+        }
+      } catch {
+        return;
+      }
+      const posFloor = Math.max(0, Math.floor(pos));
+      const nextPct = dur > 0 ? Math.min(100, Math.round((100 * pos) / dur)) : base.progressPct;
+      void (async () => {
+        setHub((h) =>
+          h
+            ? {
+                ...h,
+                lastPositionSec: posFloor,
+                videoDurationSec: dur > 0 ? dur : h.videoDurationSec,
+                progressPct: dur > 0 ? nextPct : h.progressPct,
+                updatedAt: Date.now(),
+              }
+            : h,
+        );
+        const merged = {
+          ...base,
+          lastPositionSec: posFloor,
+          videoDurationSec: dur > 0 ? dur : base.videoDurationSec,
+          progressPct: dur > 0 ? nextPct : base.progressPct,
+          updatedAt: Date.now(),
+        };
+        const res = await fetch("/api/me/learning-hub", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            key: courseKey,
+            provider: merged.provider,
+            title: merged.title,
+            url: merged.url,
+            imageUrl: merged.imageUrl,
+            primaryVideoId: merged.primaryVideoId,
+            lastPositionSec: merged.lastPositionSec,
+            videoDurationSec: merged.videoDurationSec,
+            progressPct: merged.progressPct,
+            completed: merged.completed,
+            notes: merged.notes,
+          }),
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { state: LearningHubCourseState };
+          if (data.state) {
+            setHub(data.state);
+            hubRef.current = data.state;
+          }
+        }
+      })();
+    };
+    const id = window.setInterval(tick, 10_000);
+    return () => window.clearInterval(id);
+  }, [courseKey, useYoutubeIframe, useFileOrVimeoPlayer, useYtApi, provider, title, url, imageUrl, videoId]);
 
   const persist = useCallback(
     async (next: Partial<LearningHubCourseState> & { notes?: LearningHubNote[] }) => {
@@ -112,14 +273,19 @@ export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, ini
             url: merged.url,
             imageUrl: merged.imageUrl,
             primaryVideoId: merged.primaryVideoId,
+            lastPositionSec: merged.lastPositionSec,
+            videoDurationSec: merged.videoDurationSec,
             progressPct: merged.progressPct,
             completed: merged.completed,
             notes: merged.notes,
           }),
         });
         if (res.ok) {
-          const data = await res.json();
-          if (data.state) setHub(data.state);
+          const data = (await res.json()) as { state: LearningHubCourseState };
+          if (data.state) {
+            setHub(data.state);
+            hubRef.current = data.state;
+          }
         }
       } finally {
         setSaving(false);
@@ -166,9 +332,37 @@ export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, ini
     [hub?.notes, scheduleSaveNotes],
   );
 
-  const seekTo = useCallback((sec: number) => {
-    playerRef.current?.seekTo?.(sec, "seconds");
-  }, []);
+  const seekTo = useCallback(
+    (sec: number) => {
+      if (useYoutubeIframe && videoId) {
+        const start = Math.max(0, Math.floor(sec));
+        if (youtubePlayerRef.current) {
+          try {
+            youtubePlayerRef.current.seekTo(start, true);
+            setNowSec(start);
+            playedRef.current = start;
+            return;
+          } catch {
+            // fall through
+          }
+        }
+        const q = new URLSearchParams({
+          rel: "0",
+          modestbranding: "1",
+          playsinline: "1",
+          start: String(start),
+          autoplay: "1",
+        });
+        const el = youtubeIframeRef.current;
+        if (el) {
+          el.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?${q.toString()}`;
+        }
+        return;
+      }
+      playerRef.current?.seekTo?.(sec, "seconds");
+    },
+    [useYoutubeIframe, videoId],
+  );
 
   const setRate = useCallback((r: number) => {
     setPlaybackRate(r);
@@ -218,15 +412,28 @@ export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, ini
           {title}
         </h1>
 
-        {/* Main player */}
+        {/* Main player — use absolute fill so react-player always gets a real box (percent heights + aspect-ratio). */}
         <div
-          className="relative w-full rounded-[12px] overflow-hidden bg-black border border-border1"
-          style={{ aspectRatio: "16/9" }}
+          className="relative w-full aspect-video max-h-[80vh] rounded-[12px] overflow-hidden bg-black border border-border1"
         >
-          {videoId ? (
+          {useYoutubeIframe && videoId && useYtApi ? (
+            <div ref={setYtHostEl} className="absolute top-0 left-0 h-full w-full" />
+          ) : useYoutubeIframe && videoId && !useYtApi ? (
+            <iframe
+              ref={youtubeIframeRef}
+              className="absolute top-0 left-0 h-full w-full border-0"
+              title={title}
+              src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?rel=0&modestbranding=1&playsinline=1`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          ) : useFileOrVimeoPlayer ? (
             <ReactPlayer
               ref={playerRef as never}
-              url={playUrl}
+              className="absolute top-0 left-0 w-full h-full"
+              style={{ position: "absolute", top: 0, left: 0 }}
+              url={play.playUrl}
               width="100%"
               height="100%"
               controls
@@ -236,18 +443,22 @@ export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, ini
                 playedRef.current = e.playedSeconds;
                 setNowSec(e.playedSeconds);
               }}
+              onDuration={(d) => {
+                if (d > 0) durationRef.current = d;
+              }}
               onReady={() => {
                 setRate(playbackRate);
               }}
               config={{
-                youtube: {
-                  playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
-                },
+                vimeo: { playerOptions: { responsive: true } },
               }}
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-4 text-center text-white/90 text-[14px]">
-              <p>This source opens on the provider site (many don’t allow embedding in an iframe).</p>
+              <p>
+                This course link opens on the provider site (Coursera, Open Library, etc. don’t expose an embeddable
+                video URL from search).
+              </p>
               <a
                 href={url}
                 target="_blank"
@@ -255,13 +466,13 @@ export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, ini
                 className="btn btn-primary"
                 style={{ background: "var(--g)", color: "var(--bg)" }}
               >
-                Open on {providerLabel(provider)} ↗
+                Watch on {providerLabel(provider)} ↗
               </a>
             </div>
           )}
         </div>
 
-        {videoId && (
+        {play.kind === "player" && useFileOrVimeoPlayer && (
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11px] text-t3 uppercase">Speed</span>
             {[0.5, 0.75, 1, 1.25, 1.5, 2].map((r) => (
@@ -283,11 +494,11 @@ export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, ini
               Course outline
             </h2>
             <p className="text-[12.5px] text-t2">
-              {videoId
+              {play.kind === "player" && videoId
                 ? "We’ll import chapter lists automatically when a provider gives them. For YouTube, use notes with timestamps to build your own outline."
                 : "Follow along on the provider site. Use notes on the right to track what matters."}
             </p>
-            {videoId && (
+            {play.kind === "player" && videoId && (
               <ul className="mt-2 text-[12.5px] text-t2 space-y-1">
                 <li>• Primary video (this page)</li>
                 <li>• Use “Jump to” in notes for your own milestones</li>
@@ -310,9 +521,17 @@ export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, ini
             <div className="text-[12px] font-bold mb-1" style={{ fontFamily: "var(--role-font-display)" }}>
               Progress
             </div>
+            <p className="text-[0.7rem] text-t3 mb-1">
+              {useYoutubeIframe && !useYtApi
+                ? "Basic embed: use +10% or mark complete. For automatic time, allow the IFrame player."
+                : "Watched time and percent save to your account about every 10s."}
+            </p>
             <div className="progress-bar w-full sm:w-[200px]">
               <span style={{ width: `${hub?.progressPct ?? 0}%` }} />
             </div>
+            {hub?.lastPositionSec != null && hub.lastPositionSec > 0 && (
+              <p className="text-xs text-t2 mt-1">Resuming near {fmtT(hub.lastPositionSec)}</p>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -347,15 +566,25 @@ export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, ini
           </h2>
           <div className="grid sm:grid-cols-2 gap-2">
             {related.length === 0 && <p className="text-[12.5px] text-t3">Run a course search to see more.</p>}
-            {related.map((r) => (
-              <Link
-                key={r.id}
-                href={`/courses/learn?k=${r.id}&url=${encodeURIComponent(r.url)}&provider=${r.provider}&title=${encodeURIComponent(r.title)}`}
-                className="card p-3 card-hover text-[12.5px] font-medium line-clamp-2"
-              >
-                {r.title}
-              </Link>
-            ))}
+            {related.map((r) => {
+              const vid = extractYoutubeVideoId(r.url);
+              const qs = new URLSearchParams({
+                k: r.id,
+                url: r.url,
+                provider: r.provider,
+                title: r.title,
+              });
+              if (vid) qs.set("v", vid);
+              return (
+                <Link
+                  key={r.id}
+                  href={`/courses/learn?${qs.toString()}`}
+                  className="card p-3 card-hover text-[12.5px] font-medium line-clamp-2"
+                >
+                  {r.title}
+                </Link>
+              );
+            })}
           </div>
         </section>
       </div>
@@ -379,7 +608,7 @@ export function CourseWorkspace({ courseKey, url, provider, title, imageUrl, ini
             .sort((a, b) => a.tSec - b.tSec)
             .map((n) => (
               <li key={n.id} className="border-b border-border1 pb-3 last:border-0">
-                {videoId && (
+                {play.kind === "player" && videoId && (
                   <button
                     type="button"
                     className="text-[11px] text-g font-mono mb-1 underline"

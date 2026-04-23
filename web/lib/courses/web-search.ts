@@ -83,7 +83,9 @@ export async function searchSiteCourses(
           ? "Khan Academy"
           : provider === "simplilearn"
             ? "Simplilearn"
-            : "Web";
+            : provider === "udemy"
+              ? "Udemy"
+              : "Web";
     courses.push({
       id: stableCourseId(provider, u.toString()),
       provider,

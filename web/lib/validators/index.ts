@@ -123,6 +123,9 @@ export const assistantAskSchema = z.object({
     .default([]),
 });
 
+/** Same shape as assistant; used by /api/teacher/assistant. */
+export const teacherAssistantAskSchema = assistantAskSchema;
+
 export const challengeSchema = z.object({
   day: z.number().int().min(1).max(30),
   completed: z.boolean(),
@@ -174,6 +177,7 @@ const courseProviderEnum = z.enum([
   "khan",
   "youtube",
   "simplilearn",
+  "udemy",
 ]);
 
 export const courseSearchSchema = z.object({
@@ -211,6 +215,8 @@ export const learningHubPatchSchema = z.object({
   url: z.string().url().max(2000),
   imageUrl: z.string().url().max(2000).optional(),
   primaryVideoId: z.string().max(32).optional(),
+  lastPositionSec: z.number().min(0).max(1_000_000).optional(),
+  videoDurationSec: z.number().min(0).max(1_000_000).optional(),
   progressPct: z.number().int().min(0).max(100).optional(),
   completed: z.boolean().optional(),
   notes: z.array(learningHubNoteSchema).max(200).optional(),
@@ -226,6 +232,217 @@ export const phoneVerifyActionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("verify"), code: z.string().regex(/^\d{6}$/, "Use the 6-digit code") }),
   z.object({ action: z.literal("remove") }),
 ]);
+
+const quizQuestionInputSchema = z
+  .object({
+    id: z.string().min(4).max(40).optional(),
+    prompt: z.string().min(1).max(2000),
+    options: z.array(z.string().min(1).max(500)).min(2).max(4),
+    correctIndex: z.number().int().min(0).max(3),
+  })
+  .refine((d) => d.correctIndex < d.options.length, {
+    message: "correctIndex must point to an existing option",
+    path: ["correctIndex"],
+  });
+
+export const teacherQuizCreateSchema = z
+  .object({
+    courseKey: z.string().min(8).max(40),
+    youtubeVideoId: z
+      .string()
+      .max(20)
+      .optional()
+      .transform((s) => (s == null || s.trim() === "" ? undefined : s.trim())),
+    title: z.string().min(1).max(200),
+    kind: z.enum(["checkpoint", "final"]),
+    triggerAtSec: z.number().min(0).max(1_000_000).optional(),
+    passPct: z.number().int().min(0).max(100),
+    maxAttempts: z.number().int().min(1).max(10),
+    questions: z.array(quizQuestionInputSchema).min(1).max(40),
+  })
+  .refine(
+    (d) =>
+      d.kind !== "checkpoint" ||
+      (d.triggerAtSec != null && d.triggerAtSec > 0 && Boolean(d.youtubeVideoId?.trim())),
+    {
+      message: "Checkpoint quizzes need a YouTube video id and triggerAtSec > 0",
+      path: ["triggerAtSec"],
+    },
+  );
+
+export const teacherQuizUpdateSchema = z
+  .object({
+    courseKey: z.string().min(8).max(40).optional(),
+    youtubeVideoId: z
+      .string()
+      .max(20)
+      .optional()
+      .transform((s) => (s == null || s.trim() === "" ? undefined : s.trim())),
+    title: z.string().min(1).max(200).optional(),
+    kind: z.enum(["checkpoint", "final"]).optional(),
+    triggerAtSec: z.number().min(0).max(1_000_000).optional(),
+    passPct: z.number().int().min(0).max(100).optional(),
+    maxAttempts: z.number().int().min(1).max(10).optional(),
+    questions: z.array(quizQuestionInputSchema).min(1).max(40).optional(),
+  })
+  .refine((d) => Object.values(d).some((v) => v !== undefined), { message: "No fields to update" });
+
+/** Teacher bulk outreach to learners currently flagged at-risk for a given track. */
+export const teacherBulkOutreachSchema = z
+  .object({
+    channel: z.enum(["email", "sms", "both"]),
+    subject: z.string().max(200).optional(),
+    body: z.string().min(1).max(4000),
+    targets: z
+      .array(
+        z.object({
+          userId: z.string().min(1).max(64),
+          trackSlug: z.string().min(1).max(80),
+        }),
+      )
+      .min(1)
+      .max(25),
+  })
+  .refine((d) => d.channel === "sms" || Boolean(d.subject?.trim()), {
+    message: "Subject is required for email",
+    path: ["subject"],
+  });
+
+const courseMaterialSchema = z.object({
+  id: z.string().min(2).max(64),
+  kind: z.enum(["pdf", "doc", "sheet", "slide", "link", "youtube", "other"]),
+  title: z.string().min(1).max(200),
+  url: z.string().url().max(2000).optional(),
+  s3Key: z.string().max(500).optional(),
+  createdAt: z.number().int().optional(),
+});
+
+export const courseModuleUpdateSchema = z.object({
+  id: z.string().min(1).max(64),
+  title: z.string().min(1).max(300),
+  duration: z.string().max(40).optional(),
+  summary: z.string().max(50_000).default(""),
+  transcript: z.string().max(200_000).default(""),
+  unitId: z.string().max(64).optional(),
+  unitTitle: z.string().max(200).optional(),
+  durationMin: z.number().int().min(0).max(12 * 60).optional(),
+  isPreview: z.boolean().optional(),
+  videoSource: z.enum(["none", "youtube", "upload"]).optional(),
+  videoUrl: z.union([z.string().url().max(2000), z.literal("")]).optional(),
+  s3Key: z.string().max(500).optional(),
+  youtubeVideoId: z.string().max(32).optional(),
+  thumbnailUrl: z.union([z.string().url().max(2000), z.literal("")]).optional(),
+  materials: z.array(courseMaterialSchema).max(30).optional(),
+  transcribeStatus: z.enum(["none", "pending", "ready"]).optional(),
+  descriptionHtml: z.string().max(200_000).optional(),
+});
+
+export const teacherCourseOutlineSchema = z.object({
+  units: z
+    .array(
+      z.object({
+        id: z.string().min(1).max(64),
+        title: z.string().min(1).max(200),
+        lessons: z.array(courseModuleUpdateSchema).max(200),
+      }),
+    )
+    .min(1)
+    .max(50),
+});
+
+export const teacherCoursePresignSchema = z.object({
+  trackSlug: z.string().min(1).max(80),
+  fileName: z.string().min(1).max(200),
+  contentType: z.string().min(3).max(200),
+  kind: z.enum(["video", "material", "thumbnail"]),
+});
+
+export const teacherTranscribeRequestSchema = z.object({
+  trackSlug: z.string().min(1).max(80),
+  moduleId: z.string().min(1).max(64),
+});
+
+const attachmentSchema = z.object({
+  id: z.string().min(1).max(64).optional(),
+  title: z.string().min(1).max(200),
+  url: z.string().url().max(2000),
+});
+
+export const lmsAssignmentCreateSchema = z.object({
+  title: z.string().min(1).max(300),
+  description: z.string().max(50_000).default(""),
+  dueAt: z.number().int().min(0),
+  pointsPossible: z.number().min(0).max(10_000),
+  rubric: z.string().max(20_000).optional(),
+  attachments: z.array(attachmentSchema).max(20).optional().default([]),
+  moduleId: z.string().max(64).optional(),
+});
+
+export const lmsAssignmentPatchSchema = lmsAssignmentCreateSchema.partial();
+
+export const lmsSubmissionSubmitSchema = z.object({
+  textBody: z.string().max(100_000).default(""),
+  fileS3Keys: z.array(z.string().min(1).max(500)).max(10).optional().default([]),
+  asDraft: z.boolean().optional().default(false),
+});
+
+export const lmsGradeSubmissionSchema = z.object({
+  score: z.number().min(0),
+  feedback: z.string().max(20_000).optional().default(""),
+  status: z.enum(["graded", "returned"]).optional().default("returned"),
+});
+
+export const lmsAnnouncementCreateSchema = z.object({
+  title: z.string().min(1).max(200),
+  body: z.string().min(1).max(100_000),
+  sendEmail: z.boolean().optional().default(false),
+  pinned: z.boolean().optional().default(false),
+  attachmentUrl: z.string().url().max(2000).optional(),
+});
+
+export const lmsForumThreadSchema = z.object({
+  title: z.string().min(1).max(300),
+  moduleId: z.string().max(64).optional(),
+  requirePostFirst: z.boolean().optional().default(false),
+  maxPoints: z.number().min(0).max(10_000).optional(),
+});
+
+export const lmsForumPostSchema = z.object({
+  body: z.string().min(1).max(50_000),
+  parentPostId: z.string().max(64).optional(),
+});
+
+export const lmsDmMessageSchema = z.object({
+  body: z.string().min(1).max(20_000),
+  /** For teacher broadcast: section id or "all" */
+  sectionId: z.string().max(64).optional(),
+});
+
+export const lmsInviteCreateSchema = z.object({
+  expiresAt: z.number().int().optional(),
+  requireApproval: z.boolean().optional().default(false),
+  sectionId: z.string().max(64).optional(),
+});
+
+export const lmsSectionCreateSchema = z.object({
+  label: z.string().min(1).max(120),
+});
+
+export const lmsGradebookOverrideSchema = z.object({
+  userId: z.string().min(1),
+  finalPercentOverride: z.number().min(0).max(100).nullable().optional(),
+  note: z.string().max(2000).optional(),
+});
+
+export const lmsTrackSettingsSchema = z.object({
+  prerequisiteSlugs: z.array(z.string().min(1).max(80)).max(20).optional(),
+  gradebookWeights: z
+    .object({
+      assignment: z.number().min(0).max(100),
+      quiz: z.number().min(0).max(100),
+    })
+    .optional(),
+});
 
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

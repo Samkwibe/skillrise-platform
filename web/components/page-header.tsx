@@ -16,7 +16,9 @@ export function PageHeader({
         <h1 className="font-display text-[clamp(24px,3vw,36px)] font-extrabold leading-tight tracking-tight">
           {title}
         </h1>
-        {subtitle && <p className="text-t2 mt-1 max-w-[640px]">{subtitle}</p>}
+        {subtitle && (
+          <p className="text-t2 mt-1 max-w-[640px] text-base leading-relaxed">{subtitle}</p>
+        )}
       </div>
       {right && <div className="flex gap-2">{right}</div>}
     </div>

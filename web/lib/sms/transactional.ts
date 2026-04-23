@@ -51,12 +51,16 @@ export function getDevTemporarySmsInboxUrl(): string | undefined {
   return u || "https://receivesms.me";
 }
 
-export async function sendVerificationSms(e164: string, code: string): Promise<void> {
+/**
+ * General transactional SMS (teacher outreach, etc.). Same transport rules as verification SMS.
+ * Keep messages short; long text may be split or rejected by carriers.
+ */
+export async function sendTransactionalSms(e164: string, messageBody: string): Promise<void> {
   const off = (process.env.SMS_MODE || "").toLowerCase().trim();
   if (off === "off" || off === "disabled" || off === "none") {
     throw new Error("sms_disabled");
   }
-  const body = `SkillRise: Your verification code is ${code}. It expires in 10 minutes.`;
+  const body = messageBody.trim();
   const mode = resolveMode();
   if (mode === "dev") {
     // eslint-disable-next-line no-console
@@ -65,12 +69,23 @@ export async function sendVerificationSms(e164: string, code: string): Promise<v
   }
   if (mode === "sns") {
     const region = snsRegion();
+    const origination = process.env.AWS_SNS_ORIGINATION_NUMBER?.trim();
+    const messageAttributes: Record<string, { DataType: "String"; StringValue: string }> = {
+      "AWS.SNS.SMS.SMSType": { DataType: "String", StringValue: "Transactional" },
+    };
+    if (origination) {
+      messageAttributes["AWS.SNS.SMS.OriginationNumber"] = {
+        DataType: "String",
+        StringValue: origination,
+      };
+    }
     const client = new SNSClient({ region });
     try {
       const out = await client.send(
         new PublishCommand({
           PhoneNumber: e164,
           Message: body,
+          MessageAttributes: messageAttributes,
         }),
       );
       // eslint-disable-next-line no-console
@@ -120,4 +135,11 @@ export async function sendVerificationSms(e164: string, code: string): Promise<v
     const t = await res.text();
     throw new Error(`twilio_sms: ${res.status} ${t.slice(0, 200)}`);
   }
+}
+
+export async function sendVerificationSms(e164: string, code: string): Promise<void> {
+  await sendTransactionalSms(
+    e164,
+    `SkillRise: Your verification code is ${code}. It expires in 10 minutes.`,
+  );
 }

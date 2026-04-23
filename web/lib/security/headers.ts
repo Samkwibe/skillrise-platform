@@ -6,10 +6,10 @@ export function securityHeaders(): Record<string, string> {
     "img-src 'self' data: blob: https:",
     "font-src 'self' data: https://fonts.gstatic.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    `script-src 'self'${isProd ? "" : " 'unsafe-eval' 'unsafe-inline'"} 'unsafe-inline' blob:`,
+    `script-src 'self'${isProd ? "" : " 'unsafe-eval' 'unsafe-inline'"} 'unsafe-inline' blob: https://www.youtube.com https://s.ytimg.com`,
     "connect-src 'self' https: wss:",
-    // Allow embedding free educational videos (YouTube) inside the app
-    "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
+    // Educational embeds (skill search iframe + react-player: YouTube, Vimeo, etc.)
+    "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.dailymotion.com",
     "frame-ancestors 'none'",
     "form-action 'self'",
     "object-src 'none'",

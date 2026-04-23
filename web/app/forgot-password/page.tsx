@@ -7,17 +7,22 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [devResetLink, setDevResetLink] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
+    setDevResetLink(null);
     try {
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      await res.json();
+      const data = (await res.json()) as { devPasswordResetLink?: string };
+      if (typeof data.devPasswordResetLink === "string" && data.devPasswordResetLink.length > 0) {
+        setDevResetLink(data.devPasswordResetLink);
+      }
       setDone(true);
     } catch {
       setDone(true);
@@ -35,10 +40,31 @@ export default function ForgotPasswordPage() {
       <main className="max-w-[480px] mx-auto px-6 py-16">
         <h1 className="font-display text-[clamp(26px,3vw,34px)] font-extrabold mb-2">Forgot password</h1>
         {done ? (
-          <p className="text-t2">
-            If an account exists for that email, we sent a link to reset your password. Check your inbox and spam
-            folder.
-          </p>
+          <div className="space-y-4 text-t2">
+            <p>
+              If an account exists for that email, we sent a link to reset your password. Check your inbox and spam
+              folder.
+            </p>
+            {devResetLink && (
+              <div className="rounded-md border border-g/40 bg-surface-2/50 px-3 py-2 text-sm text-t1">
+                <p className="text-amber-200/90 font-medium mb-1">Local dev: reset link</p>
+                <p className="break-all text-[13px]">
+                  <a href={devResetLink} className="text-g underline">
+                    Open password reset
+                  </a>
+                </p>
+                <button
+                  type="button"
+                  className="mt-2 btn btn-secondary btn-sm"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(devResetLink);
+                  }}
+                >
+                  Copy link
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <form onSubmit={submit} className="space-y-4 mt-4">
             <div>

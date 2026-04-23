@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { findUserById } from "@/lib/store";
+import { getDb } from "@/lib/db";
 import { getVerifiedUserForApi } from "@/lib/auth";
 import { savedExternalCourseBodySchema, savedExternalProgressSchema, formatZodError } from "@/lib/validators";
 import { stableCourseId } from "@/lib/courses/ids";
@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const user = await getVerifiedUserForApi();
   if (user instanceof NextResponse) return user;
-  const u = findUserById(user.id);
+  const db = getDb();
+  const u = await db.findUserById(user.id);
   if (!u) return NextResponse.json({ error: "Not found." }, { status: 404 });
   return NextResponse.json({ courses: u.savedExternalCourses ?? [] });
 }
@@ -17,7 +18,8 @@ export async function GET() {
 export async function POST(req: Request) {
   const user = await getVerifiedUserForApi();
   if (user instanceof NextResponse) return user;
-  const target = findUserById(user.id);
+  const db = getDb();
+  const target = await db.findUserById(user.id);
   if (!target) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
   let body: unknown;
@@ -51,15 +53,17 @@ export async function POST(req: Request) {
     progressPct: 0,
     savedAt: Date.now(),
   });
-  target.savedExternalCourses = list;
+  const nextList = list;
+  await db.updateUser(user.id, { savedExternalCourses: nextList });
 
-  return NextResponse.json({ ok: true, courses: list });
+  return NextResponse.json({ ok: true, courses: nextList });
 }
 
 export async function PATCH(req: Request) {
   const user = await getVerifiedUserForApi();
   if (user instanceof NextResponse) return user;
-  const target = findUserById(user.id);
+  const db = getDb();
+  const target = await db.findUserById(user.id);
   if (!target) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
   let body: unknown;
@@ -81,13 +85,15 @@ export async function PATCH(req: Request) {
   const row = list.find((c) => c.id === parsed.data.id);
   if (!row) return NextResponse.json({ error: "Not saved." }, { status: 404 });
   row.progressPct = parsed.data.progressPct;
+  await db.updateUser(user.id, { savedExternalCourses: list });
   return NextResponse.json({ ok: true, courses: list });
 }
 
 export async function DELETE(req: Request) {
   const user = await getVerifiedUserForApi();
   if (user instanceof NextResponse) return user;
-  const target = findUserById(user.id);
+  const db = getDb();
+  const target = await db.findUserById(user.id);
   if (!target) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
   const url = new URL(req.url);
@@ -95,6 +101,6 @@ export async function DELETE(req: Request) {
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
   const list = (target.savedExternalCourses ?? []).filter((c) => c.id !== id);
-  target.savedExternalCourses = list;
+  await db.updateUser(user.id, { savedExternalCourses: list });
   return NextResponse.json({ ok: true, courses: list });
 }

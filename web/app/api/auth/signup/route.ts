@@ -6,6 +6,7 @@ import { hashPassword } from "@/lib/security/password";
 import { randomUrlToken, hashToken } from "@/lib/security/tokens";
 import { sendEmailVerificationEmail } from "@/lib/email/transactional";
 import { getAuthEmailDispatch } from "@/lib/email/config";
+import { buildEmailVerificationUrl, shouldExposeDevEmailLinkInApi } from "@/lib/email/dev-link";
 import { clientIp, clientUserAgent } from "@/lib/http/client-meta";
 import { rateLimit, clientKey, rateLimitHeaders } from "@/lib/security/rate-limit";
 import { getDb } from "@/lib/db";
@@ -123,8 +124,13 @@ export async function POST(req: Request) {
     console.error("[signup] verification email", err);
   }
 
-  return NextResponse.json(
-    { user: publicUser(user), emailDelivery },
-    { status: 201, headers: rateLimitHeaders(limit) },
-  );
+  const signupPayload: {
+    user: ReturnType<typeof publicUser>;
+    emailDelivery: typeof emailDelivery;
+    devVerificationLink?: string;
+  } = { user: publicUser(user), emailDelivery };
+  if (shouldExposeDevEmailLinkInApi() && emailDelivery !== "failed") {
+    signupPayload.devVerificationLink = buildEmailVerificationUrl(user.email, rawVerify);
+  }
+  return NextResponse.json(signupPayload, { status: 201, headers: rateLimitHeaders(limit) });
 }

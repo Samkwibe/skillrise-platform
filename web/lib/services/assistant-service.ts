@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import type { User } from "@/lib/store";
 import { userEnrollments, getTrack, type Track } from "@/lib/store";
+import { ensureTracksFromDatabase } from "@/lib/course/ensure-tracks";
 import {
   isVertexTutorEnabled,
   streamVertexTutorReply,
@@ -12,7 +13,8 @@ import {
   geminiApiTutorReplyNonStreaming,
 } from "@/lib/services/gemini-api-tutor";
 
-type Msg = { role: "system" | "user" | "assistant"; content: string };
+export type AssistantChatMsg = { role: "system" | "user" | "assistant"; content: string };
+type Msg = AssistantChatMsg;
 
 function systemPrompt(user: User, track: Track | null): string {
   const neighborhood = user.neighborhood || "your neighborhood";
@@ -182,6 +184,7 @@ export async function streamAssistantReply({
   prompt: string;
   history: Msg[];
 }): Promise<ReadableStream<Uint8Array>> {
+  await ensureTracksFromDatabase();
   const { track, history: systemHistory } = getAssistantContext(user);
   const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
   const backend = resolveTutorProvider();
@@ -235,6 +238,118 @@ export async function streamAssistantReply({
   return streamTextMessage("Tutor: no model configured. Set GEMINI_API_KEY and/or OPENAI_API_KEY in .env.local.");
 }
 
+/** Same backends as the learner tutor, but with a custom system prompt (e.g. teacher AI). */
+export async function streamAssistantReplyWithSystem({
+  systemPrompt,
+  prompt,
+  history,
+}: {
+  user: User;
+  systemPrompt: string;
+  prompt: string;
+  history: Msg[];
+}): Promise<ReadableStream<Uint8Array>> {
+  const systemHistory: Msg[] = [{ role: "system", content: systemPrompt }];
+  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  const backend = resolveTutorProvider();
+  const encoder = new TextEncoder();
+
+  if (backend === "none") {
+    const reply = mockReply(prompt, null);
+    return new ReadableStream({
+      async start(controller) {
+        for (const chunk of reply.match(/.{1,14}/g) || [reply]) {
+          controller.enqueue(encoder.encode(chunk));
+          await new Promise((r) => setTimeout(r, 25));
+        }
+        controller.close();
+      },
+    });
+  }
+
+  if (backend === "vertex") {
+    return streamVertexTutorReply(systemHistory, history, prompt);
+  }
+
+  if (backend === "gemini_openai") {
+    if (isGeminiApiTutorEnabled()) {
+      try {
+        return await streamGeminiApiTutorReply(systemHistory, history, prompt);
+      } catch (err) {
+        if (process.env.OPENAI_API_KEY) {
+          return await streamOpenAITutorReply(systemHistory, history, prompt, model);
+        }
+        const msg = (err as Error).message?.slice(0, 200) ?? "request failed";
+        return streamTextMessage(
+          `Assistant: Gemini is unavailable (${msg}). Set OPENAI_API_KEY for fallback.`,
+        );
+      }
+    }
+    if (process.env.OPENAI_API_KEY) {
+      return await streamOpenAITutorReply(systemHistory, history, prompt, model);
+    }
+    return streamTextMessage("Set GEMINI_API_KEY and/or OPENAI_API_KEY.");
+  }
+
+  if (backend === "openai") {
+    return await streamOpenAITutorReply(systemHistory, history, prompt, model);
+  }
+
+  return streamTextMessage("No model configured. Set GEMINI_API_KEY and/or OPENAI_API_KEY.");
+}
+
+export async function assistantReplyNonStreamingWithSystem({
+  systemPrompt,
+  prompt,
+  history,
+}: {
+  user: User;
+  systemPrompt: string;
+  prompt: string;
+  history: Msg[];
+}): Promise<string> {
+  const systemHistory: Msg[] = [{ role: "system", content: systemPrompt }];
+  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  const backend = resolveTutorProvider();
+
+  if (backend === "none") return mockReply(prompt, null);
+
+  if (backend === "vertex") {
+    return vertexTutorReplyNonStreaming(systemHistory, history, prompt);
+  }
+
+  if (backend === "gemini_openai") {
+    if (isGeminiApiTutorEnabled()) {
+      try {
+        const text = await withRequestTimeout(
+          geminiApiTutorReplyNonStreaming(systemHistory, history, prompt),
+          geminiNonStreamRequestTimeoutMs(),
+          "Gemini request timed out",
+        );
+        const trimmed = text?.trim();
+        if (trimmed && !/^\[No response from Gemini\]$/.test(trimmed)) {
+          return trimmed;
+        }
+        throw new Error(trimmed || "Gemini returned an empty response");
+      } catch (err) {
+        if (process.env.OPENAI_API_KEY) {
+          const t = await openAITutorText(systemHistory, history, prompt, model);
+          return t || mockReply(prompt, null);
+        }
+        return `Assistant: Gemini unavailable (${(err as Error).message?.slice(0, 200) ?? "error"}).`;
+      }
+    }
+    if (process.env.OPENAI_API_KEY) {
+      const t = await openAITutorText(systemHistory, history, prompt, model);
+      return t || mockReply(prompt, null);
+    }
+    return "Set GEMINI_API_KEY and/or OPENAI_API_KEY.";
+  }
+
+  const t = await openAITutorText(systemHistory, history, prompt, model);
+  return t || mockReply(prompt, null);
+}
+
 export async function assistantReplyNonStreaming({
   user,
   prompt,
@@ -244,6 +359,7 @@ export async function assistantReplyNonStreaming({
   prompt: string;
   history: Msg[];
 }): Promise<string> {
+  await ensureTracksFromDatabase();
   const { track, history: systemHistory } = getAssistantContext(user);
   const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
   const backend = resolveTutorProvider();

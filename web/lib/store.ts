@@ -4,6 +4,20 @@
 
 import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
+import type { Quiz, QuizAttempt } from "@/lib/quiz/types";
+import type {
+  CourseAssignment,
+  AssignmentSubmission,
+  CourseAnnouncement,
+  AnnouncementRead,
+  CourseForumThread,
+  CourseForumPost,
+  DmThread,
+  DmMessage,
+  EnrollmentInvite,
+  CourseSection,
+  CourseGradebookOverride,
+} from "@/lib/course/lms-types";
 
 // Hash the shared demo password once at module load so seeded users are bcrypt-hashed too.
 const DEMO_PASSWORD_HASH = bcrypt.hashSync("demo1234", 10);
@@ -126,6 +140,8 @@ export type User = {
   mfaEmailOtpEnabled?: boolean;
   mfaSmsOtpEnabled?: boolean;
   mfaTotpEnabled?: boolean;
+  /** Users this account does not want to receive DMs from (learner safety). */
+  mutedUserIds?: string[];
   // employer-specific
   company?: string;
   // teacher-specific
@@ -161,11 +177,14 @@ export type LearningHubNote = {
 };
 
 export type LearningHubCourseState = {
-  provider: "coursera" | "openlibrary" | "mit" | "khan" | "youtube" | "simplilearn";
+  provider: "coursera" | "openlibrary" | "mit" | "khan" | "youtube" | "simplilearn" | "udemy";
   title: string;
   url: string;
   imageUrl?: string;
   primaryVideoId?: string;
+  /** When known (e.g. YouTube player), for auto % and resume. */
+  lastPositionSec?: number;
+  videoDurationSec?: number;
   progressPct: number;
   completed: boolean;
   notes: LearningHubNote[];
@@ -175,12 +194,14 @@ export type LearningHubCourseState = {
 /** Saved free-course links from `/courses` search — not the same as SkillFeed saves. */
 export type SavedExternalCourse = {
   id: string;
-  provider: "coursera" | "openlibrary" | "mit" | "khan" | "youtube" | "simplilearn";
+  provider: "coursera" | "openlibrary" | "mit" | "khan" | "youtube" | "simplilearn" | "udemy";
   title: string;
   url: string;
   imageUrl?: string;
   description?: string;
   progressPct: number;
+  /** Mirrors learning hub for dashboard “continue from” links */
+  lastPositionSec?: number;
   savedAt: number;
 };
 
@@ -213,12 +234,42 @@ export type Session = {
   ip?: string;
 };
 
+/** Files or links attached to a lesson (download in player or open external). */
+export type CourseMaterial = {
+  id: string;
+  kind: "pdf" | "doc" | "sheet" | "slide" | "link" | "youtube" | "other";
+  title: string;
+  /** Public HTTPS URL, or set `s3Key` for private bucket + signed GET at view time. */
+  url?: string;
+  s3Key?: string;
+  createdAt: number;
+};
+
 export type Module = {
   id: string;
   title: string;
-  duration: string; // e.g. "12 min"
+  duration: string; // e.g. "12 min" (display; can mirror durationMin)
   summary: string;
   transcript: string;
+  /** Group lessons under a unit in the course builder and track page. */
+  unitId?: string;
+  unitTitle?: string;
+  /** Estimated minutes (course builder + analytics). */
+  durationMin?: number;
+  /** When true, learners can open this lesson before enrolling. */
+  isPreview?: boolean;
+  videoSource?: "none" | "youtube" | "upload";
+  /** Direct play URL (public object or long-lived CDN URL). */
+  videoUrl?: string;
+  /** S3 object key for private uploads; combined with presigned GET in the learn UI. */
+  s3Key?: string;
+  youtubeVideoId?: string;
+  thumbnailUrl?: string;
+  materials?: CourseMaterial[];
+  /** AWS Transcribe (or similar) — pending until transcript text is backfilled. */
+  transcribeStatus?: "none" | "pending" | "ready";
+  /** Rich HTML for lesson body (optional; summary stays plain for cards). */
+  descriptionHtml?: string;
 };
 
 /**
@@ -244,6 +295,10 @@ export type Track = {
   jobPaths?: string[];
   hiringDemand: number; // 1–5
   averageWageUplift: string;
+  /** Slugs of tracks that must be completed before starting this one */
+  prerequisiteSlugs?: string[];
+  /** Weights 0–100, should sum to 100; used by gradebook final calculation */
+  gradebookWeights?: { assignment: number; quiz: number };
 };
 
 export type Enrollment = {
@@ -254,6 +309,12 @@ export type Enrollment = {
   completedModuleIds: string[];
   completedAt?: number;
   cohortId?: string;
+  /** Cohort/section for LMS features */
+  sectionId?: string;
+  /** e.g. invite token id */
+  source?: string;
+  /** Set when join used an invite with requireApproval — teacher must clear */
+  pendingApproval?: boolean;
 };
 
 export type Cohort = {
@@ -432,6 +493,16 @@ export type CommunityMessage = {
   hidden?: boolean;
 };
 
+/** Learner-submitted thanks shown on the teacher Community Impact dashboard (demo + future API). */
+export type TeacherThankYou = {
+  id: string;
+  teacherId: string;
+  fromUserId: string;
+  message: string;
+  at: number;
+  trackSlug?: string;
+};
+
 type StoreShape = {
   users: User[];
   sessions: Session[];
@@ -453,6 +524,20 @@ type StoreShape = {
   reports: Report[];
   communityRooms: CommunityRoom[];
   communityMessages: CommunityMessage[];
+  quizzes: Quiz[];
+  quizAttempts: QuizAttempt[];
+  teacherThankYous: TeacherThankYou[];
+  courseAssignments: CourseAssignment[];
+  assignmentSubmissions: AssignmentSubmission[];
+  courseAnnouncements: CourseAnnouncement[];
+  announcementReads: AnnouncementRead[];
+  courseForumThreads: CourseForumThread[];
+  courseForumPosts: CourseForumPost[];
+  dmThreads: DmThread[];
+  dmMessages: DmMessage[];
+  enrollmentInvites: EnrollmentInvite[];
+  courseSections: CourseSection[];
+  courseGradebookOverrides: CourseGradebookOverride[];
   seededTotal: number;
 };
 
@@ -1048,6 +1133,27 @@ function seed(): StoreShape {
     { id: "cmm16", roomId: "r_teen",    userId: "u_tanya", text: "SkillRise certs count. Tell them what you built, not what you didn't.", at: now - 1.9 * day },
   ];
 
+  const teacherThankYous: TeacherThankYou[] = [
+    {
+      id: "ty1",
+      teacherId: "u_john",
+      fromUserId: "u_tanya",
+      message:
+        "Thank you for breaking down the panel the way you did. I used your framing on the job site the same week. — Tanya",
+      at: now - 6 * day,
+      trackSlug: "electrical-basics",
+    },
+    {
+      id: "ty2",
+      teacherId: "u_sarah",
+      fromUserId: "u_sofia",
+      message:
+        "I finally published my site. Your async feedback in office hours is why I didn’t give up. Thank you! — Sofía",
+      at: now - 4 * day,
+      trackSlug: "web-dev-starter",
+    },
+  ];
+
   return {
     users,
     sessions: [],
@@ -1069,6 +1175,20 @@ function seed(): StoreShape {
     communityRooms,
     communityMessages,
     reports: [],
+    quizzes: [],
+    quizAttempts: [],
+    teacherThankYous,
+    courseAssignments: [],
+    assignmentSubmissions: [],
+    courseAnnouncements: [],
+    announcementReads: [],
+    courseForumThreads: [],
+    courseForumPosts: [],
+    dmThreads: [],
+    dmMessages: [],
+    enrollmentInvites: [],
+    courseSections: [],
+    courseGradebookOverrides: [],
     seededTotal: 48213,
   };
 }

@@ -10,7 +10,8 @@ export type CourseProviderId =
   | "mit"
   | "khan"
   | "youtube"
-  | "simplilearn";
+  | "simplilearn"
+  | "udemy";
 
 export type FreeCourse = {
   id: string;
@@ -38,6 +39,8 @@ export type FreeCourse = {
   viewCount?: number;
   /** For YouTube — watch page URL always works with the player. */
   youtubeVideoId?: string;
+  /** For Udemy / curated free listings (badge in UI) */
+  isFree?: boolean;
 };
 
 export type CourseSearchOptions = {

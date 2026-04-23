@@ -77,6 +77,14 @@ export function SignupForm({ showGoogle = false }: { showGoogle?: boolean }) {
           setErr(body.error || "Could not create account.");
           return;
         }
+        const dev = (body as { devVerificationLink?: string }).devVerificationLink;
+        if (typeof dev === "string" && dev.length > 0) {
+          try {
+            sessionStorage.setItem("skillrise:devEmailVerificationLink", dev);
+          } catch {
+            // ignore
+          }
+        }
         // Email must be verified before the full app; same flow for every role.
         router.push("/verify-email/required");
         router.refresh();

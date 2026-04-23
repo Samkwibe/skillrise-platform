@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import type { CourseProviderId } from "@/lib/courses/types";
+import { extractYoutubeVideoId } from "@/lib/courses/youtube-util";
 import { ProviderMark, providerLabel } from "@/components/courses/provider-logo";
 
 type FreeCourse = {
@@ -20,11 +21,13 @@ type FreeCourse = {
   ratingCountLabel?: string;
   viewCount?: number;
   youtubeVideoId?: string;
+  isFree?: boolean;
 };
 
 const PROVIDERS: { id: CourseProviderId; label: string }[] = [
   { id: "coursera", label: "Coursera" },
   { id: "youtube", label: "YouTube" },
+  { id: "udemy", label: "Udemy" },
   { id: "openlibrary", label: "Open Library" },
   { id: "mit", label: "MIT OCW" },
   { id: "khan", label: "Khan Academy" },
@@ -38,6 +41,7 @@ const PILL: Record<CourseProviderId, string> = {
   khan: "Khan",
   youtube: "YouTube",
   simplilearn: "Simplilearn",
+  udemy: "Udemy",
 };
 
 const SUGGEST = ["Communication skills", "Python basics", "Resume writing", "Algebra", "First aid", "Project management"];
@@ -55,7 +59,8 @@ function courseLearnHref(c: FreeCourse) {
     provider: c.provider,
     title: c.title,
   });
-  if (c.youtubeVideoId) p.set("v", c.youtubeVideoId);
+  const vid = c.youtubeVideoId || extractYoutubeVideoId(c.url);
+  if (vid) p.set("v", vid);
   return `/courses/learn?${p.toString()}`;
 }
 
@@ -99,21 +104,24 @@ export function UnifiedCourseSearch({ variant = "page", defaultQuery = "" }: Pro
       {variant === "page" && (
         <div className="mb-4">
           <h1
-            className="text-[24px] md:text-[32px] font-extrabold"
+            className="text-2xl md:text-3xl font-extrabold leading-tight"
             style={{ fontFamily: "var(--role-font-display)" }}
           >
             Free course search
           </h1>
-          <p className="text-[13.5px] text-t2 mt-1 max-w-2xl">
-            One search across Coursera (catalog + your org API when it works), YouTube (with{" "}
-            <code className="text-[12px]">YOUTUBE_API_KEY</code>), Open Library, MIT, Khan, and Simplilearn (via web
-            search when Brave/Serper keys are set). Pick the course that fits — you’re in control.
+          <p className="text-[0.9375rem] text-t2 mt-2 max-w-2xl leading-relaxed">
+            One search across Coursera, YouTube, Udemy (free-leaning matches), Open Library, MIT, Khan, and Simplilearn
+            (YouTube with <code className="text-sm font-mono">YOUTUBE_API_KEY</code>; other providers with Brave/Serper
+            for web search). Always confirm price on the provider before enrolling. Pick the course that fits — you’re
+            in control.
           </p>
         </div>
       )}
 
       <div className="card p-4 md:p-5">
-        <div className="text-[11px] font-bold uppercase tracking-[0.1em] text-t3 mb-2">Free courses & books</div>
+        <div className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-t3 mb-2">
+          Free courses & books
+        </div>
         <form
           className="flex flex-col lg:flex-row gap-2"
           onSubmit={(e) => {
@@ -147,7 +155,7 @@ export function UnifiedCourseSearch({ variant = "page", defaultQuery = "" }: Pro
                   if (q.trim()) void run(q, id);
                 }
               }}
-              className={`pill text-[12px] ${(id === "all" ? filter === "all" : filter === id) ? "pill-g" : ""}`}
+              className={`pill text-sm ${(id === "all" ? filter === "all" : filter === id) ? "pill-g" : ""}`}
             >
               {id === "all" ? "All sources" : PILL[id]}
             </button>
@@ -163,16 +171,16 @@ export function UnifiedCourseSearch({ variant = "page", defaultQuery = "" }: Pro
                 setQ(s);
                 setTimeout(() => run(s), 0);
               }}
-              className="pill text-[12px] micro-hover"
+              className="pill text-sm micro-hover"
             >
               {s}
             </button>
           ))}
         </div>
 
-        {note && !err && <p className="text-[12.5px] text-t3 mt-3">{note}</p>}
+        {note && !err && <p className="text-sm text-t3 mt-3 leading-relaxed">{note}</p>}
         {err && (
-          <p className="text-[12.5px] mt-3" style={{ color: "var(--red)" }}>
+          <p className="text-sm mt-3 leading-relaxed" style={{ color: "var(--red)" }}>
             {err}
           </p>
         )}
@@ -191,21 +199,29 @@ export function UnifiedCourseSearch({ variant = "page", defaultQuery = "" }: Pro
                 )}
                 <div className="absolute top-2 left-2 flex items-center gap-1.5">
                   <ProviderMark id={c.provider} size="sm" />
-                  <span className="pill text-[10px] bg-black/70 text-white border-0">{PILL[c.provider]}</span>
+                  <span className="pill text-[0.7rem] bg-black/70 text-white border-0">{PILL[c.provider]}</span>
                 </div>
                 {c.freeCertificateHint && (
                   <span
-                    className="absolute top-2 right-2 pill text-[10px] border-amber-200/50"
+                    className="absolute top-2 right-2 pill text-[0.7rem] border-amber-200/50"
                     title="Certificate may be offered on the provider site."
                   >
                     Cert (on site)
                   </span>
                 )}
+                {c.provider === "udemy" && c.isFree && (
+                  <span
+                    className="absolute right-2 top-2 pill border-emerald-500/40 bg-emerald-950/80 text-[0.7rem] text-emerald-100"
+                    title="Listing appears free or coupon from search. Confirm on Udemy."
+                  >
+                    Free
+                  </span>
+                )}
               </div>
-              <div className="p-4 flex-1 flex flex-col gap-1">
-                <h2 className="font-bold text-[15px] leading-snug line-clamp-2">{c.title}</h2>
+              <div className="p-4 sm:p-5 flex-1 flex flex-col gap-1.5">
+                <h2 className="font-bold text-lg leading-snug line-clamp-2">{c.title}</h2>
                 {(c.rating != null || c.ratingCountLabel || c.viewCount != null) && (
-                  <div className="text-[11px] text-t3">
+                  <div className="text-xs text-t3 sm:text-sm">
                     {c.rating != null && <span>{c.rating.toFixed(1)}★</span>}
                     {c.ratingCountLabel && <span className="ml-1">· {c.ratingCountLabel}</span>}
                     {c.viewCount != null && !c.ratingCountLabel && (
@@ -213,10 +229,12 @@ export function UnifiedCourseSearch({ variant = "page", defaultQuery = "" }: Pro
                     )}
                   </div>
                 )}
-                {c.format && <div className="text-[11px] text-t3">{c.format}</div>}
-                {c.durationText && <div className="text-[11px] text-t3">⏱ {c.durationText}</div>}
-                {c.byline && <div className="text-[11px] text-t3">{c.byline}</div>}
-                {c.description && <p className="text-[12.5px] text-t2 line-clamp-3 flex-1">{c.description}</p>}
+                {c.format && <div className="text-sm text-t3">{c.format}</div>}
+                {c.durationText && <div className="text-sm text-t3">⏱ {c.durationText}</div>}
+                {c.byline && <div className="text-sm text-t3">{c.byline}</div>}
+                {c.description && (
+                  <p className="text-[0.9375rem] text-t2 line-clamp-3 flex-1 leading-relaxed">{c.description}</p>
+                )}
                 <div className="flex flex-wrap gap-2 mt-2">
                   <Link href={courseLearnHref(c)} className="btn btn-primary btn-sm">
                     Select this course
@@ -250,7 +268,12 @@ export function UnifiedCourseSearch({ variant = "page", defaultQuery = "" }: Pro
                     {saving === c.id ? "…" : "Watch later"}
                   </button>
                 </div>
-                <a href={c.url} target="_blank" rel="noreferrer noopener" className="text-[11px] text-t3 underline mt-1">
+                <a
+                  href={c.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-sm text-t3 underline mt-1 leading-normal"
+                >
                   Open on {providerLabel(c.provider)} ↗
                 </a>
               </div>
@@ -260,7 +283,7 @@ export function UnifiedCourseSearch({ variant = "page", defaultQuery = "" }: Pro
       )}
 
       {variant === "page" && (
-        <p className="text-[12px] text-t3 mt-4">
+        <p className="text-sm text-t3 mt-4 leading-relaxed">
           Tip: changing the source filter re-runs the search. We return many rows from different providers so you
           can compare and choose.
         </p>
