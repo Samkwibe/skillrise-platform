@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentUser, isEmailVerified } from "@/lib/auth";
+import { ensureEnrollmentStoreFromDatabase } from "@/lib/course/ensure-enrollments";
 import { buildCommandItems } from "@/lib/command-items";
 import { UnverifiedShell } from "@/components/shells/unverified-shell";
 import { CommandPalette } from "@/components/command-palette";
@@ -31,6 +32,8 @@ export async function RoleShell({ children }: { children: React.ReactNode }) {
     }
     return <UnverifiedShell user={user}>{children}</UnverifiedShell>;
   }
+
+  await ensureEnrollmentStoreFromDatabase(user);
 
   const commandItems = buildCommandItems(user);
   const wrapped = (

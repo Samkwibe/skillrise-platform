@@ -386,6 +386,11 @@ export const lmsSubmissionSubmitSchema = z.object({
   asDraft: z.boolean().optional().default(false),
 });
 
+export const assignmentSubmissionPresignSchema = z.object({
+  fileName: z.string().min(1).max(200),
+  contentType: z.string().min(3).max(200),
+});
+
 export const lmsGradeSubmissionSchema = z.object({
   score: z.number().min(0),
   feedback: z.string().max(20_000).optional().default(""),

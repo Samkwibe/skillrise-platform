@@ -195,6 +195,22 @@ export function TeacherAssignmentManager({ trackSlug }: { trackSlug: string }) {
                         {s.studentName} <span className="text-t3 text-[11px]">{s.studentEmail}</span>
                       </div>
                       <div className="text-t2 mt-2 whitespace-pre-wrap">{s.textBody || "— no text —"}</div>
+                      {s.fileS3Keys && s.fileS3Keys.length > 0 && (
+                        <ul className="text-[12px] mt-2 space-y-1">
+                          {s.fileS3Keys.map((k) => (
+                            <li key={k}>
+                              <a
+                                href={`/api/teacher/course/${encodeURIComponent(trackSlug)}/assignment-file?key=${encodeURIComponent(k)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline text-g"
+                              >
+                                {k.split("/").pop() ?? "Download file"}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                       <div className="text-[11px] text-t3 mt-1">Status: {s.status}</div>
                       {s.status === "submitted" && (
                         <GradeForm

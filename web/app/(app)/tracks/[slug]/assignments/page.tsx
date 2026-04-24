@@ -66,7 +66,24 @@ export default async function CourseAssignmentsPage({ params }: { params: Promis
                 canEdit={!locked}
                 initialText={s?.textBody}
                 initialStatus={s?.status}
+                initialFileKeys={s?.fileS3Keys}
               />
+              {locked && s?.fileS3Keys && s.fileS3Keys.length > 0 && (
+                <ul className="text-[12px] mt-2 text-t2 space-y-1">
+                  {s.fileS3Keys.map((k) => (
+                    <li key={k}>
+                      <a
+                        href={`/api/course/${encodeURIComponent(slug)}/assignment-file?key=${encodeURIComponent(k)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline text-g"
+                      >
+                        {k.split("/").pop() ?? "Attachment"}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           );
         })}

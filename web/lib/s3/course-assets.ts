@@ -30,6 +30,13 @@ export function makeCourseObjectKey(
   return `courses/${trackSlug}/${kind}/${id}-${safe}`;
 }
 
+/** Learner assignment hand-ins; private under `courses/{slug}/assignment-submissions/{userId}/`. */
+export function makeAssignmentSubmissionObjectKey(trackSlug: string, userId: string, fileName: string): string {
+  const safe = fileName.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(0, 120) || "file";
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  return `courses/${trackSlug}/assignment-submissions/${userId}/${id}-${safe}`;
+}
+
 let _client: S3Client | null = null;
 function s3(): S3Client {
   if (!_client) _client = new S3Client({ region: region() });
@@ -60,6 +67,13 @@ export function isAllowedVideoContentType(ct: string): boolean {
 export function isAllowedMaterialContentType(ct: string): boolean {
   const c = ct.toLowerCase().trim();
   return DOC_TYPES.has(c) || c === "text/plain" || c === "application/octet-stream";
+}
+
+/** PDF, Office, images (not raw video) for assignment uploads. */
+export function isAllowedAssignmentSubmissionContentType(ct: string): boolean {
+  if (isAllowedMaterialContentType(ct)) return true;
+  const c = ct.toLowerCase().trim();
+  return c === "image/png" || c === "image/jpeg" || c === "image/webp" || c === "image/gif" || c === "image/heic" || c === "image/heif";
 }
 
 type PresignPutArgs = {
