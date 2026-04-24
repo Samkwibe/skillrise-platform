@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireVerifiedUser } from "@/lib/auth";
 import { getTrack } from "@/lib/store";
 import { canTeacherEditCourse } from "@/lib/services/teacher-course";
 import { buildCourseAnalytics } from "@/lib/services/course-analytics";
 import { ensureTracksFromDatabase } from "@/lib/course/ensure-tracks";
+import { CourseAnalyticsCharts } from "@/components/teacher/course-analytics-charts";
 
 export const dynamic = "force-dynamic";
 
@@ -16,21 +16,23 @@ export default async function TeacherCourseAnalyticsPage({ params }: { params: P
   const track = getTrack(slug);
   if (!canTeacherEditCourse(user, track) || !track) notFound();
   const data = await buildCourseAnalytics(track, user.id);
+  const chartPayload = {
+    enrollCount: data.enrollCount,
+    graduated: data.graduated,
+    avgTrackCompletion: data.avgTrackCompletion,
+    moduleCompletion: data.moduleCompletion,
+    quizAverages: data.quizAverages,
+    atRiskCount: data.atRisk.length,
+  };
+
   return (
-    <div className="section-pad-x py-8 max-w-3xl">
-      <div className="text-sm text-t2 mb-4 flex flex-wrap gap-3">
-        <Link href="/teach/courses" className="underline">
-          ← All courses
-        </Link>
-        <Link href={`/teach/course/${slug}/builder`} className="underline">
-          Builder
-        </Link>
-        <Link href={`/teach/course/${slug}/gradebook`} className="underline">
-          Gradebook
-        </Link>
-      </div>
-      <h1 className="font-display text-2xl font-extrabold mb-2">Course analytics</h1>
-      <p className="text-t2 text-sm mb-6">{data.title}</p>
+    <div className="max-w-4xl w-full">
+      <h2 className="font-[family-name:var(--role-font-display)] text-xl font-extrabold mb-1" style={{ color: "var(--text-1)" }}>
+        Course analytics
+      </h2>
+      <p className="text-sm mb-6" style={{ color: "var(--text-3)" }}>
+        {data.title}
+      </p>
       <div className="grid sm:grid-cols-2 gap-3 mb-8">
         <div className="card p-4">
           <div className="text-t3 text-[11px] uppercase">Enrolled</div>
@@ -49,7 +51,10 @@ export default async function TeacherCourseAnalyticsPage({ params }: { params: P
           <div className="text-2xl font-bold">{data.atRisk.length}</div>
         </div>
       </div>
-      <h2 className="font-bold text-lg mb-2">Quizzes (avg best score per student)</h2>
+
+      <CourseAnalyticsCharts data={chartPayload} />
+
+      <h2 className="font-bold text-lg mb-2 mt-10">Quizzes (list)</h2>
       <ul className="text-sm text-t2 space-y-1 mb-8">
         {data.quizAverages.map((q) => (
           <li key={q.quizId}>

@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { ensureTracksFromDatabase } from "@/lib/course/ensure-tracks";
 import { assertEnrolledLearner } from "@/lib/services/lms-access";
 import { formatZodError, lmsSubmissionSubmitSchema } from "@/lib/validators";
+import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
 import type { AssignmentSubmission } from "@/lib/course/lms-types";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,13 @@ export async function POST(
   const user = await getVerifiedUserForApi();
   if (user instanceof NextResponse) return user;
   const { trackSlug, assignmentId } = await ctx.params;
+  const lim = rateLimit(`asub:${user.id}:${trackSlug}:${assignmentId}`, 80, 10 * 60 * 1000);
+  if (!lim.ok) {
+    return NextResponse.json(
+      { error: "Too many submission attempts. Wait a few minutes." },
+      { status: 429, headers: rateLimitHeaders(lim) },
+    );
+  }
   await ensureTracksFromDatabase();
   const track = getTrack(trackSlug);
   const enr = await assertEnrolledLearner(user, track);

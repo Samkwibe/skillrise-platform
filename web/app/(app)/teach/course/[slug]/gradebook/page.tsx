@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireVerifiedUser } from "@/lib/auth";
 import { getTrack } from "@/lib/store";
@@ -27,29 +26,22 @@ export default async function TeacherGradebookPage({ params }: { params: Promise
     assignments,
   );
   return (
-    <div className="section-pad-x py-8 max-w-5xl overflow-x-auto">
-      <div className="text-sm text-t2 mb-4 flex flex-wrap gap-3">
-        <Link href="/teach/courses" className="underline">
-          ← All courses
-        </Link>
-        <Link href={`/teach/course/${slug}/builder`} className="underline">
-          Builder
-        </Link>
-        <Link href={`/teach/course/${slug}/analytics`} className="underline">
-          Analytics
-        </Link>
+    <div className="max-w-5xl w-full overflow-x-auto">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm" style={{ color: "var(--text-2)" }}>
+          Weights: assignments {track.gradebookWeights?.assignment ?? 50}% · quizzes {track.gradebookWeights?.quiz ?? 50}%.
+        </p>
         <a
-          className="underline"
+          className="text-sm font-medium underline"
+          style={{ color: "var(--text-2)" }}
           href={`/api/teacher/course/${encodeURIComponent(slug)}/gradebook?export=csv`}
         >
           Export CSV
         </a>
       </div>
-      <h1 className="font-display text-2xl font-extrabold mb-4">Gradebook</h1>
-      <p className="text-t2 text-sm mb-4">
-        Weights: assignments {track.gradebookWeights?.assignment ?? 50}% · quizzes {track.gradebookWeights?.quiz ?? 50}%.
-        Set in course settings API or extend the builder later.
-      </p>
+      <h2 className="font-[family-name:var(--role-font-display)] text-xl font-extrabold mb-3" style={{ color: "var(--text-1)" }}>
+        Gradebook
+      </h2>
       <table className="w-full text-left text-[13px] border-collapse">
         <thead>
           <tr className="text-t3 border-b border-white/10">

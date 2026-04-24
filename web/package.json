@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
     "check:validation": "node --env-file=.env.local scripts/check-validation-providers.mjs"
   },
   "dependencies": {
@@ -29,9 +30,11 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-player": "^2.16.0",
+    "recharts": "^2.15.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "22.10.5",
     "@types/react": "19.0.7",

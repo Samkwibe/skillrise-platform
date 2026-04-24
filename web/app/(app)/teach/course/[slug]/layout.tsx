@@ -3,11 +3,17 @@ import { requireVerifiedUser } from "@/lib/auth";
 import { getTrack } from "@/lib/store";
 import { canTeacherEditCourse } from "@/lib/services/teacher-course";
 import { ensureTracksFromDatabase } from "@/lib/course/ensure-tracks";
-import { TeacherAssignmentManager } from "@/components/teacher/teacher-assignment-manager";
+import { CoursePageHeader } from "@/components/teacher/course-page-header";
 
 export const dynamic = "force-dynamic";
 
-export default async function TeacherAssignmentsPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function TeachCourseLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
   const user = await requireVerifiedUser();
   if (user.role !== "teacher" && user.role !== "admin") redirect("/dashboard");
@@ -16,11 +22,9 @@ export default async function TeacherAssignmentsPage({ params }: { params: Promi
   if (!canTeacherEditCourse(user, track) || !track) notFound();
 
   return (
-    <div className="max-w-4xl">
-      <p className="text-sm mb-6" style={{ color: "var(--text-2)" }}>
-        Create assignments and grade submissions. Students open assignments from the course page.
-      </p>
-      <TeacherAssignmentManager trackSlug={slug} />
+    <div className="section-pad-x py-6 sm:py-8 max-w-6xl mx-auto w-full">
+      <CoursePageHeader slug={slug} title={track.title} heroEmoji={track.heroEmoji} color={track.color} />
+      {children}
     </div>
   );
 }

@@ -348,7 +348,11 @@ export function createMongoAdapter(): DbAdapter {
     },
     async putAssignment(a) {
       const { cols } = await getConnection();
-      await cols.courseAssignments.updateOne({ id: a.id }, { $set: a }, { upsert: true });
+      const setDoc = { ...a } as Record<string, unknown>;
+      for (const k of Object.keys(setDoc)) {
+        if (setDoc[k] === undefined) delete setDoc[k];
+      }
+      await cols.courseAssignments.updateOne({ id: a.id }, { $set: setDoc }, { upsert: true });
       return a;
     },
     async deleteAssignment(id) {

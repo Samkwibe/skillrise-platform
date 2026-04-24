@@ -190,17 +190,11 @@ export default async function TrackDetail({
             <div className="card p-4">
               <div className="text-[11px] uppercase tracking-wider text-t3 mb-2">Instructor tools</div>
               <div className="flex flex-col gap-1 text-[13px]">
-                <Link href={`/teach/course/${track.slug}/builder`} className="underline text-t2">
-                  Course builder
+                <Link href={`/teach/course/${encodeURIComponent(track.slug)}`} className="underline text-t2">
+                  Open instructor dashboard
                 </Link>
-                <Link href={`/teach/course/${track.slug}/assignments`} className="underline text-t2">
-                  Assignments & grading
-                </Link>
-                <Link href={`/teach/course/${track.slug}/gradebook`} className="underline text-t2">
-                  Gradebook
-                </Link>
-                <Link href={`/teach/course/${track.slug}/analytics`} className="underline text-t2">
-                  Analytics
+                <Link href={`/teach/course/${encodeURIComponent(track.slug)}/assignments`} className="underline text-t2">
+                  Assignments
                 </Link>
               </div>
             </div>

@@ -18,7 +18,7 @@ export default async function ScheduleLivePage() {
         eyebrow="Teach · live"
         title="Schedule a live session."
         subtitle="We handle the tech (LiveKit under the hood). You just teach. Chat, hand-raise, and Q&A included."
-        right={<Link href="/teach" className="btn btn-ghost btn-sm">← Back to studio</Link>}
+        right={<Link href="/teach" className="btn btn-ghost btn-sm">← Dashboard</Link>}
       />
       <div className="grid lg:grid-cols-[1fr_360px] gap-8">
         <ScheduleLiveForm />

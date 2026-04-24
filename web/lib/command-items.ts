@@ -29,13 +29,14 @@ export function buildCommandItems(user: User): CommandItem[] {
       { label: "Profile", href: "/profile", emoji: "★" },
     ],
     teacher: [
-      { label: "Studio overview", href: "/dashboard", emoji: "▤" },
-      { label: "Teach Studio", href: "/teach", emoji: "◈" },
+      { label: "Instructor dashboard", href: "/teach", emoji: "▤" },
+      { label: "My courses", href: "/teach/courses", emoji: "▦" },
+      { label: "Students", href: "/teach/students", emoji: "▩" },
+      { label: "Inbox", href: "/teach/messages", emoji: "✉" },
+      { label: "Quizzes", href: "/teach/quizzes", emoji: "▣" },
       { label: "New recording", href: "/teach/record", emoji: "●", hint: "⌘N" },
-      { label: "Schedule live", href: "/teach/live", emoji: "▶" },
-      { label: "My lessons", href: "/feed", emoji: "▦" },
-      { label: "Sessions", href: "/live", emoji: "◉" },
-      { label: "Cohorts", href: "/cohort", emoji: "▩" },
+      { label: "Go live", href: "/teach/live", emoji: "▶" },
+      { label: "Learner home", href: "/dashboard", emoji: "◈" },
       { label: "Account", href: "/profile", emoji: "◆" },
     ],
     employer: [
@@ -83,6 +84,18 @@ export function buildCommandItems(user: User): CommandItem[] {
         href: `/tracks/${t.slug}`,
         subtitle: `${t.level} · ${t.weeks} weeks · ${t.category}`,
         emoji: t.heroEmoji,
+      });
+    }
+  }
+  if (user.role === "teacher") {
+    for (const t of store.tracks.filter((x) => x.teacherId === user.id)) {
+      items.push({
+        id: `instructor-${t.slug}`,
+        kind: "nav",
+        label: `Course: ${t.title}`,
+        href: `/teach/course/${t.slug}`,
+        emoji: t.heroEmoji,
+        subtitle: "Instructor",
       });
     }
   }

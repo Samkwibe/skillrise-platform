@@ -61,7 +61,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ trackSlug: str
     description: d.description,
     dueAt: d.dueAt,
     pointsPossible: d.pointsPossible,
-    rubric: d.rubric,
     attachments: (d.attachments ?? []).map((x, i) => ({
       id: x.id ?? `att_${id()}_${i}`,
       title: x.title,
@@ -70,8 +69,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ trackSlug: str
     createdAt: now,
     updatedAt: now,
     sortOrder: existing.length,
-    moduleId: d.moduleId,
   };
+  if (d.rubric != null && d.rubric !== "") a.rubric = d.rubric;
+  if (d.moduleId) a.moduleId = d.moduleId;
   await db.putAssignment(a);
   return NextResponse.json({ assignment: a }, { status: 201 });
 }

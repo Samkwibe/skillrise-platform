@@ -20,7 +20,7 @@ export default async function TeacherImpactPage() {
     <div className="section-pad-x py-8 max-w-[900px] mx-auto">
       <div className="mb-4">
         <Link href="/teach" className="text-sm text-t2 underline">
-          ← Teach Studio
+          ← Dashboard
         </Link>
       </div>
       <PageHeader

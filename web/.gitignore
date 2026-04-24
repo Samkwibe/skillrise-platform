@@ -9,3 +9,5 @@ build
 .vercel
 coverage
 .turbo
+playwright-report
+test-results

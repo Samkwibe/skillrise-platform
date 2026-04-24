@@ -18,6 +18,19 @@ export async function buildCourseAnalytics(track: Track, teacherId: string) {
 
   const atRisk = (await listAtRiskStudentsForTeacher(teacherId)).filter((r) => r.trackSlug === track.slug);
 
+  /** % of enrolled students who have completed each module (curriculum order). */
+  const moduleCompletion: { moduleId: string; label: string; pct: number }[] = track.modules.map((m, i) => {
+    if (enrollments.length === 0) {
+      return { moduleId: m.id, label: `L${i + 1}`, pct: 0 };
+    }
+    const done = enrollments.filter((e) => e.completedModuleIds.includes(m.id)).length;
+    return {
+      moduleId: m.id,
+      label: m.title.length > 28 ? `L${i + 1}` : m.title,
+      pct: Math.round((done / enrollments.length) * 1000) / 10,
+    };
+  });
+
   const quizAverages: { quizId: string; title: string; averagePct: number | null; studentsWithScore: number }[] = [];
   for (const q of quizzes) {
     let sum = 0;
@@ -44,6 +57,7 @@ export async function buildCourseAnalytics(track: Track, teacherId: string) {
     enrollCount: enrollments.length,
     graduated: enrollments.filter((e) => e.completedAt).length,
     avgTrackCompletion: Math.round(avgTrackCompletion * 10) / 10,
+    moduleCompletion,
     quizAverages,
     atRisk,
   };

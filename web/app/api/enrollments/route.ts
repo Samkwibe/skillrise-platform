@@ -4,6 +4,7 @@ import { getVerifiedUserForApi } from "@/lib/auth";
 import { ensureTracksFromDatabase, getTrackLoaded } from "@/lib/course/ensure-tracks";
 import { getDb } from "@/lib/db";
 import { mirrorEnrollmentToStore } from "@/lib/course/enrollment-store";
+import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
 
 export async function GET() {
   const user = await getVerifiedUserForApi();
@@ -18,6 +19,13 @@ export async function GET() {
 export async function POST(req: Request) {
   const user = await getVerifiedUserForApi();
   if (user instanceof NextResponse) return user;
+  const lim = rateLimit(`enroll:${user.id}`, 40, 60 * 60 * 1000);
+  if (!lim.ok) {
+    return NextResponse.json(
+      { error: "Too many enrollment requests. Try again later." },
+      { status: 429, headers: rateLimitHeaders(lim) },
+    );
+  }
   await ensureTracksFromDatabase();
   const body = (await req.json()) as {
     trackSlug?: string;

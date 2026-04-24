@@ -18,7 +18,7 @@ export default async function RecordLesson() {
         eyebrow="Teach · record"
         title="Film a 30-second lesson on your phone."
         subtitle="Upload vertical video, we auto-caption, auto-translate, and publish. Your kitchen table is fine."
-        right={<Link href="/teach" className="btn btn-ghost btn-sm">← Back to studio</Link>}
+        right={<Link href="/teach" className="btn btn-ghost btn-sm">← Dashboard</Link>}
       />
       <div className="max-w-[640px]">
         <RecordLessonForm tracks={myTracks.map((t) => ({ slug: t.slug, title: t.title }))} />
