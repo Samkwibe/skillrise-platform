@@ -23,6 +23,8 @@ import type {
   CourseSection,
   CourseGradebookOverride,
 } from "@/lib/course/lms-types";
+import type { CourseReviewRecord, CourseWishlistEntry } from "@/lib/course/discovery-types";
+import type { FeedPost } from "@/lib/store";
 
 type Collections = {
   users: Collection<User>;
@@ -46,6 +48,9 @@ type Collections = {
   enrollmentInvites: Collection<EnrollmentInvite>;
   courseSections: Collection<CourseSection>;
   courseGradebookOverrides: Collection<CourseGradebookOverride>;
+  courseReviews: Collection<CourseReviewRecord>;
+  courseWishlist: Collection<CourseWishlistEntry>;
+  feedPosts: Collection<FeedPost>;
 };
 
 declare global {
@@ -116,6 +121,13 @@ async function getConnection() {
       db.collection("courseSections").createIndex({ trackSlug: 1 }),
       db.collection("courseGradebookOverrides").createIndex({ id: 1 }, { unique: true }),
       db.collection("courseGradebookOverrides").createIndex({ trackSlug: 1, userId: 1 }, { unique: true }),
+      db.collection("courseReviews").createIndex({ id: 1 }, { unique: true }),
+      db.collection("courseReviews").createIndex({ trackSlug: 1 }),
+      db.collection("courseReviews").createIndex({ userId: 1, trackSlug: 1 }, { unique: true }),
+      db.collection("courseWishlist").createIndex({ userId: 1, trackSlug: 1 }, { unique: true }),
+      db.collection("courseWishlist").createIndex({ userId: 1 }),
+      db.collection("feedPosts").createIndex({ id: 1 }, { unique: true }),
+      db.collection("feedPosts").createIndex({ createdAt: -1 }),
     ]);
   })();
 
@@ -142,6 +154,9 @@ async function getConnection() {
     enrollmentInvites: db.collection<EnrollmentInvite>("enrollmentInvites"),
     courseSections: db.collection<CourseSection>("courseSections"),
     courseGradebookOverrides: db.collection<CourseGradebookOverride>("courseGradebookOverrides"),
+    courseReviews: db.collection<CourseReviewRecord>("courseReviews"),
+    courseWishlist: db.collection<CourseWishlistEntry>("courseWishlist"),
+    feedPosts: db.collection<FeedPost>("feedPosts"),
   };
   globalThis.__skillrise_mongo__ = { client, db, cols, ready };
   return globalThis.__skillrise_mongo__;
@@ -518,6 +533,76 @@ export function createMongoAdapter(): DbAdapter {
         { upsert: true },
       );
       return o;
+    },
+
+    async listReviewsByTrack(slug) {
+      const { cols } = await getConnection();
+      const arr = await cols.courseReviews.find({ trackSlug: slug }).sort({ createdAt: -1 }).toArray();
+      return arr.map((a) => strip(a)!) as CourseReviewRecord[];
+    },
+    async getReviewByUserTrack(userId, trackSlug) {
+      const { cols } = await getConnection();
+      return strip(
+        await cols.courseReviews.findOne({ userId, trackSlug }),
+      ) as CourseReviewRecord | null;
+    },
+    async putReview(r) {
+      const { cols } = await getConnection();
+      const setDoc = { ...r } as Record<string, unknown>;
+      for (const k of Object.keys(setDoc)) {
+        if (setDoc[k] === undefined) delete setDoc[k];
+      }
+      await cols.courseReviews.updateOne({ id: r.id }, { $set: setDoc }, { upsert: true });
+      return r;
+    },
+    async addReviewHelpful(reviewId, voterUserId) {
+      const { cols } = await getConnection();
+      const r = strip(await cols.courseReviews.findOne({ id: reviewId })) as CourseReviewRecord | null;
+      if (!r) return false;
+      const voters = r.helpfulVoterIds ?? [];
+      if (voters.includes(voterUserId)) return false;
+      voters.push(voterUserId);
+      await cols.courseReviews.updateOne(
+        { id: reviewId },
+        { $set: { helpfulVoterIds: voters, helpfulCount: (r.helpfulCount ?? 0) + 1 } },
+      );
+      return true;
+    },
+    async listWishlist(userId) {
+      const { cols } = await getConnection();
+      const arr = await cols.courseWishlist.find({ userId }).sort({ createdAt: -1 }).toArray();
+      return arr.map((a) => strip(a)!) as CourseWishlistEntry[];
+    },
+    async isWishlisted(userId, trackSlug) {
+      const { cols } = await getConnection();
+      return Boolean(await cols.courseWishlist.findOne({ userId, trackSlug }));
+    },
+    async addWishlist(userId, trackSlug) {
+      const { cols } = await getConnection();
+      const now = Date.now();
+      await cols.courseWishlist.updateOne(
+        { userId, trackSlug },
+        { $setOnInsert: { userId, trackSlug, createdAt: now } },
+        { upsert: true },
+      );
+    },
+    async removeWishlist(userId, trackSlug) {
+      const { cols } = await getConnection();
+      await cols.courseWishlist.deleteOne({ userId, trackSlug });
+    },
+
+    async listFeedPosts() {
+      const { db } = await getConnection();
+      // Use db.collection, not cached `cols`, so this works after HMR when `cols` predates `feedPosts`.
+      const c = db.collection<FeedPost>("feedPosts");
+      const arr = await c.find({}).sort({ createdAt: -1 }).toArray();
+      return arr.map((a) => strip(a)!) as FeedPost[];
+    },
+    async putFeedPost(p) {
+      const { db } = await getConnection();
+      const c = db.collection<FeedPost>("feedPosts");
+      await c.updateOne({ id: p.id }, { $set: p }, { upsert: true });
+      return p;
     },
 
     async getQuiz(id) {

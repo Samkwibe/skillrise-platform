@@ -16,9 +16,13 @@ export default async function TeacherAssignmentsPage({ params }: { params: Promi
   if (!canTeacherEditCourse(user, track) || !track) notFound();
 
   return (
-    <div className="max-w-4xl">
-      <p className="text-sm mb-6" style={{ color: "var(--text-2)" }}>
-        Create assignments and grade submissions. Students open assignments from the course page.
+    <div className="w-full animate-in fade-in duration-500">
+      <div className="flex items-center gap-2 mb-6">
+        <span className="text-indigo-400 text-xl">📝</span>
+        <h2 className="text-xl font-extrabold text-white">Grading Desk</h2>
+      </div>
+      <p className="text-sm text-t2 font-medium mb-8 max-w-2xl bg-white/5 p-4 rounded-xl border border-white/5 backdrop-blur-md">
+        Create assignments and grade submissions. Students open assignments from the course page. Use the AI Grading Assistant to pre-fill feedback for standard criteria.
       </p>
       <TeacherAssignmentManager trackSlug={slug} />
     </div>

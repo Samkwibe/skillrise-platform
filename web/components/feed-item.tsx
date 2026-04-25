@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
+import { classifyVideoUrl } from "@/lib/feed/video-embed";
 
 type Comment = { id: string; userId: string; text: string; at: number };
 type Post = {
@@ -16,6 +17,7 @@ type Post = {
   trackSlug?: string;
   category?: string;
   takeaway?: string;
+  videoUrl?: string;
 };
 type Author = { id: string; name: string; role: string; avatar: string; credentials?: string };
 type Category = { id: string; label: string; emoji: string } | null;
@@ -26,6 +28,8 @@ export function FeedItem({
   category,
   canSave = false,
   initialSaved = false,
+  viewerId,
+  commentNameById = {},
 }: {
   post: Post;
   author: Author;
@@ -33,6 +37,8 @@ export function FeedItem({
   /** When true (learners + teens), renders the Save button. */
   canSave?: boolean;
   initialSaved?: boolean;
+  viewerId?: string;
+  commentNameById?: Record<string, string>;
 }) {
   const [likes, setLikes] = useState(post.likes);
   const [liked, setLiked] = useState(false);
@@ -41,6 +47,7 @@ export function FeedItem({
   const [showComments, setShowComments] = useState(false);
   const [saved, setSaved] = useState(initialSaved);
   const [savingHint, setSavingHint] = useState<string | null>(null);
+  const video = classifyVideoUrl(post.videoUrl);
 
   async function toggleSave() {
     const will = !saved;
@@ -81,9 +88,29 @@ export function FeedItem({
           {post.youth && <span className="pill pill-purple">★ Youth</span>}
         </div>
       </div>
-      <div className="aspect-[4/5] sm:aspect-video relative bg-gradient-to-br from-[#0d2a1c] to-[#1a1040] flex items-center justify-center">
-        <div className="text-[64px]">{post.emoji}</div>
-        <div className="absolute bottom-3 left-3 pill">▶ {post.duration}</div>
+      <div className="aspect-[4/5] sm:aspect-video relative bg-gradient-to-br from-[#0d2a1c] to-[#1a1040] flex items-center justify-center overflow-hidden">
+        {video.type === "youtube" || video.type === "vimeo" ? (
+          <iframe
+            title={post.title}
+            src={video.embedUrl!}
+            className="absolute inset-0 w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        ) : video.type === "direct" && video.srcUrl ? (
+          <video
+            className="absolute inset-0 w-full h-full object-contain bg-black"
+            controls
+            playsInline
+            src={video.srcUrl}
+            preload="metadata"
+          />
+        ) : (
+          <>
+            <div className="text-[64px] z-[1]">{post.emoji}</div>
+            <div className="absolute bottom-3 left-3 pill z-[1]">▶ {post.duration}</div>
+          </>
+        )}
       </div>
       <div className="p-4">
         <div className="font-display text-[16px] font-bold mb-1">{post.title}</div>
@@ -162,9 +189,12 @@ export function FeedItem({
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ text: commentText }),
                 });
-                const body = await res.json();
-                if (res.ok) {
-                  setComments((c) => [...c, body.comment]);
+                const body = (await res.json()) as {
+                  comment?: Comment;
+                  authorName?: string;
+                };
+                if (res.ok && body.comment) {
+                  setComments((c) => [...c, body.comment as Comment]);
                   setCommentText("");
                 }
               }}
@@ -174,11 +204,15 @@ export function FeedItem({
               <button className="btn btn-primary btn-sm" type="submit">Send</button>
             </form>
             <div className="flex flex-col gap-2">
-              {comments.map((c) => (
-                <div key={c.id} className="text-[13px] text-t2">
-                  <span className="font-semibold text-t1">You</span> — {c.text}
-                </div>
-              ))}
+              {comments.map((c) => {
+                const isYou = viewerId && c.userId === viewerId;
+                const name = isYou ? "You" : commentNameById[c.userId] ?? "Member";
+                return (
+                  <div key={c.id} className="text-[13px] text-t2">
+                    <span className="font-semibold text-t1">{name}</span> — {c.text}
+                  </div>
+                );
+              })}
               {comments.length === 0 && <div className="text-[12px] text-t3">Be the first to comment.</div>}
             </div>
           </div>

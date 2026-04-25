@@ -19,6 +19,14 @@ export type TeacherRecentSubmission = {
   status: string;
 };
 
+export type TeacherChartData = {
+  name: string;
+  active: number;
+  submissions: number;
+};
+
+export type TeacherHeatmapData = number[][];
+
 export type TeacherCourseSummary = {
   slug: string;
   title: string;
@@ -36,6 +44,8 @@ export async function buildTeacherDashboard(teacherId: string): Promise<{
   upcomingDeadlines: TeacherDeadline[];
   recentSubmissions: TeacherRecentSubmission[];
   courseSummaries: TeacherCourseSummary[];
+  chartData: TeacherChartData[];
+  heatmapData: TeacherHeatmapData;
 }> {
   const db = getDb();
   await db.ready();
@@ -107,10 +117,49 @@ export async function buildTeacherDashboard(teacherId: string): Promise<{
     status: e.status,
   }));
 
+  // Build chartData and heatmapData
+  const chartDataMap: Record<string, { activeSet: Set<string>; subs: number }> = {};
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now - i * 86400000);
+    chartDataMap[days[d.getDay()]] = { activeSet: new Set(), subs: 0 };
+  }
+
+  const heatmapData: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+
+  for (const e of events) {
+    const d = new Date(e.at);
+    const dayStr = days[d.getDay()];
+    if (chartDataMap[dayStr]) {
+      chartDataMap[dayStr].subs++;
+      chartDataMap[dayStr].activeSet.add(e.studentName);
+    }
+    
+    // Heatmap
+    heatmapData[d.getDay()][d.getHours()]++;
+  }
+
+  const chartData: TeacherChartData[] = Object.keys(chartDataMap).map((k) => ({
+    name: k,
+    active: chartDataMap[k].activeSet.size,
+    submissions: chartDataMap[k].subs,
+  }));
+
+  // Reorder chartData to start from 6 days ago up to today
+  const orderedChartData: TeacherChartData[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now - i * 86400000);
+    const dayStr = days[d.getDay()];
+    const found = chartData.find(c => c.name === dayStr);
+    if (found) orderedChartData.push(found);
+  }
+
   return {
     pendingGradesTotal,
     upcomingDeadlines: deadlines.slice(0, 10),
     recentSubmissions,
     courseSummaries: courseSummaries.sort((a, b) => a.title.localeCompare(b.title)),
+    chartData: orderedChartData,
+    heatmapData,
   };
 }

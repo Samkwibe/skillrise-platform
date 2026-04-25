@@ -3,6 +3,7 @@ import { store, findUserById, LIFE_CATEGORIES } from "@/lib/store";
 import { PageHeader } from "@/components/page-header";
 import { FeedItem } from "@/components/feed-item";
 import { FeedCategoryPills } from "@/components/feed-category-pills";
+import { FeedPostComposer } from "@/components/feed-post-composer";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,12 @@ export default async function FeedPage({
   if (cat !== "all") posts = posts.filter((p) => p.category === cat);
 
   const visibleCats = LIFE_CATEGORIES.filter((c) => (teen ? c.forTeens : true));
+  const canPostFeed =
+    user.role === "learner" || user.role === "teen" || user.role === "teacher" || user.role === "admin";
+  const teacherTrackChoices =
+    user.role === "teacher"
+      ? store.tracks.filter((t) => t.teacherId === user.id).map((t) => ({ slug: t.slug, title: t.title }))
+      : [];
 
   return (
     <div className="section-pad-x py-8 md:py-10">
@@ -38,6 +45,9 @@ export default async function FeedPage({
       />
       <div className="max-w-[720px] mx-auto">
         <FeedCategoryPills current={cat} categories={visibleCats} />
+        {canPostFeed && (
+          <FeedPostComposer role={user.role} trackChoices={teacherTrackChoices} />
+        )}
         <div className="flex flex-col gap-4">
           {posts.length === 0 ? (
             <div className="cover-card p-6 text-center text-[14px]" style={{ color: "var(--text-2)" }}>
@@ -49,6 +59,13 @@ export default async function FeedPage({
               if (!author) return null;
               const category = LIFE_CATEGORIES.find((c) => c.id === p.category);
               const initialSaved = canSave && Boolean(p.savedBy?.includes(user.id));
+              const commentNameById: Record<string, string> = {};
+              for (const c of p.comments) {
+                if (!commentNameById[c.userId]) {
+                  const u = findUserById(c.userId);
+                  commentNameById[c.userId] = u?.name?.split(" ")[0] ?? "Member";
+                }
+              }
               return (
                 <FeedItem
                   key={p.id}
@@ -57,6 +74,8 @@ export default async function FeedPage({
                   category={category ?? null}
                   canSave={canSave}
                   initialSaved={initialSaved}
+                  viewerId={user.id}
+                  commentNameById={commentNameById}
                 />
               );
             })

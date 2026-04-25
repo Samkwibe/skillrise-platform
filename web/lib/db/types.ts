@@ -21,6 +21,8 @@ import type {
   CourseSection,
   CourseGradebookOverride,
 } from "@/lib/course/lms-types";
+import type { CourseReviewRecord, CourseWishlistEntry } from "@/lib/course/discovery-types";
+import type { FeedPost } from "@/lib/store";
 
 export type DbStoreKind = "memory" | "mongodb" | "dynamodb";
 
@@ -127,4 +129,19 @@ export type DbAdapter = {
 
   getGradebookOverride: (trackSlug: string, userId: string) => Promise<CourseGradebookOverride | null>;
   putGradebookOverride: (o: CourseGradebookOverride) => Promise<CourseGradebookOverride>;
+
+  listReviewsByTrack: (trackSlug: string) => Promise<CourseReviewRecord[]>;
+  getReviewByUserTrack: (userId: string, trackSlug: string) => Promise<CourseReviewRecord | null>;
+  putReview: (r: CourseReviewRecord) => Promise<CourseReviewRecord>;
+  /** Returns true if the vote was recorded (false if user already voted). */
+  addReviewHelpful: (reviewId: string, voterUserId: string) => Promise<boolean>;
+
+  listWishlist: (userId: string) => Promise<CourseWishlistEntry[]>;
+  isWishlisted: (userId: string, trackSlug: string) => Promise<boolean>;
+  addWishlist: (userId: string, trackSlug: string) => Promise<void>;
+  removeWishlist: (userId: string, trackSlug: string) => Promise<void>;
+
+  /** SkillFeed posts (learner + teacher); merged with seed posts in `store.feed`. */
+  listFeedPosts: () => Promise<FeedPost[]>;
+  putFeedPost: (p: FeedPost) => Promise<FeedPost>;
 };

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { store } from "@/lib/store";
 import { getVerifiedUserForApi } from "@/lib/auth";
+import { persistFeedPost } from "@/lib/feed/persist-feed-post";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getVerifiedUserForApi();
@@ -11,5 +12,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!post) return NextResponse.json({ error: "Not found." }, { status: 404 });
   post.likes += liked ? 1 : -1;
   if (post.likes < 0) post.likes = 0;
+  await persistFeedPost(post);
   return NextResponse.json({ likes: post.likes });
 }

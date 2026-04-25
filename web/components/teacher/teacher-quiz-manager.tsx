@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import type { Quiz, QuizKind } from "@/lib/quiz/types";
+import { QuizLivePreview } from "./quiz-live-preview";
 
 type QDraft = { prompt: string; o0: string; o1: string; o2: string; o3: string; correctIndex: number };
 
@@ -53,6 +54,7 @@ export function TeacherQuizManager() {
   const [drafts, setDrafts] = useState<QDraft[]>([emptyQ(), emptyQ()]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
 
   const load = useCallback(async () => {
     const ck = courseKey.trim();
@@ -167,208 +169,331 @@ export function TeacherQuizManager() {
     }
   };
 
+  const handleAIGenerate = async () => {
+    if (!youtubeVideoId && kind === "checkpoint") {
+      setErr("Please enter a YouTube video ID first so AI can analyze the transcript.");
+      return;
+    }
+    setGeneratingAI(true);
+    setErr(null);
+    
+    try {
+      const res = await fetch("/api/teacher/assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          prompt: `You are generating a quiz. Generate 2 multiple choice questions for a quiz titled "${title || 'Knowledge Check'}". The quiz is a ${kind} quiz. Return EXACTLY AND ONLY a valid JSON array of objects, where each object has exactly these fields: "prompt" (string), "o0" (string), "o1" (string), "o2" (string), "o3" (string), "correctIndex" (number 0-3). Do not wrap the JSON in markdown code blocks. Do not include any explanations.`, 
+          history: [], 
+          stream: true 
+        }),
+      });
+
+      if (!res.ok || !res.body) {
+        throw new Error("Failed to connect to AI assistant.");
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let acc = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        acc += decoder.decode(value, { stream: true });
+      }
+      
+      // Clean up markdown code blocks if the AI accidentally adds them
+      let cleanJson = acc.trim();
+      if (cleanJson.startsWith('```json')) cleanJson = cleanJson.substring(7);
+      if (cleanJson.startsWith('```')) cleanJson = cleanJson.substring(3);
+      if (cleanJson.endsWith('```')) cleanJson = cleanJson.substring(0, cleanJson.length - 3);
+      cleanJson = cleanJson.trim();
+
+      const parsedDrafts = JSON.parse(cleanJson);
+      if (Array.isArray(parsedDrafts) && parsedDrafts.length > 0) {
+        if (!title) setTitle("Auto-Generated Knowledge Check");
+        setDrafts(parsedDrafts);
+      } else {
+        throw new Error("AI returned invalid format.");
+      }
+    } catch (e) {
+      setErr("AI Generation failed: " + (e as Error).message);
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
+
   return (
-    <div className="space-y-8">
-      <section className="card p-5">
-        <h2 className="font-display text-lg font-bold mb-2">1. Course key</h2>
-        <p className="text-sm text-t2 mb-3 leading-relaxed">
-          Use the same key as the learner URL: from <code className="text-xs font-mono">/courses/learn?k=…</code> copy
-          the <code className="text-xs font-mono">k</code> value (16-char id). It identifies the saved course + video
-          context.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <input
-            className="input flex-1 min-w-[200px]"
-            value={courseKey}
-            onChange={(e) => setCourseKey(e.target.value.trim())}
-            placeholder="e.g. a1b2c3d4e5f6g7h8"
-            aria-label="Course key"
-          />
-          <button type="button" className="btn btn-primary" disabled={loading} onClick={() => void load()}>
-            {loading ? "Loading…" : "Load quizzes"}
-          </button>
-        </div>
-      </section>
-
-      {quizzes && (
-        <section className="card p-5">
-          <h2 className="font-display text-lg font-bold mb-3">Quizzes for this course</h2>
-          {quizzes.length === 0 ? (
-            <p className="text-sm text-t3">No quizzes yet. Create one below.</p>
-          ) : (
-            <ul className="space-y-2">
-              {quizzes.map((q) => (
-                <li
-                  key={q.id}
-                  className="flex flex-wrap items-center justify-between gap-2 border-b border-border1 pb-2 last:border-0"
-                >
-                  <div>
-                    <div className="font-medium">{q.title}</div>
-                    <div className="text-xs text-t3">
-                      {q.kind} · {q.questions.length} Q
-                      {q.youtubeVideoId ? ` · YT ${q.youtubeVideoId}` : ""}
-                      {q.triggerAtSec != null ? ` · @ ${q.triggerAtSec}s` : ""}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => startEdit(q)}>
-                      Edit
-                    </button>
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => void remove(q.id)}>
-                      Delete
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
-
-      <section className="card p-5">
-        <h2 className="font-display text-lg font-bold mb-2">{editingId ? "Edit quiz" : "Create quiz"}</h2>
-        <div className="grid sm:grid-cols-2 gap-3 mb-4">
-          <label className="block text-sm">
-            <span className="text-t3">Title</span>
-            <input className="input w-full mt-1" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </label>
-          <label className="block text-sm">
-            <span className="text-t3">Kind</span>
-            <select
-              className="input w-full mt-1"
-              value={kind}
-              onChange={(e) => setKind(e.target.value as QuizKind)}
-            >
-              <option value="checkpoint">Checkpoint (timed in video)</option>
-              <option value="final">Final exam</option>
-            </select>
-          </label>
-          <label className="block text-sm sm:col-span-2">
-            <span className="text-t3">YouTube video id (required for checkpoint)</span>
+    <div className="flex flex-col xl:flex-row gap-8 w-full min-h-[calc(100vh-12rem)]">
+      
+      {/* LEFT PANE: Editor & Controls */}
+      <div className="flex-1 max-w-3xl space-y-6">
+        
+        {/* Course Key Selection */}
+        <section className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-indigo-400 mb-2">1. Connect Course</h2>
+          <p className="text-sm text-t2 mb-4 leading-relaxed max-w-xl">
+            Link this quiz to an existing course. Copy the <code className="text-[11px] font-mono bg-white/10 px-1.5 py-0.5 rounded">k</code> value from your course URL.
+          </p>
+          <div className="flex flex-wrap gap-3">
             <input
-              className="input w-full mt-1 font-mono text-sm"
-              value={youtubeVideoId}
-              onChange={(e) => setYoutubeVideoId(e.target.value.trim())}
-              placeholder="e.g. dQw4w9WgXcQ"
+              className="flex-1 min-w-[200px] bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none transition-all"
+              value={courseKey}
+              onChange={(e) => setCourseKey(e.target.value.trim())}
+              placeholder="e.g. a1b2c3d4e5f6g7h8"
+              aria-label="Course key"
             />
-          </label>
-          {kind === "checkpoint" && (
-            <label className="block text-sm">
-              <span className="text-t3">Trigger at (seconds)</span>
+            <button 
+              type="button" 
+              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50"
+              disabled={loading} 
+              onClick={() => void load()}
+            >
+              {loading ? "Loading…" : "Load Quizzes"}
+            </button>
+          </div>
+        </section>
+
+        {/* Existing Quizzes List */}
+        {quizzes && (
+          <section className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-white mb-4">Existing Quizzes</h2>
+            {quizzes.length === 0 ? (
+              <div className="text-sm text-t3 border border-dashed border-white/10 rounded-xl p-8 text-center bg-white/[0.01]">
+                No quizzes yet. Create your first one below.
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {quizzes.map((q) => (
+                  <li
+                    key={q.id}
+                    className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition-colors"
+                  >
+                    <div>
+                      <div className="font-bold text-white mb-1">{q.title}</div>
+                      <div className="text-[11px] font-medium text-t3 flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded ${q.kind === 'final' ? 'bg-purple-500/20 text-purple-300' : 'bg-indigo-500/20 text-indigo-300'}`}>
+                          {q.kind}
+                        </span>
+                        <span>{q.questions.length} Qs</span>
+                        {q.youtubeVideoId && <span>· YT: {q.youtubeVideoId}</span>}
+                        {q.triggerAtSec != null && <span>· @ {Math.floor(q.triggerAtSec/60)}:{(q.triggerAtSec%60).toString().padStart(2, '0')}</span>}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" className="px-3 py-1.5 text-xs font-semibold bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors" onClick={() => startEdit(q)}>
+                        Edit
+                      </button>
+                      <button type="button" className="px-3 py-1.5 text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors" onClick={() => void remove(q.id)}>
+                        Delete
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
+
+        {/* Quiz Builder Editor */}
+        <section className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-xl relative">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+            <h2 className="text-xl font-bold text-white">{editingId ? "Edit Quiz" : "Create New Quiz"}</h2>
+            
+            <button 
+              onClick={handleAIGenerate}
+              disabled={generatingAI}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600/20 to-indigo-600/20 hover:from-purple-600/40 hover:to-indigo-600/40 border border-purple-500/30 text-purple-300 text-xs font-bold transition-all"
+            >
+              <span className="text-sm">✨</span> 
+              {generatingAI ? "Analyzing Video..." : "Auto-Generate with AI"}
+            </button>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4 mb-8">
+            <label className="block text-sm col-span-2 sm:col-span-1">
+              <span className="text-t3 font-medium mb-1.5 block">Title</span>
+              <input className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none transition-all" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Module 1 Knowledge Check" />
+            </label>
+            <label className="block text-sm col-span-2 sm:col-span-1">
+              <span className="text-t3 font-medium mb-1.5 block">Quiz Type</span>
+              <select
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none transition-all"
+                value={kind}
+                onChange={(e) => setKind(e.target.value as QuizKind)}
+              >
+                <option value="checkpoint">Checkpoint (Timed in video)</option>
+                <option value="final">Final Exam (Standalone)</option>
+              </select>
+            </label>
+            <label className="block text-sm col-span-2">
+              <span className="text-t3 font-medium mb-1.5 block">YouTube Video ID <span className="text-indigo-400 text-xs">(Required for checkpoint & AI)</span></span>
               <input
-                type="number"
-                min={1}
-                className="input w-full mt-1"
-                value={triggerAtSec}
-                onChange={(e) => setTriggerAtSec(Number(e.target.value))}
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 font-mono text-white text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none transition-all"
+                value={youtubeVideoId}
+                onChange={(e) => setYoutubeVideoId(e.target.value.trim())}
+                placeholder="e.g. dQw4w9WgXcQ"
               />
             </label>
-          )}
-          <label className="block text-sm">
-            <span className="text-t3">Pass % (e.g. 70)</span>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              className="input w-full mt-1"
-              value={passPct}
-              onChange={(e) => setPassPct(Number(e.target.value))}
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="text-t3">Max attempts</span>
-            <input
-              type="number"
-              min={1}
-              max={10}
-              className="input w-full mt-1"
-              value={maxAttempts}
-              onChange={(e) => setMaxAttempts(Number(e.target.value))}
-            />
-          </label>
-        </div>
-
-        <div className="text-sm font-bold text-t3 mb-2">Questions (2–4 options each)</div>
-        <div className="space-y-4">
-          {drafts.map((d, i) => (
-            <div key={i} className="border border-border1 rounded-[10px] p-3 space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-bold text-t3">Question {i + 1}</span>
-                {drafts.length > 1 && (
-                  <button
-                    type="button"
-                    className="text-xs text-red-400 underline"
-                    onClick={() => setDrafts((prev) => prev.filter((_, j) => j !== i))}
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-              <input
-                className="input w-full text-sm"
-                placeholder="Prompt"
-                value={d.prompt}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setDrafts((prev) => prev.map((x, j) => (j === i ? { ...x, prompt: v } : x)));
-                }}
-              />
-              {(["o0", "o1", "o2", "o3"] as const).map((k, oi) => (
+            {kind === "checkpoint" && (
+              <label className="block text-sm">
+                <span className="text-t3 font-medium mb-1.5 block">Trigger At (Seconds)</span>
                 <input
-                  key={k}
-                  className="input w-full text-sm"
-                  placeholder={`Option ${oi + 1}`}
-                  value={d[k]}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setDrafts((prev) =>
-                      prev.map((x, j) => {
-                        if (j !== i) return x;
-                        if (k === "o0") return { ...x, o0: v };
-                        if (k === "o1") return { ...x, o1: v };
-                        if (k === "o2") return { ...x, o2: v };
-                        return { ...x, o3: v };
-                      }),
-                    );
-                  }}
+                  type="number"
+                  min={1}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none transition-all"
+                  value={triggerAtSec}
+                  onChange={(e) => setTriggerAtSec(Number(e.target.value))}
                 />
-              ))}
-              <label className="text-xs text-t3 flex items-center gap-2">
-                Correct:
-                <select
-                  className="input py-1 text-sm"
-                  value={d.correctIndex}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    setDrafts((prev) => prev.map((x, j) => (j === i ? { ...x, correctIndex: v } : x)));
-                  }}
-                >
-                  <option value={0}>1</option>
-                  <option value={1}>2</option>
-                  <option value={2}>3</option>
-                  <option value={3}>4</option>
-                </select>
+              </label>
+            )}
+            <div className={`grid grid-cols-2 gap-4 ${kind !== 'checkpoint' ? 'col-span-2' : ''}`}>
+              <label className="block text-sm">
+                <span className="text-t3 font-medium mb-1.5 block">Pass Percentage</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none transition-all"
+                  value={passPct}
+                  onChange={(e) => setPassPct(Number(e.target.value))}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-t3 font-medium mb-1.5 block">Max Attempts</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500/50 focus:outline-none transition-all"
+                  value={maxAttempts}
+                  onChange={(e) => setMaxAttempts(Number(e.target.value))}
+                />
               </label>
             </div>
-          ))}
-        </div>
-        <button type="button" className="btn btn-ghost btn-sm mt-2" onClick={() => setDrafts((p) => [...p, emptyQ()])}>
-          + Add question
-        </button>
+          </div>
 
-        {err && <p className="text-sm text-red-400 mt-3">{err}</p>}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Questions</h3>
+            <span className="text-xs text-t3 font-medium">{drafts.length} total</span>
+          </div>
 
-        <div className="flex flex-wrap gap-2 mt-4">
-          <button type="button" className="btn btn-primary" disabled={saving} onClick={() => void save()}>
-            {saving ? "Saving…" : editingId ? "Update quiz" : "Create quiz"}
+          <div className="space-y-6">
+            {drafts.map((d, i) => (
+              <div key={i} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 relative group transition-all hover:border-white/20">
+                <div className="absolute -left-3 top-5 w-6 h-6 rounded-full bg-indigo-500/20 border border-indigo-500/50 flex items-center justify-center text-[10px] font-bold text-indigo-300">
+                  {i + 1}
+                </div>
+                
+                <div className="flex justify-between items-start mb-4">
+                  <input
+                    className="flex-1 bg-transparent border-none text-white font-bold text-base focus:ring-0 placeholder:text-t3/50 px-0"
+                    placeholder="Enter question prompt..."
+                    value={d.prompt}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setDrafts((prev) => prev.map((x, j) => (j === i ? { ...x, prompt: v } : x)));
+                    }}
+                  />
+                  {drafts.length > 1 && (
+                    <button
+                      type="button"
+                      className="text-xs font-semibold text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-red-400/10 px-2 py-1 rounded-md"
+                      onClick={() => setDrafts((prev) => prev.filter((_, j) => j !== i))}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  {(["o0", "o1", "o2", "o3"] as const).map((k, oi) => (
+                    <div key={k} className="relative flex items-center">
+                      <div className={`absolute left-3 w-4 h-4 rounded-full border flex items-center justify-center ${d.correctIndex === oi ? 'border-green-400 bg-green-500/20' : 'border-t3/30'}`}>
+                        {d.correctIndex === oi && <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>}
+                      </div>
+                      <input
+                        className={`w-full bg-black/30 border rounded-xl pl-10 pr-3 py-2 text-sm text-t2 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none transition-all ${d.correctIndex === oi ? 'border-green-500/30 bg-green-500/5' : 'border-white/5'}`}
+                        placeholder={`Option ${oi + 1}`}
+                        value={d[k]}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setDrafts((prev) =>
+                            prev.map((x, j) => {
+                              if (j !== i) return x;
+                              return { ...x, [k]: v };
+                            }),
+                          );
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-t3 font-medium">Mark Correct Answer:</span>
+                  <div className="flex gap-2">
+                    {[0, 1, 2, 3].map((val) => (
+                      <button
+                        key={val}
+                        onClick={() => setDrafts((prev) => prev.map((x, j) => (j === i ? { ...x, correctIndex: val } : x)))}
+                        className={`w-7 h-7 rounded-md text-xs font-bold transition-all ${d.correctIndex === val ? 'bg-green-500 text-white' : 'bg-white/5 text-t3 hover:bg-white/10'}`}
+                      >
+                        {val + 1}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button 
+            type="button" 
+            className="w-full mt-6 py-4 rounded-xl border-2 border-dashed border-white/10 text-t2 font-bold text-sm hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all flex items-center justify-center gap-2" 
+            onClick={() => setDrafts((p) => [...p, emptyQ()])}
+          >
+            <span>+</span> Add Another Question
           </button>
-          {editingId && (
-            <button type="button" className="btn btn-ghost" onClick={resetForm}>
-              Cancel edit
-            </button>
+
+          {err && (
+            <div className="mt-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium flex items-center gap-2">
+              <span className="text-lg">⚠️</span> {err}
+            </div>
           )}
-        </div>
-      </section>
+
+          <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-white/10">
+            <button 
+              type="button" 
+              className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/25 disabled:opacity-50" 
+              disabled={saving} 
+              onClick={() => void save()}
+            >
+              {saving ? "Saving…" : editingId ? "Save Changes" : "Create Quiz"}
+            </button>
+            {editingId && (
+              <button type="button" className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-bold rounded-xl transition-all" onClick={resetForm}>
+                Cancel Edit
+              </button>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* RIGHT PANE: Live Student Preview */}
+      <div className="hidden xl:block flex-1 min-w-[400px] sticky top-6 h-[calc(100vh-6rem)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-t3 mb-4 flex items-center gap-2">
+          <span>👀</span> Live Student Preview
+        </h2>
+        <QuizLivePreview
+          title={title}
+          kind={kind}
+          youtubeVideoId={youtubeVideoId}
+          triggerAtSec={triggerAtSec}
+          drafts={drafts}
+        />
+      </div>
+
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   type Application,
   type AssistantMessage,
   type Track,
+  type FeedPost,
 } from "@/lib/store";
 import type { DbAdapter } from "./types";
 
@@ -346,6 +347,53 @@ export function createMemoryAdapter(): DbAdapter {
       if (i >= 0) store.courseGradebookOverrides[i] = o;
       else store.courseGradebookOverrides.push(o);
       return o;
+    },
+
+    async listReviewsByTrack(slug) {
+      return store.courseReviews.filter((r) => r.trackSlug === slug).sort((a, b) => b.createdAt - a.createdAt);
+    },
+    async getReviewByUserTrack(userId, trackSlug) {
+      return store.courseReviews.find((r) => r.userId === userId && r.trackSlug === trackSlug) ?? null;
+    },
+    async putReview(r) {
+      const i = store.courseReviews.findIndex((x) => x.id === r.id);
+      if (i >= 0) store.courseReviews[i] = r;
+      else store.courseReviews.push(r);
+      return r;
+    },
+    async addReviewHelpful(reviewId, voterUserId) {
+      const r = store.courseReviews.find((x) => x.id === reviewId);
+      if (!r) return false;
+      if (r.helpfulVoterIds.includes(voterUserId)) return false;
+      r.helpfulVoterIds.push(voterUserId);
+      r.helpfulCount = (r.helpfulCount ?? 0) + 1;
+      return true;
+    },
+    async listWishlist(userId) {
+      return store.courseWishlist
+        .filter((w) => w.userId === userId)
+        .sort((a, b) => b.createdAt - a.createdAt);
+    },
+    async isWishlisted(userId, trackSlug) {
+      return store.courseWishlist.some((w) => w.userId === userId && w.trackSlug === trackSlug);
+    },
+    async addWishlist(userId, trackSlug) {
+      if (store.courseWishlist.some((w) => w.userId === userId && w.trackSlug === trackSlug)) return;
+      store.courseWishlist.push({ userId, trackSlug, createdAt: Date.now() });
+    },
+    async removeWishlist(userId, trackSlug) {
+      const i = store.courseWishlist.findIndex((w) => w.userId === userId && w.trackSlug === trackSlug);
+      if (i >= 0) store.courseWishlist.splice(i, 1);
+    },
+
+    async listFeedPosts() {
+      return [] as FeedPost[];
+    },
+    async putFeedPost(p) {
+      const i = store.feed.findIndex((x) => x.id === p.id);
+      if (i >= 0) store.feed[i] = p;
+      else store.feed.unshift(p);
+      return p;
     },
   } satisfies DbAdapter;
 }

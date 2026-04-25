@@ -22,9 +22,17 @@ export default async function TeachCourseLayout({
   if (!canTeacherEditCourse(user, track) || !track) notFound();
 
   return (
-    <div className="section-pad-x py-6 sm:py-8 max-w-6xl mx-auto w-full">
-      <CoursePageHeader slug={slug} title={track.title} heroEmoji={track.heroEmoji} color={track.color} />
-      {children}
+    <div className="w-full text-t1 min-h-screen bg-gradient-to-br from-[#0a0a0f] to-[#12121a] pb-12 relative overflow-hidden">
+      {/* Background Effect */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[10%] right-[20%] w-[40vw] h-[40vw] bg-indigo-600/10 rounded-full blur-[150px] mix-blend-screen animate-pulse" style={{ animationDuration: '15s' }} />
+        <div className="absolute bottom-[10%] left-[10%] w-[30vw] h-[30vw] bg-purple-600/5 rounded-full blur-[150px] mix-blend-screen animate-pulse" style={{ animationDuration: '20s' }} />
+      </div>
+
+      <div className="max-w-[1400px] mx-auto relative z-10 px-4 sm:px-6 md:px-8 pt-8">
+        <CoursePageHeader slug={slug} title={track.title} heroEmoji={track.heroEmoji} color={track.color} />
+        {children}
+      </div>
     </div>
   );
 }

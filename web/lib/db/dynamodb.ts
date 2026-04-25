@@ -54,6 +54,8 @@ import type {
   CourseSection,
   CourseGradebookOverride,
 } from "@/lib/course/lms-types";
+import type { CourseReviewRecord, CourseWishlistEntry } from "@/lib/course/discovery-types";
+import type { FeedPost } from "@/lib/store";
 
 type Item = Record<string, unknown> & { pk: string; sk: string };
 
@@ -719,6 +721,105 @@ export function createDynamoAdapter(): DbAdapter {
     async putGradebookOverride(o) {
       await put({ pk: `LMS#G#${o.id}`, sk: "META", lmsType: "gradeOverride", ...o } as Item);
       return o;
+    },
+
+    async listReviewsByTrack(trackSlug) {
+      const { Items = [] } = await doc.send(
+        new ScanCommand({
+          TableName: table,
+          FilterExpression: "lmsType = :t AND trackSlug = :s",
+          ExpressionAttributeValues: { ":t": "courseReview", ":s": trackSlug },
+        }),
+      );
+      return (Items.map((i) => strip<CourseReviewRecord>(i)).filter(Boolean) as CourseReviewRecord[]).sort(
+        (a, b) => b.createdAt - a.createdAt,
+      );
+    },
+    async getReviewByUserTrack(userId, trackSlug) {
+      const { Items = [] } = await doc.send(
+        new ScanCommand({
+          TableName: table,
+          FilterExpression: "lmsType = :t AND userId = :u AND trackSlug = :s",
+          ExpressionAttributeValues: { ":t": "courseReview", ":u": userId, ":s": trackSlug },
+        }),
+      );
+      return strip<CourseReviewRecord>(Items[0]) ?? null;
+    },
+    async putReview(r) {
+      await put({ pk: `LMS#REV#${r.id}`, sk: "META", lmsType: "courseReview", ...r } as Item);
+      return r;
+    },
+    async addReviewHelpful(reviewId, voterUserId) {
+      const raw = await get(`LMS#REV#${reviewId}`, "META");
+      const r = strip<CourseReviewRecord>(raw) as CourseReviewRecord | null;
+      if (!r) return false;
+      const voters = r.helpfulVoterIds ?? [];
+      if (voters.includes(voterUserId)) return false;
+      voters.push(voterUserId);
+      await put({
+        pk: `LMS#REV#${reviewId}`,
+        sk: "META",
+        lmsType: "courseReview",
+        ...r,
+        helpfulVoterIds: voters,
+        helpfulCount: (r.helpfulCount ?? 0) + 1,
+      } as Item);
+      return true;
+    },
+    async listWishlist(userId) {
+      const { Items = [] } = await doc.send(
+        new ScanCommand({
+          TableName: table,
+          FilterExpression: "lmsType = :t AND userId = :u",
+          ExpressionAttributeValues: { ":t": "courseWish", ":u": userId },
+        }),
+      );
+      return (Items.map((i) => strip<CourseWishlistEntry>(i)).filter(Boolean) as CourseWishlistEntry[]).sort(
+        (a, b) => b.createdAt - a.createdAt,
+      );
+    },
+    async isWishlisted(userId, trackSlug) {
+      const { Items = [] } = await doc.send(
+        new ScanCommand({
+          TableName: table,
+          FilterExpression: "lmsType = :t AND userId = :u AND trackSlug = :s",
+          ExpressionAttributeValues: { ":t": "courseWish", ":u": userId, ":s": trackSlug },
+        }),
+      );
+      return Items.length > 0;
+    },
+    async addWishlist(userId, trackSlug) {
+      const now = Date.now();
+      const pk = `LMS#WISH#${userId}#${trackSlug.replace(/[^a-zA-Z0-9-]/g, "_")}`;
+      await put({
+        pk,
+        sk: "META",
+        lmsType: "courseWish",
+        userId,
+        trackSlug,
+        createdAt: now,
+      } as Item);
+    },
+    async removeWishlist(userId, trackSlug) {
+      const pk = `LMS#WISH#${userId}#${trackSlug.replace(/[^a-zA-Z0-9-]/g, "_")}`;
+      await del(pk, "META");
+    },
+
+    async listFeedPosts() {
+      const { Items = [] } = await doc.send(
+        new ScanCommand({
+          TableName: table,
+          FilterExpression: "lmsType = :t",
+          ExpressionAttributeValues: { ":t": "feedPost" },
+        }),
+      );
+      return (Items.map((i) => strip<FeedPost>(i)).filter(Boolean) as FeedPost[]).sort(
+        (a, b) => b.createdAt - a.createdAt,
+      );
+    },
+    async putFeedPost(p) {
+      await put({ pk: `LMS#FEED#${p.id}`, sk: "META", lmsType: "feedPost", ...p } as Item);
+      return p;
     },
   } satisfies DbAdapter;
 }

@@ -12,6 +12,7 @@ import { LogoutButton } from "@/components/logout-button";
 const TEEN_TABS: Array<{ href: string; label: string; icon: string }> = [
   { href: "/dashboard", label: "Quest", icon: "⚔" },
   { href: "/tracks", label: "Learn", icon: "📚" },
+  { href: "/discover", label: "Reels", icon: "🎬" },
   { href: "/feed", label: "Feed", icon: "◈" },
   { href: "/community", label: "Talk", icon: "◎" },
   { href: "/profile", label: "Me", icon: "★" },

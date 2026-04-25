@@ -449,6 +449,11 @@ export const lmsTrackSettingsSchema = z.object({
     .optional(),
 });
 
+export const courseReviewCreateSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  body: z.string().trim().min(10, "Review must be at least 10 characters").max(2000),
+});
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type AssistantAskInput = z.infer<typeof assistantAskSchema>;

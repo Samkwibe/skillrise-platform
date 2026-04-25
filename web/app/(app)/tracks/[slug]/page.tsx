@@ -9,6 +9,9 @@ import { groupModulesIntoUnits } from "@/lib/course/outline";
 import { ensureTracksFromDatabase } from "@/lib/course/ensure-tracks";
 import { getDb } from "@/lib/db";
 import { getMissingPrerequisites } from "@/lib/services/prerequisites";
+import { getReviewStatsForTrack } from "@/lib/services/course-discovery-stats";
+import { CourseReviewsSection, type ReviewRow } from "@/components/learner/course-reviews-section";
+import { WishlistHeartButton } from "@/components/learner/wishlist-heart-button";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +42,33 @@ export default async function TrackDetail({
   const pct = enrollment ? Math.round((enrollment.completedModuleIds.length / track.modules.length) * 100) : 0;
   const jobs = store.jobs.filter((j: Job) => j.requiredTrackSlug === track.slug && j.status === "open");
   const units = groupModulesIntoUnits(track.modules);
+  const [reviewStats, reviewRows, wishlisted] = await Promise.all([
+    getReviewStatsForTrack(track.slug),
+    (async (): Promise<ReviewRow[]> => {
+      const raw = await db.listReviewsByTrack(track.slug);
+      const rows: ReviewRow[] = await Promise.all(
+        raw.map(async (r) => {
+          const u = await db.findUserById(r.userId);
+          return {
+            id: r.id,
+            rating: r.rating,
+            body: r.body,
+            helpfulCount: r.helpfulCount,
+            createdAt: r.createdAt,
+            instructorReply: r.instructorReply,
+            instructorRepliedAt: r.instructorRepliedAt,
+            author: u ? { name: u.name, avatar: u.avatar } : { name: "Learner", avatar: "" },
+            isOwnReview: r.userId === user.id,
+            helpfulVotedByMe: r.helpfulVoterIds.includes(user.id),
+          };
+        }),
+      );
+      return rows.sort((a, b) => b.createdAt - a.createdAt);
+    })(),
+    db.isWishlisted(user.id, track.slug),
+  ]);
+  const userReview = reviewRows.find((r) => r.isOwnReview);
+  const hasAlreadyReviewed = Boolean(userReview);
   const prereqTitles = (track.prerequisiteSlugs ?? [])
     .map((s) => getTrack(s)?.title ?? s)
     .filter(Boolean);
@@ -131,6 +161,13 @@ export default async function TrackDetail({
             })()}
           </div>
 
+          <CourseReviewsSection
+            trackSlug={track.slug}
+            canPost={Boolean(enrollment)}
+            hasAlreadyReviewed={hasAlreadyReviewed}
+            initialReviews={reviewRows}
+          />
+
           {jobs.length > 0 && (
             <>
               <h2 className="font-display text-[20px] font-bold mb-3">Local jobs waiting for graduates</h2>
@@ -175,13 +212,21 @@ export default async function TrackDetail({
                   <Link href={`/tracks/${track.slug}/messages`} className="btn btn-ghost w-full justify-center text-[13px]">
                     Messages
                   </Link>
+                  {user.role !== "employer" && user.role !== "school" && (
+                    <WishlistHeartButton trackSlug={track.slug} initialSaved={wishlisted} />
+                  )}
                 </div>
               </>
             ) : (
               <>
                 <div className="font-display text-[22px] font-extrabold mb-1">Free. Forever.</div>
                 <div className="text-[13px] text-t3 mb-4">Start now. Stop any time. Keep what you learned.</div>
-                <EnrollButton trackSlug={track.slug} />
+                <div className="flex flex-col gap-2">
+                  <EnrollButton trackSlug={track.slug} />
+                  {user.role !== "employer" && user.role !== "school" && (
+                    <WishlistHeartButton trackSlug={track.slug} initialSaved={wishlisted} />
+                  )}
+                </div>
               </>
             )}
           </div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { GoogleSignInCta, googleSignInErrorMessages } from "@/components/auth/google-sign-in-cta";
 
-export function LoginForm({ showGoogle = false }: { showGoogle?: boolean }) {
+export function LoginForm({ showGoogle = false, portal = "learner" }: { showGoogle?: boolean; portal?: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "/dashboard";
@@ -12,6 +12,22 @@ export function LoginForm({ showGoogle = false }: { showGoogle?: boolean }) {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const demoAccounts: Record<string, string> = {
+    learner: "tanya@skillrise.app",
+    teacher: "john@skillrise.app",
+    teen: "sofia@skillrise.app",
+    employer: "hiring@apexelectric.com",
+    school: "careers@centralhs.edu",
+    admin: "admin@skillrise.app"
+  };
+  
+  const currentDemoEmail = demoAccounts[portal] || demoAccounts.learner;
+
+  const handleDemoLogin = () => {
+    setEmail(currentDemoEmail);
+    setPassword("demo1234");
+  };
 
   useEffect(() => {
     const code = params.get("error");
@@ -75,14 +91,18 @@ export function LoginForm({ showGoogle = false }: { showGoogle?: boolean }) {
       <button type="submit" disabled={busy} className="btn btn-primary btn-xl justify-center">
         {busy ? "Signing in…" : "Sign in"}
       </button>
-      <div className="text-[12px] text-t3 leading-relaxed">
-        Try any demo account with password <code className="font-mono text-t2">demo1234</code>:<br />
-        <span className="font-mono text-t2">tanya@skillrise.app</span> · learner ·{" "}
-        <span className="font-mono text-t2">john@skillrise.app</span> · teacher ·{" "}
-        <span className="font-mono text-t2">sofia@skillrise.app</span> · teen<br />
-        <span className="font-mono text-t2">hiring@apexelectric.com</span> · employer ·{" "}
-        <span className="font-mono text-t2">careers@centralhs.edu</span> · school ·{" "}
-        <span className="font-mono text-t2">admin@skillrise.app</span> · admin
+      
+      <div className="mt-4 pt-4 border-t border-border1 text-center">
+        <button 
+          type="button" 
+          onClick={handleDemoLogin}
+          className="text-[13px] font-medium text-[#1fc87e] hover:text-white transition-colors"
+        >
+          Auto-fill Demo Account
+        </button>
+        <p className="text-[11px] text-t3 mt-1">
+          Fills in credentials for <span className="font-mono text-t2">{currentDemoEmail}</span>
+        </p>
       </div>
     </form>
     </div>

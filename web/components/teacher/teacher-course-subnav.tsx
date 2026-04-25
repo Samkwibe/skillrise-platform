@@ -23,8 +23,7 @@ export function TeacherCourseSubnav({ slug }: { slug: string }) {
       style={{ WebkitOverflowScrolling: "touch" }}
     >
       <nav
-        className="inline-flex min-w-full gap-1 rounded-[10px] p-1 sm:flex-wrap"
-        style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)" }}
+        className="inline-flex min-w-full gap-2 rounded-xl p-1.5 sm:flex-wrap bg-black/20 border border-white/5 backdrop-blur-md"
         aria-label="Course sections"
       >
         {tabs.map((t) => {
@@ -36,16 +35,11 @@ export function TeacherCourseSubnav({ slug }: { slug: string }) {
               key={t.segment || "overview"}
               href={href}
               className={[
-                "shrink-0 rounded-[8px] px-3 py-2 text-[13px] font-medium transition-colors",
+                "shrink-0 rounded-lg px-4 py-2 text-[13px] font-bold transition-all duration-300",
                 active
-                  ? "text-white"
-                  : "hover:bg-[color-mix(in_srgb,var(--surface-1)_70%,transparent)]",
+                  ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]"
+                  : "text-t3 hover:text-white hover:bg-white/5 border border-transparent",
               ].join(" ")}
-              style={
-                active
-                  ? { background: "var(--red)", color: "#fff" }
-                  : { color: "var(--text-2)" }
-              }
             >
               {t.label}
             </Link>

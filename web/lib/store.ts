@@ -18,6 +18,7 @@ import type {
   CourseSection,
   CourseGradebookOverride,
 } from "@/lib/course/lms-types";
+import type { CourseReviewRecord, CourseWishlistEntry } from "@/lib/course/discovery-types";
 
 // Hash the shared demo password once at module load so seeded users are bcrypt-hashed too.
 const DEMO_PASSWORD_HASH = bcrypt.hashSync("demo1234", 10);
@@ -348,6 +349,8 @@ export type FeedPost = {
   category: LifeCategory;
   /** The one-sentence takeaway the viewer should walk away with. */
   takeaway?: string;
+  /** Optional public video: HTTPS URL to .mp4/.webm or a page YouTube/Vimeo can embed. */
+  videoUrl?: string;
   /** Users who have saved this post for later. */
   savedBy?: string[];
   createdAt: number;
@@ -538,6 +541,8 @@ type StoreShape = {
   enrollmentInvites: EnrollmentInvite[];
   courseSections: CourseSection[];
   courseGradebookOverrides: CourseGradebookOverride[];
+  courseReviews: CourseReviewRecord[];
+  courseWishlist: CourseWishlistEntry[];
   seededTotal: number;
 };
 
@@ -1189,6 +1194,29 @@ function seed(): StoreShape {
     enrollmentInvites: [],
     courseSections: [],
     courseGradebookOverrides: [],
+    courseReviews: [
+      {
+        id: "rev_seed_1",
+        trackSlug: "electrical-basics",
+        userId: "u_tanya",
+        rating: 5,
+        body: "Clear, practical, and got me interview-ready fast. John explains like you're on the job with him.",
+        helpfulCount: 14,
+        helpfulVoterIds: [],
+        createdAt: now - 20 * day,
+      },
+      {
+        id: "rev_seed_2",
+        trackSlug: "electrical-basics",
+        userId: "u_rico",
+        rating: 4,
+        body: "Solid basics. Would love even more panel photos, but the safety section alone was worth it.",
+        helpfulCount: 8,
+        helpfulVoterIds: [],
+        createdAt: now - 12 * day,
+      },
+    ],
+    courseWishlist: [] as CourseWishlistEntry[],
     seededTotal: 48213,
   };
 }

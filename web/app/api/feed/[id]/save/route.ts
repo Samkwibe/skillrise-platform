@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { store } from "@/lib/store";
 import { getVerifiedUserForApi } from "@/lib/auth";
+import { persistFeedPost } from "@/lib/feed/persist-feed-post";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,8 @@ export async function POST(req: Request, ctx: RouteCtx) {
 
   if (want && !already) savedBy.push(user.id);
   else if (!want && already) post.savedBy = savedBy.filter((u) => u !== user.id);
+
+  await persistFeedPost(post);
 
   return NextResponse.json({
     id: post.id,

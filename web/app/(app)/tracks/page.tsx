@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { store, findUserById, LIFE_CATEGORIES } from "@/lib/store";
+import { store, LIFE_CATEGORIES } from "@/lib/store";
 import { requireVerifiedUser } from "@/lib/auth";
-import { PageHeader } from "@/components/page-header";
+import { TracksBrowseSections } from "@/components/learner/tracks-browse-sections";
 
 export const dynamic = "force-dynamic";
 
-// Built from LIFE_CATEGORIES so adding a new category in one place
-// shows up here for free. "All" is prepended as a reset link.
 const CATEGORIES = [
   { id: "all", label: "All" },
   ...LIFE_CATEGORIES.map((c) => ({ id: c.id, label: c.label })),
@@ -18,58 +16,64 @@ export default async function TracksPage({ searchParams }: { searchParams: Promi
   const cat = sp.cat || "all";
   const youthOnly = sp.youth === "1" || user.role === "teen";
 
-  let tracks = [...store.tracks];
-  if (cat !== "all") tracks = tracks.filter((t) => t.category === cat);
-  if (youthOnly) tracks = tracks.filter((t) => t.youthFriendly);
+  let baseTracks = [...store.tracks];
+  if (cat !== "all") baseTracks = baseTracks.filter((t) => t.category === cat);
+  if (youthOnly) baseTracks = baseTracks.filter((t) => t.youthFriendly);
 
   return (
-    <div className="section-pad-x py-10">
-      <PageHeader
-        eyebrow="Skill Tracks"
-        title={youthOnly ? "Youth Zone tracks" : "Learn a skill. Get hired."}
-        subtitle="Free, verifiable tracks taught by working professionals. 3–8 weeks, start any time."
-      />
-
-      <div className="flex flex-wrap gap-2 mb-6">
-        {CATEGORIES.map((c) => (
-          <Link key={c.id} href={`/tracks?cat=${c.id}${youthOnly ? "&youth=1" : ""}`} className={`pill ${cat === c.id ? "pill-g" : ""}`}>
-            {c.label}
-          </Link>
-        ))}
-        {user.role !== "teen" && (
-          <Link href={`/tracks?cat=${cat}${youthOnly ? "" : "&youth=1"}`} className={`pill ${youthOnly ? "pill-purple" : ""}`}>
-            ★ Youth-friendly only
-          </Link>
-        )}
+    <div className="min-h-screen bg-slate-50 pb-16">
+      <div className="bg-gradient-to-b from-blue-50 to-slate-50 border-b border-slate-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-12">
+          <p className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2">Free courses</p>
+          <h1
+            className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-2"
+            style={{ fontFamily: "var(--role-font-display), system-ui, sans-serif" }}
+          >
+            {youthOnly ? "Youth Zone courses" : "Learn skills that get you hired"}
+          </h1>
+          <p className="text-slate-600 text-base max-w-2xl">
+            Browse like Udemy or Coursera: ratings, save for later, and clear paths. All courses listed here are free
+            to start.
+          </p>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {tracks.map((t) => {
-          const teacher = findUserById(t.teacherId);
-          return (
-            <Link key={t.slug} href={`/tracks/${t.slug}`} className="card card-hover p-5 flex flex-col">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-12 h-12 rounded-[12px] flex items-center justify-center text-[24px]" style={{ background: `rgba(${t.color},0.14)` }}>{t.heroEmoji}</div>
-                <div className="flex flex-col items-end gap-1">
-                  {t.youthFriendly && <span className="pill pill-purple">★ Youth</span>}
-                  <span className="pill">{t.level}</span>
-                </div>
-              </div>
-              <div className="font-display text-[18px] font-bold mb-1">{t.title}</div>
-              <div className="text-[13px] text-t3 mb-4 flex-1">{t.summary}</div>
-              <div className="flex items-center justify-between text-[12px] text-t3 mb-3">
-                <span>{t.weeks} weeks · {t.modules.length} modules</span>
-                <span className="text-g font-semibold">Hiring demand {"★".repeat(t.hiringDemand)}</span>
-              </div>
-              {teacher && (
-                <div className="text-[12px] text-t2 border-t border-border1 pt-3">
-                  Taught by <span className="font-semibold text-t1">{teacher.name}</span> · {teacher.credentials}
-                </div>
-              )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+        <div className="flex flex-wrap gap-2 mb-2 overflow-x-auto pb-1 scrollbar-thin">
+          {CATEGORIES.map((c) => (
+            <Link
+              key={c.id}
+              href={`/tracks?cat=${c.id}${youthOnly ? "&youth=1" : ""}`}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold border transition-colors ${
+                cat === c.id
+                  ? "bg-blue-600 text-white border-blue-600 shadow"
+                  : "bg-white text-slate-700 border-slate-200 hover:border-blue-300"
+              }`}
+            >
+              {c.label}
             </Link>
-          );
-        })}
+          ))}
+          {user.role !== "teen" && (
+            <Link
+              href={`/tracks?cat=${cat}${youthOnly ? "" : "&youth=1"}`}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold border ${
+                youthOnly ? "bg-violet-600 text-white border-violet-600" : "bg-white text-slate-700 border-slate-200"
+              }`}
+            >
+              ★ Youth-friendly only
+            </Link>
+          )}
+        </div>
+        <p className="text-sm text-slate-500 mb-8">
+          <Link href="/discover" className="font-semibold text-blue-700 hover:underline">
+            Education reels
+          </Link>
+          <span className="mx-2">·</span>
+          Short lessons in a full-screen, LinkedIn-style scroll — only learning content.
+        </p>
       </div>
+
+      <TracksBrowseSections user={user} baseTracks={baseTracks} allTracks={store.tracks} youthOnly={youthOnly} />
     </div>
   );
 }
