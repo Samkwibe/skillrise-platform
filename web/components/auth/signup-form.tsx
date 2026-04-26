@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { GoogleSignInCta } from "@/components/auth/google-sign-in-cta";
+import { GitHubSignInCta } from "@/components/auth/github-sign-in-cta";
 import { PasswordStrength } from "@/components/auth/password-strength";
 import { AuthPasswordInput } from "@/components/auth/auth-password-input";
 
@@ -17,10 +18,12 @@ const ROLES: { id: Role; label: string; sub: string }[] = [
 
 export function SignupForm({
   showGoogle = false,
+  showGitHub = false,
   role,
   onRoleChange,
 }: {
   showGoogle?: boolean;
+  showGitHub?: boolean;
   role: Role;
   onRoleChange: (r: Role) => void;
 }) {
@@ -39,11 +42,24 @@ export function SignupForm({
 
   return (
     <div>
-      <GoogleSignInCta enabled={showGoogle} defaultNext="/onboarding" source="signup" label="Sign up with Google" />
-      <p className="text-[13px] text-t2 leading-relaxed mb-5 pl-3 border-l-2 border-g/40">
-        With Google you start as a <span className="text-t1 font-semibold">learner</span> with a verified email. Use the form
-        below to join as a teacher, employer, teen, or school.
-      </p>
+      <div className="space-y-3 mb-4">
+        <GoogleSignInCta enabled={showGoogle} defaultNext="/onboarding" source="signup" label="Sign up with Google" />
+        <GitHubSignInCta enabled={showGitHub} defaultNext="/onboarding" source="signup" label="Sign up with GitHub" />
+      </div>
+      {(showGoogle || showGitHub) && (
+        <div className="flex items-center gap-3 mb-5">
+          <div className="h-px flex-1" style={{ background: "var(--border-1)" }} />
+          <span className="text-[12px] text-t3">or sign up with email</span>
+          <div className="h-px flex-1" style={{ background: "var(--border-1)" }} />
+        </div>
+      )}
+      {(showGoogle || showGitHub) && (
+        <p className="text-[13px] text-t2 leading-relaxed mb-5 pl-3 border-l-2 border-g/40">
+          With {showGoogle && showGitHub ? "Google or GitHub" : showGoogle ? "Google" : "GitHub"} you start as a{" "}
+          <span className="text-t1 font-semibold">learner</span> with a verified email. Use the form below to join as a
+          teacher, employer, teen, or school.
+        </p>
+      )}
       <form
         onSubmit={async (e) => {
           e.preventDefault();

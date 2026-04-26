@@ -161,6 +161,17 @@ export function createDynamoAdapter(): DbAdapter {
       );
       return strip<User>(Items[0]);
     },
+    async findUserByGitHubId(githubId) {
+      const { Items = [] } = await doc.send(
+        new ScanCommand({
+          TableName: table,
+          FilterExpression: "#sk = :p AND #gh = :g",
+          ExpressionAttributeNames: { "#sk": "sk", "#gh": "githubId" },
+          ExpressionAttributeValues: { ":p": "PROFILE", ":g": githubId },
+        }),
+      );
+      return strip<User>(Items[0]);
+    },
     async findUserByVerifiedPhoneE164(e164, excludeUserId) {
       const { Items = [] } = await doc.send(
         new ScanCommand({

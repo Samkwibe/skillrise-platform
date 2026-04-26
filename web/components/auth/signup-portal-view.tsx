@@ -65,7 +65,13 @@ function isRole(v: string | null): v is Role {
   return v !== null && ROLE_KEYS.includes(v as Role);
 }
 
-export function SignupPortalView({ showGoogle }: { showGoogle: boolean }) {
+export function SignupPortalView({
+  showGoogle,
+  showGitHub,
+}: {
+  showGoogle: boolean;
+  showGitHub: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -138,7 +144,7 @@ export function SignupPortalView({ showGoogle }: { showGoogle: boolean }) {
 
           <div className="auth-form-shell">
             <div className="animate-in fade-in duration-500" key={role}>
-              <SignupForm showGoogle={showGoogle} role={role} onRoleChange={setRole} />
+              <SignupForm showGoogle={showGoogle} showGitHub={showGitHub} role={role} onRoleChange={setRole} />
             </div>
           </div>
         </div>

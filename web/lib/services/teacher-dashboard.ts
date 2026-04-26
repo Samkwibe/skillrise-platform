@@ -36,6 +36,13 @@ export type TeacherCourseSummary = {
   pendingGrades: number;
 };
 
+export type TeacherStudentFace = {
+  id: string;
+  name: string;
+  avatar: string;
+  avatarUrl?: string;
+};
+
 /**
  * Aggregates grading queue, deadlines, and recent submission activity for a teacher's courses.
  */
@@ -46,6 +53,7 @@ export async function buildTeacherDashboard(teacherId: string): Promise<{
   courseSummaries: TeacherCourseSummary[];
   chartData: TeacherChartData[];
   heatmapData: TeacherHeatmapData;
+  studentRoster: TeacherStudentFace[];
 }> {
   const db = getDb();
   await db.ready();
@@ -154,6 +162,25 @@ export async function buildTeacherDashboard(teacherId: string): Promise<{
     if (found) orderedChartData.push(found);
   }
 
+  const studentIds = new Set<string>();
+  for (const t of tracks) {
+    const ens = await db.listEnrollmentsByTrack(t.slug);
+    for (const e of ens) studentIds.add(e.userId);
+  }
+  const studentRoster: TeacherStudentFace[] = [];
+  for (const sid of [...studentIds].slice(0, 36)) {
+    const u = await db.findUserById(sid);
+    if (u) {
+      studentRoster.push({
+        id: u.id,
+        name: u.name,
+        avatar: u.avatar,
+        avatarUrl: u.avatarUrl,
+      });
+    }
+  }
+  studentRoster.sort((a, b) => a.name.localeCompare(b.name));
+
   return {
     pendingGradesTotal,
     upcomingDeadlines: deadlines.slice(0, 10),
@@ -161,5 +188,6 @@ export async function buildTeacherDashboard(teacherId: string): Promise<{
     courseSummaries: courseSummaries.sort((a, b) => a.title.localeCompare(b.title)),
     chartData: orderedChartData,
     heatmapData,
+    studentRoster,
   };
 }

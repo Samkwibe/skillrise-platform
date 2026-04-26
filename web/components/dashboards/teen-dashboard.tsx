@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { User } from "@/lib/store";
-import { store, userEnrollments, userCertificates, getTrack } from "@/lib/store";
+import { store, userEnrollments, userCertificates, getTrack, neighborhoodPeers } from "@/lib/store";
+import { Avatar } from "@/components/ui/avatar";
 import { SkillSearch } from "@/components/dashboard/skill-search";
 import { UnifiedCourseSearch } from "@/components/courses/unified-course-search";
 import { RecommendedFreeCourses } from "@/components/courses/learner-courses-dock";
@@ -11,10 +12,6 @@ import { StreakCalendar } from "./streak-calendar";
  * XP bar, streak fire, daily quest, badge trophy case. Chunky colored tiles.
  * No Jobs, no AI Tutor, no serious analytics.
  */
-function hashStreak(uid: string): number {
-  return 3 + ([...uid].reduce((a, c) => a + c.charCodeAt(0), 0) % 18);
-}
-
 export function TeenDashboard({ user }: { user: User }) {
   const enrolls = userEnrollments(user.id);
   const certs = userCertificates(user.id);
@@ -25,8 +22,9 @@ export function TeenDashboard({ user }: { user: User }) {
   const level = 1 + Math.floor(xp / 250);
   const xpInLevel = xp % 250;
   const xpPct = Math.round((xpInLevel / 250) * 100);
-  const streak = hashStreak(user.id);
+  const lessonMilestone = completedModules;
 
+  const peersNearby = neighborhoodPeers(user, 12);
   const youthTracks = store.tracks.filter((t) => t.youthFriendly).slice(0, 4);
   const nextTrack =
     enrolls
@@ -38,10 +36,10 @@ export function TeenDashboard({ user }: { user: User }) {
 
   const BADGES = [
     { id: "first-step", icon: "👟", label: "First Step", earned: completedModules >= 1, bg: "var(--teen-lime)" },
-    { id: "streak-3", icon: "🔥", label: "3-Day Fire", earned: streak >= 3, bg: "var(--teen-pink)" },
+    { id: "streak-3", icon: "🔥", label: "3 Lessons", earned: completedModules >= 3, bg: "var(--teen-pink)" },
     { id: "cert-1", icon: "🏅", label: "Certified", earned: certs.length >= 1, bg: "var(--teen-cyan)" },
     { id: "modules-10", icon: "⭐", label: "10 Lessons", earned: completedModules >= 10, bg: "var(--teen-purple)" },
-    { id: "streak-7", icon: "🌈", label: "Week Warrior", earned: streak >= 7, bg: "var(--teen-lime)" },
+    { id: "streak-7", icon: "🌈", label: "20 Lessons", earned: completedModules >= 20, bg: "var(--teen-lime)" },
     { id: "level-5", icon: "👑", label: "Level 5", earned: level >= 5, bg: "var(--teen-pink)" },
   ];
 
@@ -101,10 +99,10 @@ export function TeenDashboard({ user }: { user: User }) {
             🔥
           </div>
           <div className="text-[32px] font-black leading-none mt-1" style={{ color: "var(--teen-pink)" }}>
-            {streak}
+            {lessonMilestone}
           </div>
           <div className="text-[11px] font-black uppercase tracking-[0.15em]" style={{ color: "var(--text-2)" }}>
-            day streak
+            lessons done
           </div>
         </div>
         <div className="tile-chunky tile-chunky-cyan p-4 text-center">
@@ -120,6 +118,28 @@ export function TeenDashboard({ user }: { user: User }) {
 
       {/* 7-day streak calendar */}
       <StreakCalendar user={user} />
+
+      {peersNearby.length > 0 ? (
+        <section
+          className="tile-chunky tile-chunky-cyan p-4"
+          style={{ background: "linear-gradient(135deg, var(--surface-1), var(--surface-2))" }}
+        >
+          <div className="text-[10px] font-black uppercase tracking-[0.16em] mb-2" style={{ color: "var(--teen-cyan)" }}>
+            Teens learning near you
+          </div>
+          <p className="text-[12px] font-bold mb-3" style={{ color: "var(--text-2)" }}>
+            Real Youth Zone accounts in {user.neighborhood} — keep it kind in Community.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {peersNearby.map((p) => (
+              <div key={p.id} className="flex items-center gap-2 rounded-xl bg-black/20 px-2 py-1.5 border border-white/10">
+                <Avatar spec={p.avatar} photoUrl={p.avatarUrl} name={p.name} size={36} />
+                <span className="text-[12px] font-black truncate max-w-[100px]">{p.name.split(" ")[0]}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* Daily quest */}
       <div

@@ -171,7 +171,7 @@ export function RolePreview() {
               {current.cta.label}
             </Link>
             <Link href="/login" className="btn btn-ghost btn-sm">
-              Try the demo
+              Sign in
             </Link>
           </div>
         </div>

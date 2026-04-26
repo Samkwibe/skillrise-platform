@@ -59,7 +59,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           <div className="text-[11px] text-t3 italic">Learn. Teach. Rise.</div>
         </Link>
         <div className="flex items-center gap-3 px-2 py-3 mb-2 border-y border-border1">
-          <Avatar spec={user.avatar} size={36} />
+          <Avatar spec={user.avatar} photoUrl={user.avatarUrl} name={user.name} size={36} />
           <div className="min-w-0 flex-1">
             <div className="text-[13px] font-semibold truncate">{user.name}</div>
             <div className="text-[11px] text-t3 capitalize">{user.role}</div>

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth";
 import { isGoogleOAuthConfigured } from "@/lib/auth/google-oauth";
+import { isGitHubOAuthConfigured } from "@/lib/auth/github-oauth";
 import { redirect } from "next/navigation";
 import { LoginPortalView } from "@/components/auth/login-portal-view";
 import { AuthPageSkeleton } from "@/components/auth/auth-page-skeleton";
@@ -13,7 +14,10 @@ export default async function LoginPage() {
 
   return (
     <Suspense fallback={<AuthPageSkeleton />}>
-      <LoginPortalView showGoogle={isGoogleOAuthConfigured()} />
+      <LoginPortalView
+        showGoogle={isGoogleOAuthConfigured()}
+        showGitHub={isGitHubOAuthConfigured()}
+      />
     </Suspense>
   );
 }

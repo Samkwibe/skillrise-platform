@@ -3,9 +3,24 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { GoogleSignInCta, googleSignInErrorMessages } from "@/components/auth/google-sign-in-cta";
+import { GitHubSignInCta, githubSignInErrorMessages } from "@/components/auth/github-sign-in-cta";
 import { AuthPasswordInput } from "@/components/auth/auth-password-input";
 
-export function LoginForm({ showGoogle = false, portal = "learner" }: { showGoogle?: boolean; portal?: string }) {
+const oauthErrors: Record<string, string> = {
+  ...googleSignInErrorMessages,
+  ...githubSignInErrorMessages,
+};
+
+export function LoginForm({
+  showGoogle = false,
+  showGitHub = false,
+  portal: _portal = "learner",
+}: {
+  showGoogle?: boolean;
+  showGitHub?: boolean;
+  portal?: string;
+}) {
+  void _portal;
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "/dashboard";
@@ -14,27 +29,10 @@ export function LoginForm({ showGoogle = false, portal = "learner" }: { showGoog
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const demoAccounts: Record<string, string> = {
-    learner: "tanya@skillrise.app",
-    teacher: "john@skillrise.app",
-    teen: "sofia@skillrise.app",
-    employer: "hiring@apexelectric.com",
-    school: "careers@centralhs.edu",
-    admin: "admin@skillrise.app",
-  };
-
-  const currentDemoEmail = demoAccounts[portal] || demoAccounts.learner;
-
-  const handleDemoLogin = () => {
-    setEmail(currentDemoEmail);
-    setPassword("demo1234");
-    setErr("");
-  };
-
   useEffect(() => {
     const code = params.get("error");
     if (!code) return;
-    const msg = googleSignInErrorMessages[code];
+    const msg = oauthErrors[code];
     setErr(msg || "Sign-in could not be completed. Try again.");
     const path = new URLSearchParams(params.toString());
     path.delete("error");
@@ -45,8 +43,18 @@ export function LoginForm({ showGoogle = false, portal = "learner" }: { showGoog
   }, [params, router]);
 
   return (
-    <div>
-      <GoogleSignInCta enabled={showGoogle} defaultNext={next} source="login" />
+    <div className="space-y-4">
+      <div className="space-y-3">
+        <GoogleSignInCta enabled={showGoogle} defaultNext={next} source="login" />
+        <GitHubSignInCta enabled={showGitHub} defaultNext={next} source="login" />
+      </div>
+      {(showGoogle || showGitHub) && (
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1" style={{ background: "var(--border-1)" }} />
+          <span className="text-[12px] text-t3">or with email</span>
+          <div className="h-px flex-1" style={{ background: "var(--border-1)" }} />
+        </div>
+      )}
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -101,18 +109,14 @@ export function LoginForm({ showGoogle = false, portal = "learner" }: { showGoog
           onChange={setPassword}
           autoComplete="current-password"
           labelRight={
-            <Link href="/forgot-password" className="text-[12px] text-g font-semibold hover:text-t1 transition-colors no-underline hover:underline">
+            <Link
+              href="/forgot-password"
+              className="text-[12px] text-g font-semibold hover:text-t1 transition-colors no-underline hover:underline"
+            >
               Forgot password
             </Link>
           }
         />
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 -mt-1">
-          <button type="button" onClick={handleDemoLogin} className="text-[12px] text-t3 hover:text-g transition-colors font-medium">
-            Fill demo credentials
-          </button>
-          <span className="text-[11px] text-t3 hidden sm:inline">·</span>
-          <span className="text-[11px] text-t3">Demo password: <span className="font-mono text-t2">demo1234</span></span>
-        </div>
         {err ? (
           <div className="pill pill-red w-full justify-center text-center" role="alert" aria-live="polite">
             {err}

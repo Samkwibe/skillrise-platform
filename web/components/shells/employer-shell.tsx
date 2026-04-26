@@ -82,7 +82,7 @@ export function EmployerShell({ user, children }: { user: User; children: React.
             href="/profile"
             className="flex items-center gap-2 px-2 py-2 rounded-[8px] hover:bg-[var(--surface-2)]"
           >
-            <Avatar spec={user.avatar} size={30} />
+            <Avatar spec={user.avatar} photoUrl={user.avatarUrl} name={user.name} size={30} />
             <div className="min-w-0 flex-1">
               <div className="text-[12.5px] font-semibold truncate">{user.name}</div>
               <div className="text-[11px] truncate" style={{ color: "var(--text-3)" }}>

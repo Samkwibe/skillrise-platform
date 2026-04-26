@@ -34,6 +34,7 @@ export type DbAdapter = {
   findUserById: (id: string) => Promise<User | null>;
   findUserByEmail: (email: string) => Promise<User | null>;
   findUserByGoogleSub: (googleSub: string) => Promise<User | null>;
+  findUserByGitHubId: (githubId: string) => Promise<User | null>;
   /** Another account that already verified this E.164 (excludeUserId to skip self). */
   findUserByVerifiedPhoneE164: (e164: string, excludeUserId: string) => Promise<User | null>;
   createUser: (u: User) => Promise<User>;

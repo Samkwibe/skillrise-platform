@@ -62,7 +62,7 @@ export function TeenShell({ user, children }: { user: User; children: React.Reac
             border: "2px solid var(--teen-pink)",
           }}
         >
-          <Avatar spec={user.avatar} size={28} />
+          <Avatar spec={user.avatar} photoUrl={user.avatarUrl} name={user.name} size={28} />
           {user.age && (
             <span className="text-[12px] font-extrabold" style={{ color: "var(--teen-lime)" }}>
               {user.age}

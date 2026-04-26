@@ -9,7 +9,10 @@ import {
   recommendTracksFor,
   STRUGGLE_OPTIONS,
   LIFE_CATEGORIES,
+  neighborhoodPeers,
 } from "@/lib/store";
+import { deriveLearnerHeatmap } from "@/lib/learner/activity-heatmap";
+import { Avatar } from "@/components/ui/avatar";
 import { ProgressRing } from "./progress-ring";
 import { WeeklyGoal } from "./weekly-goal";
 import { SkillSearch } from "@/components/dashboard/skill-search";
@@ -30,6 +33,8 @@ import { LearnerAchievements } from "@/components/learner/learner-achievements";
  */
 export function LearnerDashboard({ user }: { user: User }) {
   const enrolls = userEnrollments(user.id);
+  const heatmap = deriveLearnerHeatmap(enrolls);
+  const peersNearby = neighborhoodPeers(user, 14);
   const certs = userCertificates(user.id);
   const totalModules = enrolls.reduce(
     (s, e) => s + (getTrack(e.trackSlug)?.modules.length ?? 0),
@@ -173,9 +178,42 @@ export function LearnerDashboard({ user }: { user: User }) {
         
         {/* LEFT COLUMN */}
         <div className="space-y-6">
-          
-          <LearnerHeatmap user={user} />
-          
+          <LearnerHeatmap
+            cells={heatmap.cells}
+            streakDays={heatmap.streakDays}
+            hasActivity={heatmap.hasActivity}
+          />
+
+          {peersNearby.length > 0 ? (
+            <section className="rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-xl p-5">
+              <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-400 mb-3">
+                Learners in {user.neighborhood}
+              </div>
+              <p className="text-[13px] text-white/55 mb-4">
+                Real accounts on SkillRise in your area — say hi in Community or SkillFeed.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {peersNearby.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2"
+                  >
+                    <Avatar spec={p.avatar} photoUrl={p.avatarUrl} name={p.name} size={40} />
+                    <span className="text-[13px] font-semibold text-white truncate max-w-[120px]">{p.name}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : (
+            <section className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-5 text-[13px] text-white/55">
+              Set your neighborhood in{" "}
+              <Link href="/profile" className="text-emerald-400 underline">
+                Profile
+              </Link>{" "}
+              to see other learners nearby when they join.
+            </section>
+          )}
+
           <WeeklyGoal user={user} />
 
           {/* Because you said... Block */}

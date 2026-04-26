@@ -57,6 +57,17 @@ export function EmployerDashboard({ user }: { user: User }) {
   const funnelTotal = Math.max(myApps.length, 1);
   const openJobs = myJobs.filter((j) => j.status === "open");
 
+  const applicantUsers: NonNullable<ReturnType<typeof findUserById>>[] = [];
+  const seenApplicant = new Set<string>();
+  for (const a of myApps) {
+    const u = findUserById(a.userId);
+    if (u && !seenApplicant.has(u.id)) {
+      seenApplicant.add(u.id);
+      applicantUsers.push(u);
+      if (applicantUsers.length >= 16) break;
+    }
+  }
+
   const bindings: KanbanCardBinding[] = myApps.map((a) => {
     const applicant = findUserById(a.userId);
     const job = myJobs.find((j) => j.id === a.jobId);
@@ -133,6 +144,32 @@ export function EmployerDashboard({ user }: { user: User }) {
           </Link>
         </div>
       </div>
+
+      {applicantUsers.length > 0 ? (
+        <section
+          className="mb-5 md:mb-6 p-4 rounded-[10px]"
+          style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }}
+        >
+          <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-2" style={{ color: "var(--text-3)" }}>
+            People in your pipeline
+          </div>
+          <p className="text-[12.5px] mb-3" style={{ color: "var(--text-2)" }}>
+            Real applicants who applied to your open roles.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {applicantUsers.map((u) => (
+              <div
+                key={u.id}
+                className="flex items-center gap-2 rounded-lg px-2 py-1.5"
+                style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)" }}
+              >
+                <Avatar spec={u.avatar} photoUrl={u.avatarUrl} name={u.name} size={36} />
+                <span className="text-[13px] font-semibold truncate max-w-[120px]">{u.name}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* Metric row */}
       <div className="grid grid-cols-2 md:grid-cols-4 3xl:grid-cols-6 4k:grid-cols-8 gap-2.5 sm:gap-3 mb-5 md:mb-6">
@@ -213,7 +250,9 @@ export function EmployerDashboard({ user }: { user: User }) {
                         appId={a.id}
                         className="kanban-card"
                       >
-                        {applicant && <Avatar spec={applicant.avatar} size={34} />}
+                        {applicant && (
+                          <Avatar spec={applicant.avatar} photoUrl={applicant.avatarUrl} name={applicant.name} size={34} />
+                        )}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-2">
                             <div className="text-[13px] font-semibold truncate">

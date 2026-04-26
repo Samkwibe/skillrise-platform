@@ -80,6 +80,7 @@ async function getConnection() {
         db.collection("users").createIndex({ email: 1 }, { unique: true }),
         db.collection("users").createIndex({ id: 1 }, { unique: true }),
         db.collection("users").createIndex({ googleSub: 1 }, { unique: true, sparse: true }),
+        db.collection("users").createIndex({ githubId: 1 }, { unique: true, sparse: true }),
       db.collection("sessions").createIndex({ token: 1 }, { unique: true }),
       db.collection("sessions").createIndex({ userId: 1 }),
       db.collection("sessions").createIndex({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 }),
@@ -187,6 +188,10 @@ export function createMongoAdapter(): DbAdapter {
     async findUserByGoogleSub(googleSub) {
       const { cols } = await getConnection();
       return strip(await cols.users.findOne({ googleSub }));
+    },
+    async findUserByGitHubId(githubId) {
+      const { cols } = await getConnection();
+      return strip(await cols.users.findOne({ githubId }));
     },
     async findUserByVerifiedPhoneE164(e164, excludeUserId) {
       const { cols } = await getConnection();

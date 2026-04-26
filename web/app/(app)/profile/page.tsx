@@ -76,7 +76,7 @@ export default async function ProfilePage({
         <div className="grid lg:grid-cols-[320px_1fr] gap-6">
           <div className="card p-5">
             <div className="flex items-center gap-3 mb-4">
-              <Avatar spec={user.avatar} size={56} />
+              <Avatar spec={user.avatar} photoUrl={user.avatarUrl} name={user.name} size={56} />
               <div>
                 <div className="font-semibold">{user.name}</div>
                 <div className="text-[12px] text-t3 capitalize">{user.role}</div>

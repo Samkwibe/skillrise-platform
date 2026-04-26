@@ -79,7 +79,7 @@ export function LearnerShell({ user, children }: { user: User; children: React.R
               href="/profile"
               className="hidden sm:flex items-center gap-2 px-2 py-1.5 rounded-[10px] hover:bg-[var(--surface-2)]"
             >
-              <Avatar spec={user.avatar} size={28} />
+              <Avatar spec={user.avatar} photoUrl={user.avatarUrl} name={user.name} size={28} />
               <span className="text-[13px] font-semibold">{user.name.split(" ")[0]}</span>
             </Link>
             <details className="lg:hidden relative">

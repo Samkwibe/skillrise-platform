@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createSession } from "@/lib/auth";
-import {
-  getGoogleProfileFromCode,
-  GOOGLE_NEXT_COOKIE,
-  GOOGLE_STATE_COOKIE,
-  getPublicOrigin,
-  oauthCookieOptions,
-} from "@/lib/auth/google-oauth";
+import { getGitHubProfileFromCode, GITHUB_NEXT_COOKIE, GITHUB_STATE_COOKIE, oauthCookieOptions } from "@/lib/auth/github-oauth";
+import { getPublicOrigin } from "@/lib/auth/google-oauth";
 import { getDb } from "@/lib/db";
 import { appendSecurityNotification } from "@/lib/security/security-notifications";
 import { id, type User } from "@/lib/store";
@@ -34,58 +29,56 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const oauthErr = url.searchParams.get("error");
   if (oauthErr) {
-    jar.delete(GOOGLE_STATE_COOKIE);
-    jar.delete(GOOGLE_NEXT_COOKIE);
-    return errRedirect(req, oauthErr === "access_denied" ? "google_denied" : "google");
+    jar.delete(GITHUB_STATE_COOKIE);
+    jar.delete(GITHUB_NEXT_COOKIE);
+    return errRedirect(req, oauthErr === "access_denied" ? "github_denied" : "github");
   }
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
-  const expected = jar.get(GOOGLE_STATE_COOKIE)?.value;
-  const nextPath = jar.get(GOOGLE_NEXT_COOKIE)?.value || "/dashboard";
-  jar.delete(GOOGLE_STATE_COOKIE);
-  jar.delete(GOOGLE_NEXT_COOKIE);
+  const expected = jar.get(GITHUB_STATE_COOKIE)?.value;
+  const nextPath = jar.get(GITHUB_NEXT_COOKIE)?.value || "/dashboard";
+  jar.delete(GITHUB_STATE_COOKIE);
+  jar.delete(GITHUB_NEXT_COOKIE);
   if (!code || !state || !expected || state !== expected) {
-    return errRedirect(req, "google_state");
+    return errRedirect(req, "github_state");
   }
 
-  let profile: Awaited<ReturnType<typeof getGoogleProfileFromCode>>;
+  let profile: Awaited<ReturnType<typeof getGitHubProfileFromCode>>;
   try {
-    profile = await getGoogleProfileFromCode(req, code);
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "";
-    if (msg === "email_not_verified") return errRedirect(req, "google_unverified");
-    return errRedirect(req, "google_token");
+    profile = await getGitHubProfileFromCode(req, code);
+  } catch {
+    return errRedirect(req, "github_token");
   }
 
   const db = getDb();
-  const bySub = await db.findUserByGoogleSub(profile.sub);
-  if (bySub) {
-    await appendSecurityNotification(bySub.id, {
-      kind: "google_sign_in",
-      title: "Signed in with Google",
-      detail: "We completed sign-in using your Google account.",
+  const byGh = await db.findUserByGitHubId(profile.id);
+  if (byGh) {
+    await appendSecurityNotification(byGh.id, {
+      kind: "github_sign_in",
+      title: "Signed in with GitHub",
+      detail: "We completed sign-in using your GitHub account.",
     });
-    await createSession(bySub.id, { userAgent: clientUserAgent(req), ip: clientIp(req) });
+    await createSession(byGh.id, { userAgent: clientUserAgent(req), ip: clientIp(req) });
     return redirectToNext(req, nextPath);
   }
 
   const byEmail = await db.findUserByEmail(profile.email);
   if (byEmail) {
-    if (byEmail.googleSub && byEmail.googleSub !== profile.sub) {
-      return errRedirect(req, "google_conflict");
+    if (byEmail.githubId && byEmail.githubId !== profile.id) {
+      return errRedirect(req, "github_conflict");
     }
     const updated = await db.updateUser(byEmail.id, {
-      googleSub: profile.sub,
+      githubId: profile.id,
       emailVerifiedAt: byEmail.emailVerifiedAt || Date.now(),
       emailVerificationTokenHash: undefined,
       emailVerificationExpiresAt: undefined,
-      avatarUrl: profile.picture ?? byEmail.avatarUrl,
+      avatarUrl: profile.avatarUrl ?? byEmail.avatarUrl,
     });
-    if (!updated) return errRedirect(req, "google_link");
+    if (!updated) return errRedirect(req, "github_link");
     await appendSecurityNotification(updated.id, {
-      kind: "google_account_linked",
-      title: "Google sign-in linked",
-      detail: "You can now use “Continue with Google” for this account.",
+      kind: "github_account_linked",
+      title: "GitHub sign-in linked",
+      detail: "You can now use GitHub for this account.",
     });
     await createSession(updated.id, { userAgent: clientUserAgent(req), ip: clientIp(req) });
     return redirectToNext(req, nextPath);
@@ -101,20 +94,20 @@ export async function GET(req: Request) {
   const newUser: User = {
     id: `u_${id()}`,
     email: profile.email,
-    googleSub: profile.sub,
+    githubId: profile.id,
     name: profile.name,
     role: "learner",
     neighborhood: "—",
     avatar: `${initials}|${grad}`,
-    avatarUrl: profile.picture,
+    avatarUrl: profile.avatarUrl,
     createdAt: now,
     emailVerifiedAt: now,
   };
   await db.createUser(newUser);
   await appendSecurityNotification(newUser.id, {
-    kind: "google_sign_in",
-    title: "Signed in with Google",
-    detail: "Your new account was created with a verified email from Google.",
+    kind: "github_sign_in",
+    title: "Signed in with GitHub",
+    detail: "Your new account was created with a verified email from GitHub.",
   });
   await createSession(newUser.id, { userAgent: clientUserAgent(req), ip: clientIp(req) });
   return redirectToNext(req, nextPath);
@@ -127,7 +120,7 @@ function redirectToNext(req: Request, nextPath: string) {
     return NextResponse.redirect(new URL("/dashboard", origin));
   }
   const res = NextResponse.redirect(dest, 302);
-  res.cookies.set(GOOGLE_STATE_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
-  res.cookies.set(GOOGLE_NEXT_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
+  res.cookies.set(GITHUB_STATE_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
+  res.cookies.set(GITHUB_NEXT_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
   return res;
 }

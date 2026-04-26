@@ -32,20 +32,13 @@ export function GoogleSignInCta({ enabled, defaultNext, source = "login", label 
   const href = `/api/auth/google?${q.toString()}`;
 
   return (
-    <div className="mb-6">
-      <a
-        href={href}
-        className="btn btn-secondary btn-xl w-full justify-center flex items-center gap-2 no-underline font-semibold"
-      >
-        <GoogleGlyph />
-        {label}
-      </a>
-      <div className="flex items-center gap-3 my-4">
-        <div className="h-px flex-1" style={{ background: "var(--border-1)" }} />
-        <span className="text-[12px] text-t3">or with email</span>
-        <div className="h-px flex-1" style={{ background: "var(--border-1)" }} />
-      </div>
-    </div>
+    <a
+      href={href}
+      className="btn btn-secondary btn-xl w-full justify-center flex items-center gap-2 no-underline font-semibold"
+    >
+      <GoogleGlyph />
+      {label}
+    </a>
   );
 }
 

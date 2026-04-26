@@ -51,7 +51,13 @@ function isPortalType(v: string | null): v is PortalType {
   return v !== null && PORTAL_KEYS.includes(v as PortalType);
 }
 
-export function LoginPortalView({ showGoogle }: { showGoogle: boolean }) {
+export function LoginPortalView({
+  showGoogle,
+  showGitHub,
+}: {
+  showGoogle: boolean;
+  showGitHub: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -143,7 +149,7 @@ export function LoginPortalView({ showGoogle }: { showGoogle: boolean }) {
           </div>
 
           <div className="auth-form-shell" key={portal}>
-            <LoginForm showGoogle={showGoogle} portal={portal} />
+            <LoginForm showGoogle={showGoogle} showGitHub={showGitHub} portal={portal} />
           </div>
         </div>
       </div>

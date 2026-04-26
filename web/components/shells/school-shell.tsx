@@ -87,7 +87,7 @@ export function SchoolShell({ user, children }: { user: User; children: React.Re
 
         <div className="p-3" style={{ borderTop: "1px solid var(--border-1)" }}>
           <Link href="/profile" className="flex items-center gap-2 px-2 py-1.5 rounded-[4px] hover:bg-[var(--surface-2)]">
-            <Avatar spec={user.avatar} size={28} />
+            <Avatar spec={user.avatar} photoUrl={user.avatarUrl} name={user.name} size={28} />
             <div className="min-w-0">
               <div className="text-[12.5px] font-semibold truncate">{user.name}</div>
               <div className="text-[11px] truncate" style={{ color: "var(--text-3)" }}>

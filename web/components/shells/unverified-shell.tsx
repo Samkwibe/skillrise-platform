@@ -16,7 +16,7 @@ export function UnverifiedShell({ user, children }: { user: User; children: Reac
           Skill<span className="text-t1">Rise</span>
         </Link>
         <div className="flex items-center gap-3 min-w-0">
-          <Avatar spec={user.avatar} size={36} />
+          <Avatar spec={user.avatar} photoUrl={user.avatarUrl} name={user.name} size={36} />
           <span className="text-[13px] font-medium truncate max-w-[140px] sm:max-w-[200px]">{user.name}</span>
           <LogoutButton />
         </div>

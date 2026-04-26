@@ -82,6 +82,8 @@ export type SecurityNotificationKind =
   | "sessions_signed_out_everywhere"
   | "google_sign_in"
   | "google_account_linked"
+  | "github_sign_in"
+  | "github_account_linked"
   | "phone_verified"
   | "phone_removed"
   | "account_verified_sms";
@@ -102,6 +104,10 @@ export type User = {
   password?: string;
   /** Set when the user signs in (or links) with Google; stable OpenID `sub` from Google. */
   googleSub?: string;
+  /** GitHub numeric user id as string (OAuth). */
+  githubId?: string;
+  /** Optional profile photo (e.g. Google/GitHub). */
+  avatarUrl?: string;
   name: string;
   role: Role;
   neighborhood: string;
@@ -638,6 +644,7 @@ export function publicUser(u: User) {
   const {
     password: _pw,
     googleSub: _gs,
+    githubId: _gh,
     emailVerificationTokenHash: _evh,
     emailVerificationExpiresAt: _eve,
     passwordResetTokenHash: _prh,
@@ -660,6 +667,7 @@ export function publicUser(u: User) {
     emailVerified: Boolean(emailVerifiedAt),
     hasPassword: Boolean(_pw),
     authGoogle: Boolean(_gs),
+    authGitHub: Boolean(_gh),
     phoneVerified,
     phoneMasked: _pe && phoneVerified ? _maskE164ForPublic(_pe) : undefined,
     phonePendingMasked: _pp && !phoneVerified ? _maskE164ForPublic(_pp) : undefined,
@@ -683,6 +691,20 @@ export function getTrack(slug: string) {
 
 export function userEnrollments(userId: string) {
   return store.enrollments.filter((e) => e.userId === userId);
+}
+
+/** Other learners/teens in the same neighborhood (real accounts only). */
+export function neighborhoodPeers(user: User, limit = 12): User[] {
+  const n = user.neighborhood?.trim();
+  if (!n || n === "—") return [];
+  return store.users
+    .filter(
+      (u) =>
+        u.id !== user.id &&
+        u.neighborhood === n &&
+        (u.role === "learner" || u.role === "teen"),
+    )
+    .slice(0, limit);
 }
 
 export function userCertificates(userId: string) {

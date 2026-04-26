@@ -50,7 +50,7 @@ export function TeacherShell({ user, children }: { user: User; children: React.R
         </div>
 
         <div className="px-3 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid var(--border-1)" }}>
-          <Avatar spec={user.avatar} size={34} />
+          <Avatar spec={user.avatar} photoUrl={user.avatarUrl} name={user.name} size={34} />
           <div className="min-w-0 flex-1">
             <div className="text-[13px] font-semibold truncate">{user.name}</div>
             <div className="studio-label">Teacher</div>

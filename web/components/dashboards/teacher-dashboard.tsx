@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { User } from "@/lib/store";
 import { store, findUserById } from "@/lib/store";
 import { UploadZone } from "./upload-zone";
+import { Avatar } from "@/components/ui/avatar";
 
 /**
  * Teacher dashboard — "Instructor studio".
@@ -34,10 +35,14 @@ export function TeacherDashboard({ user }: { user: User }) {
   );
   const myStudents = Array.from(new Set(myEnrolls.map((e) => e.userId)));
 
-  const totalViews = myLessons.reduce((s, l) => s + l.likes * 37 + l.comments.length * 18, 0);
+  const engagementTotal = myLessons.reduce((s, l) => s + l.likes + l.comments.length, 0);
   const liveNow = mySessions.find((l) => l.status === "live") ?? null;
   const topLesson = myLessons[0];
-  const hash = [...user.id].reduce((a, c) => a + c.charCodeAt(0), 0);
+
+  const studentProfiles = myStudents
+    .map((id) => findUserById(id))
+    .filter((u): u is NonNullable<typeof u> => Boolean(u))
+    .slice(0, 24);
 
   const recentEnrolls = myEnrolls
     .slice()
@@ -49,7 +54,7 @@ export function TeacherDashboard({ user }: { user: User }) {
       {/* Top metric strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 3xl:grid-cols-6 4k:grid-cols-8 gap-2.5 sm:gap-3">
         {[
-          { label: "TOTAL VIEWS", value: fmtNumber(totalViews || 12450 + hash * 7), accent: "var(--red)" },
+          { label: "ENGAGEMENT", value: engagementTotal > 0 ? fmtNumber(engagementTotal) : "—", accent: "var(--red)" },
           { label: "STUDENTS", value: String(myStudents.length || 0), accent: "var(--amber)" },
           { label: "LESSONS", value: String(myLessons.length), accent: "var(--blue)" },
           { label: "LIVE NEXT", value: mySessions.filter((s) => s.status === "scheduled").length ? "1" : "0", accent: "var(--purple)" },
@@ -63,6 +68,20 @@ export function TeacherDashboard({ user }: { user: User }) {
         ))}
       </div>
 
+      {studentProfiles.length > 0 ? (
+        <div className="studio-panel p-4">
+          <div className="studio-label mb-3">YOUR STUDENTS (FROM ENROLLMENTS)</div>
+          <div className="flex flex-wrap gap-2">
+            {studentProfiles.map((u) => (
+              <div key={u.id} className="flex items-center gap-2 rounded-md border border-[var(--border-1)] px-2 py-1.5 bg-[var(--surface-2)]">
+                <Avatar spec={u.avatar} photoUrl={u.avatarUrl} name={u.name} size={36} />
+                <span className="studio-metric text-[12px] truncate max-w-[120px]">{u.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {/* Upload zone + Top-lesson insight */}
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3 md:gap-4">
         <UploadZone />
@@ -74,7 +93,7 @@ export function TeacherDashboard({ user }: { user: User }) {
                 className="studio-metric text-[10px] px-1.5 py-0.5 rounded"
                 style={{ background: "color-mix(in srgb, var(--g) 12%, transparent)", color: "var(--g)" }}
               >
-                ▲ {Math.max(3, hash % 18) + 4}%
+                {topLesson.likes} likes
               </span>
             )}
           </div>
@@ -90,14 +109,18 @@ export function TeacherDashboard({ user }: { user: User }) {
                 <div className="min-w-0 flex-1">
                   <div className="text-[14px] font-semibold leading-tight line-clamp-2">{topLesson.title}</div>
                   <div className="studio-label mt-1">
-                    {topLesson.duration} · {fmtNumber(topLesson.likes * 37)} views
+                    {topLesson.duration} · {topLesson.likes} likes · {topLesson.comments.length} comments
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2 mt-1">
-                <MetricCell label="RETENTION" value={`${60 + (hash % 30)}%`} accent="var(--g)" />
-                <MetricCell label="CTR" value={`${4 + ((hash * 3) % 10)}.${hash % 9}%`} accent="var(--amber)" />
-                <MetricCell label="SHARES" value={String(12 + (hash % 40))} accent="var(--blue)" />
+                <MetricCell label="LIKES" value={String(topLesson.likes)} accent="var(--g)" />
+                <MetricCell label="COMMENTS" value={String(topLesson.comments.length)} accent="var(--amber)" />
+                <MetricCell
+                  label="SAVED"
+                  value={String(topLesson.savedBy?.length ?? 0)}
+                  accent="var(--blue)"
+                />
               </div>
               <Link
                 href="/teach"
@@ -157,7 +180,7 @@ export function TeacherDashboard({ user }: { user: User }) {
                     {topLesson.title}
                   </div>
                   <div className="studio-label mt-1">
-                    {topLesson.duration} · {fmtNumber(topLesson.likes * 37)} views
+                    {topLesson.duration} · {topLesson.likes} likes · {topLesson.comments.length} comments
                   </div>
                 </div>
               </>
@@ -267,7 +290,7 @@ export function TeacherDashboard({ user }: { user: User }) {
                     className="absolute bottom-1.5 left-1.5 studio-metric text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1"
                     style={{ background: "rgba(0,0,0,0.7)", color: "#fff" }}
                   >
-                    👁 {fmtNumber(p.likes * 37)}
+                    ♡ {p.likes}
                   </div>
                 </div>
                 <div className="p-2">

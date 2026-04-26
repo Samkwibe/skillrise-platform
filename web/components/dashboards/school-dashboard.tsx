@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { User } from "@/lib/store";
 import { store, findUserById, getTrack } from "@/lib/store";
 import { CohortChart } from "./cohort-chart";
+import { Avatar } from "@/components/ui/avatar";
 
 /**
  * School dashboard — "Admin portal".
@@ -70,6 +71,29 @@ export function SchoolDashboard({ user }: { user: User }) {
           </h1>
         </div>
       </div>
+
+      {studentRows.some((r) => r.u) ? (
+        <section
+          className="mb-4 md:mb-5 p-4 rounded-[6px] flex flex-wrap items-center gap-3"
+          style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }}
+        >
+          <div className="text-[11px] font-bold uppercase tracking-[0.1em] w-full sm:w-auto" style={{ color: "var(--text-3)" }}>
+            Students on roster
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {studentRows
+              .map((r) => r.u)
+              .filter((u): u is NonNullable<typeof u> => Boolean(u))
+              .slice(0, 20)
+              .map((u) => (
+                <div key={u.id} className="flex items-center gap-2" title={u.name}>
+                  <Avatar spec={u.avatar} photoUrl={u.avatarUrl} name={u.name} size={40} />
+                  <span className="text-[12px] font-semibold truncate max-w-[100px] hidden md:inline">{u.name}</span>
+                </div>
+              ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* KPI strip — expands to 6/8 cols on wide so 4K doesn't look empty. */}
       <div className="grid grid-cols-2 md:grid-cols-4 3xl:grid-cols-6 4k:grid-cols-8 gap-2.5 sm:gap-3 mb-4 md:mb-5">

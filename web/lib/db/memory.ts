@@ -29,6 +29,9 @@ export function createMemoryAdapter(): DbAdapter {
     async findUserByGoogleSub(googleSub) {
       return store.users.find((u) => u.googleSub === googleSub) ?? null;
     },
+    async findUserByGitHubId(githubId) {
+      return store.users.find((u) => u.githubId === githubId) ?? null;
+    },
     async findUserByVerifiedPhoneE164(e164, excludeUserId) {
       return (
         store.users.find(

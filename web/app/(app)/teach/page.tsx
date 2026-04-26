@@ -6,6 +6,7 @@ import { buildTeacherDashboard } from "@/lib/services/teacher-dashboard";
 import { TeacherAIInsights } from "@/components/teacher/teacher-ai-insights";
 import { TeacherAnalyticsChart } from "@/components/teacher/teacher-analytics-chart";
 import { TeacherHeatmap } from "@/components/teacher/teacher-heatmap";
+import { Avatar } from "@/components/ui/avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function TeachDashboardPage() {
   await ensureTracksFromDatabase();
   const dash = await buildTeacherDashboard(user.id);
 
-  const totalStudents = dash.courseSummaries.reduce((acc, c) => acc + c.enrolled, 0);
+  const uniqueLearners = dash.studentRoster.length;
 
   return (
     <div className="section-pad-x py-8 w-full text-t1 min-h-screen bg-gradient-to-br from-[#0a0a0f] to-[#12121a]">
@@ -46,7 +47,8 @@ export default async function TeachDashboardPage() {
               Hello, {user.name.split(" ")[0]}
             </h1>
             <p className="text-t2 mt-2 max-w-xl text-sm leading-relaxed">
-              You are actively shaping the future of <strong className="text-white">{totalStudents}</strong> students. Here is your unified command center.
+              <strong className="text-white">{uniqueLearners}</strong> unique learners across your courses — real people
+              enrolled in your tracks.
             </p>
           </div>
           
@@ -59,6 +61,39 @@ export default async function TeachDashboardPage() {
             </Link>
           </div>
         </header>
+
+        {dash.studentRoster.length > 0 ? (
+          <section className="rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-xl p-5 md:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Your students</div>
+                <p className="text-[13px] text-t2 mt-1">
+                  Profiles from enrollments — photos appear when learners sign in with Google or GitHub.
+                </p>
+              </div>
+              <Link
+                href="/teach/students"
+                className="text-[13px] font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+              >
+                Open roster →
+              </Link>
+            </div>
+            <div className="flex flex-wrap gap-2 md:gap-3">
+              {dash.studentRoster.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex items-center gap-2 rounded-2xl bg-white/[0.04] border border-white/10 px-3 py-2"
+                  title={s.name}
+                >
+                  <Avatar spec={s.avatar} photoUrl={s.avatarUrl} name={s.name} size={44} />
+                  <span className="text-[13px] font-semibold text-white truncate max-w-[100px] md:max-w-[140px]">
+                    {s.name.split(" ")[0]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {/* BENTO GRID LAYOUT */}
         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-6">
@@ -85,30 +120,33 @@ export default async function TeachDashboardPage() {
             </div>
             
             <div className="p-6 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 backdrop-blur-xl">
-              <h3 className="text-[12px] font-bold uppercase tracking-wider text-indigo-300 mb-4">Top Performing Course</h3>
+              <h3 className="text-[12px] font-bold uppercase tracking-wider text-indigo-300 mb-4">Largest course</h3>
               {dash.courseSummaries.length > 0 ? (
                 (() => {
-                  const topCourse = dash.courseSummaries[0];
-                  // Deterministic pseudo-random rate based on enrolled count
-                  const rate = Math.min(95, Math.max(45, (topCourse.enrolled * 13) % 100));
+                  const topCourse = [...dash.courseSummaries].sort((a, b) => b.enrolled - a.enrolled)[0];
                   return (
                     <>
-                      <div className="text-lg font-bold text-white mb-1 truncate">{topCourse.title}</div>
-                      <div className="flex items-center gap-2 text-sm text-t2 mb-3">
-                        <span className="text-green-400">↑ {Math.max(2, (topCourse.enrolled * 7) % 25)}%</span> this week
+                      <div className="text-lg font-bold text-white mb-3 truncate">{topCourse.title}</div>
+                      <div className="space-y-2 text-sm text-t2">
+                        <div>
+                          <span className="text-white font-semibold">{topCourse.enrolled}</span> learners enrolled
+                        </div>
+                        <div>
+                          <span className="text-white font-semibold">{topCourse.pendingGrades}</span> submissions waiting
+                          for grades
+                        </div>
                       </div>
-                      <div className="w-full bg-black/40 h-2 rounded-full overflow-hidden">
-                        <div className={`h-full bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full`} style={{ width: `${rate}%` }}></div>
-                      </div>
-                      <div className="flex justify-between text-[11px] text-t3 mt-2 font-medium">
-                        <span>Completion Rate</span>
-                        <span className="text-white">{rate}%</span>
-                      </div>
+                      <Link
+                        href={`/teach/course/${topCourse.slug}`}
+                        className="mt-4 inline-block text-[13px] text-indigo-300 font-semibold hover:text-white transition-colors"
+                      >
+                        Open course →
+                      </Link>
                     </>
                   );
                 })()
               ) : (
-                <p className="text-sm text-indigo-300/60 italic">Publish a course to see top performers.</p>
+                <p className="text-sm text-indigo-300/60 italic">Publish a course to see enrollment stats.</p>
               )}
             </div>
           </div>
