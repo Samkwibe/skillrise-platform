@@ -63,9 +63,17 @@ export function Nav() {
             <ThemeToggle compact />
           </div>
           {me ? (
-            <Link href="/dashboard" className="btn btn-primary btn-sm">
-              Open dashboard
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/my-courses"
+                className="hidden sm:inline-block text-[14px] font-medium text-t2 hover:text-emerald-400 transition-colors"
+              >
+                My Courses
+              </Link>
+              <Link href="/dashboard" className="btn btn-primary btn-sm">
+                Dashboard
+              </Link>
+            </div>
           ) : (
             <>
               <Link
@@ -122,14 +130,24 @@ export function Nav() {
         ))}
         <div className="mt-[22px] flex flex-col gap-[10px]">
           {me ? (
-            <Link
-              href="/dashboard"
-              onClick={() => setOpen(false)}
-              className="btn btn-primary"
-              style={{ justifyContent: "center" }}
-            >
-              Open dashboard
-            </Link>
+            <>
+              <Link
+                href="/my-courses"
+                onClick={() => setOpen(false)}
+                className="btn btn-ghost"
+                style={{ justifyContent: "center" }}
+              >
+                My Courses
+              </Link>
+              <Link
+                href="/dashboard"
+                onClick={() => setOpen(false)}
+                className="btn btn-primary"
+                style={{ justifyContent: "center" }}
+              >
+                Dashboard
+              </Link>
+            </>
           ) : (
             <>
               <Link

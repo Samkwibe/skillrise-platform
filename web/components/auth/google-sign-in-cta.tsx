@@ -35,7 +35,7 @@ export function GoogleSignInCta({ enabled, defaultNext, source = "login", label 
     <div className="mb-6">
       <a
         href={href}
-        className="btn btn-secondary btn-xl w-full justify-center flex items-center gap-2 no-underline"
+        className="btn btn-secondary btn-xl w-full justify-center flex items-center gap-2 no-underline font-semibold"
       >
         <GoogleGlyph />
         {label}

@@ -3,8 +3,9 @@ export function Hero() {
     <section
       className="relative overflow-hidden min-h-[92vh] flex items-center pt-[80px]"
       style={{ padding: "80px clamp(18px,5vw,72px) clamp(56px,7vw,108px)" }}
+      suppressHydrationWarning
     >
-      <div className="absolute inset-0 pointer-events-none" style={{ background: "var(--hero-radial)" }} aria-hidden />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "var(--hero-radial)" }} aria-hidden suppressHydrationWarning />
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.5]"
         style={{
@@ -15,6 +16,7 @@ export function Hero() {
           WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 40%, transparent 80%)",
         }}
         aria-hidden
+        suppressHydrationWarning
       />
 
       <div className="relative z-[1] flex items-center gap-12 dash-wrap w-full hero-stack">
@@ -150,6 +152,7 @@ function Badge({
         padding: "9px 12px",
         fontSize: 11,
       }}
+      suppressHydrationWarning
     >
       {children}
     </div>

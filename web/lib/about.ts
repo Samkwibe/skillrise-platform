@@ -36,7 +36,7 @@ export const about: AboutConfig = {
   tagline:
     "Computer Science student at SNHU. Builder of SkillRise. I make software that helps people rise.",
   location: "Southern New Hampshire University",
-  photoUrl: "/about-photo.jpg",
+  photoUrl: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80",
   bio: [
     "I'm Samuel Raymond Kwibe, a Computer Science student at Southern New Hampshire University. I've been writing code since I realized it was something I could actually do — and every project I ship starts with the same question: does this help someone?",
     "SkillRise started in a notebook. I kept meeting people in my community who wanted to learn a skill, change careers, or land their first real job, but everything in their way was paywalled, gatekept, or buried under feeds designed to keep them scrolling instead of learning.",

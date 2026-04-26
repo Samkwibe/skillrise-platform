@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireVerifiedUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { store } from "@/lib/store";
+import { AlertButton } from "@/components/ui/alert-button";
 
 export const dynamic = "force-dynamic";
 
@@ -72,12 +73,12 @@ export default async function TeacherCoursesPage() {
               Build modules, upload videos, and shape the curriculum. Monitor course health algorithms to identify which content is resonating with students.
             </p>
           </div>
-          <button 
-            onClick={() => alert("Course creation will be available in the next platform update!")}
+          <AlertButton 
+            message="Course creation will be available in the next platform update!"
             className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-400 hover:to-blue-500 text-white text-sm font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/25 flex items-center gap-2 shrink-0"
           >
             <span>+</span> Create New Course
-          </button>
+          </AlertButton>
         </header>
 
         {myTracks.length === 0 ? (
@@ -85,12 +86,12 @@ export default async function TeacherCoursesPage() {
             <div className="text-4xl mb-4">📚</div>
             <h3 className="text-xl font-bold text-white mb-2">No Courses Yet</h3>
             <p className="text-sm text-t3 max-w-md mx-auto mb-6">You don’t have any tracks on file. Contact the team to have a course shell created, then return here to edit the curriculum.</p>
-            <button 
-              onClick={() => alert("Your request for a new course shell has been sent to the admin team.")}
+            <AlertButton 
+              message="Your request for a new course shell has been sent to the admin team."
               className="px-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold transition-all"
             >
               Request Course Shell
-            </button>
+            </AlertButton>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">

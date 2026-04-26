@@ -1,9 +1,9 @@
-/** Circular SVG progress ring — the learner dashboard's signature widget. */
+/** Circular SVG progress ring — updated for premium glassmorphism. */
 export function ProgressRing({
   value,
   size = 88,
   stroke = 8,
-  color = "var(--g)",
+  color = "#10b981", // default emerald-500
   label,
   sublabel,
 }: {
@@ -21,18 +21,20 @@ export function ProgressRing({
 
   return (
     <div
-      className="relative inline-flex items-center justify-center"
+      className="relative inline-flex items-center justify-center group"
       style={{ width: size, height: size }}
     >
-      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }} className="drop-shadow-lg">
+        {/* Track */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke="var(--border-1)"
+          className="stroke-white/10"
           strokeWidth={stroke}
           fill="none"
         />
+        {/* Progress */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -43,15 +45,16 @@ export function ProgressRing({
           fill="none"
           strokeDasharray={c}
           strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 0.6s ease" }}
+          style={{ transition: "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)" }}
+          className="drop-shadow-[0_0_8px_rgba(var(--tw-shadow-color),0.5)]"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center leading-tight">
-        <div className="font-extrabold" style={{ fontSize: size * 0.28, color: "var(--text-1)" }}>
+        <div className="font-extrabold text-white group-hover:scale-105 transition-transform" style={{ fontSize: size * 0.28 }}>
           {label ?? `${Math.round(clamped)}%`}
         </div>
         {sublabel && (
-          <div className="text-[10px] uppercase tracking-wider" style={{ color: "var(--text-3)" }}>
+          <div className="text-[10px] uppercase tracking-wider text-white/50 mt-0.5">
             {sublabel}
           </div>
         )}

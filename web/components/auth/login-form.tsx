@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { GoogleSignInCta, googleSignInErrorMessages } from "@/components/auth/google-sign-in-cta";
+import { AuthPasswordInput } from "@/components/auth/auth-password-input";
 
 export function LoginForm({ showGoogle = false, portal = "learner" }: { showGoogle?: boolean; portal?: string }) {
   const router = useRouter();
@@ -19,14 +20,15 @@ export function LoginForm({ showGoogle = false, portal = "learner" }: { showGoog
     teen: "sofia@skillrise.app",
     employer: "hiring@apexelectric.com",
     school: "careers@centralhs.edu",
-    admin: "admin@skillrise.app"
+    admin: "admin@skillrise.app",
   };
-  
+
   const currentDemoEmail = demoAccounts[portal] || demoAccounts.learner;
 
   const handleDemoLogin = () => {
     setEmail(currentDemoEmail);
     setPassword("demo1234");
+    setErr("");
   };
 
   useEffect(() => {
@@ -45,66 +47,81 @@ export function LoginForm({ showGoogle = false, portal = "learner" }: { showGoog
   return (
     <div>
       <GoogleSignInCta enabled={showGoogle} defaultNext={next} source="login" />
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        setErr("");
-        const res = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-        const body = (await res.json()) as {
-          error?: string;
-          user?: { emailVerified?: boolean };
-        };
-        setBusy(false);
-        if (!res.ok) {
-          setErr(body.error || "Sign-in failed.");
-          return;
-        }
-        if (body.user && body.user.emailVerified === false) {
-          router.push("/verify-email/required");
-          router.refresh();
-          return;
-        }
-        router.push(next);
-        router.refresh();
-      }}
-      className="flex flex-col gap-4"
-    >
-      <div>
-        <label className="label" htmlFor="email">Email</label>
-        <input id="email" type="email" autoComplete="email" required className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
-      </div>
-      <div>
-        <div className="flex items-center justify-between gap-2">
-          <label className="label mb-0" htmlFor="password">Password</label>
-          <Link href="/forgot-password" className="text-[12px] text-g underline">
-            Forgot?
-          </Link>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setErr("");
+          setBusy(true);
+          try {
+            const res = await fetch("/api/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            });
+            const body = (await res.json()) as {
+              error?: string;
+              user?: { emailVerified?: boolean };
+            };
+            if (!res.ok) {
+              setErr(body.error || "Sign-in failed.");
+              return;
+            }
+            if (body.user && body.user.emailVerified === false) {
+              router.push("/verify-email/required");
+              router.refresh();
+              return;
+            }
+            router.push(next);
+            router.refresh();
+          } finally {
+            setBusy(false);
+          }
+        }}
+        className="flex flex-col gap-4"
+      >
+        <div>
+          <label className="label" htmlFor="email">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            required
+            className="input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
-        <input id="password" type="password" autoComplete="current-password" required className="input" value={password} onChange={(e) => setPassword(e.target.value)} />
-      </div>
-      {err && <div className="pill pill-red">{err}</div>}
-      <button type="submit" disabled={busy} className="btn btn-primary btn-xl justify-center">
-        {busy ? "Signing in…" : "Sign in"}
-      </button>
-      
-      <div className="mt-4 pt-4 border-t border-border1 text-center">
-        <button 
-          type="button" 
-          onClick={handleDemoLogin}
-          className="text-[13px] font-medium text-[#1fc87e] hover:text-white transition-colors"
-        >
-          Auto-fill Demo Account
+        <AuthPasswordInput
+          id="password"
+          label="Password"
+          value={password}
+          onChange={setPassword}
+          autoComplete="current-password"
+          labelRight={
+            <Link href="/forgot-password" className="text-[12px] text-g font-semibold hover:text-t1 transition-colors no-underline hover:underline">
+              Forgot password
+            </Link>
+          }
+        />
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 -mt-1">
+          <button type="button" onClick={handleDemoLogin} className="text-[12px] text-t3 hover:text-g transition-colors font-medium">
+            Fill demo credentials
+          </button>
+          <span className="text-[11px] text-t3 hidden sm:inline">·</span>
+          <span className="text-[11px] text-t3">Demo password: <span className="font-mono text-t2">demo1234</span></span>
+        </div>
+        {err ? (
+          <div className="pill pill-red w-full justify-center text-center" role="alert" aria-live="polite">
+            {err}
+          </div>
+        ) : null}
+        <button type="submit" disabled={busy} className="btn btn-primary btn-xl justify-center w-full">
+          {busy ? "Signing in…" : "Sign in"}
         </button>
-        <p className="text-[11px] text-t3 mt-1">
-          Fills in credentials for <span className="font-mono text-t2">{currentDemoEmail}</span>
-        </p>
-      </div>
-    </form>
+      </form>
     </div>
   );
 }

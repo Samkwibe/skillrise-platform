@@ -327,6 +327,48 @@
     background: var(--g-hover);
     transform: translateY(-1px);
   }
+  .btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-primary:disabled:hover {
+    background: var(--g);
+    transform: none;
+  }
+  .btn-secondary {
+    background: var(--surface-2);
+    color: var(--text-1);
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    padding: 0.625rem 1.25rem;
+    font-size: 1rem;
+  }
+  .btn-secondary:hover {
+    border-color: color-mix(in srgb, var(--g) 50%, var(--border-2));
+    color: var(--text-1);
+    background: var(--surface-3);
+    transform: translateY(-1px);
+  }
+  .btn-secondary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--g) 22%, transparent);
+  }
+  .auth-form-shell {
+    border-radius: 20px;
+    padding: clamp(1.25rem, 4vw, 2rem);
+    background: color-mix(in srgb, var(--surface-1) 88%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--border-1);
+    box-shadow: var(--shadow-float);
+  }
+  .auth-hero-grid {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--text-1) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--text-1) 6%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
   .btn-ghost {
     background: transparent;
     color: var(--text-1);

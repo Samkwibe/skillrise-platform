@@ -49,19 +49,20 @@ export function WeeklyGoal({ user, targetPerDay = 30 }: { user: User; targetPerD
   const todayIdx = Math.max(0, (new Date().getDay() + 6) % 7);
 
   return (
-    <div className="cover-card p-5">
-      <div className="flex items-start justify-between gap-4 mb-4">
+    <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-xl relative overflow-hidden group hover:bg-white/[0.04] transition-colors">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:bg-emerald-500/20 transition-colors"></div>
+      <div className="flex items-start justify-between gap-4 mb-4 relative z-10">
         <div>
-          <div className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: "var(--g)" }}>
+          <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-400 mb-1">
             Weekly goal
           </div>
           <div
-            className="text-[20px] font-extrabold leading-tight"
+            className="text-[20px] font-extrabold leading-tight text-white drop-shadow-sm"
             style={{ fontFamily: "var(--role-font-display)", letterSpacing: "-0.01em" }}
           >
-            {totalMins}<span className="text-[14px] font-medium" style={{ color: "var(--text-3)" }}> / {targetWeek} min</span>
+            {totalMins}<span className="text-[14px] font-medium text-white/50"> / {targetWeek} min</span>
           </div>
-          <div className="text-[12px]" style={{ color: "var(--text-2)" }}>
+          <div className="text-[12px] text-white/60 mt-0.5">
             {daysHit}/7 days hit your {targetPerDay}-min target
           </div>
         </div>
@@ -70,12 +71,11 @@ export function WeeklyGoal({ user, targetPerDay = 30 }: { user: User; targetPerD
           {[20, 30, 45].map((t) => (
             <div
               key={t}
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold"
-              style={{
-                background: t === targetPerDay ? "color-mix(in srgb, var(--g) 18%, transparent)" : "var(--surface-2)",
-                color: t === targetPerDay ? "var(--g)" : "var(--text-3)",
-                border: t === targetPerDay ? "1px solid var(--g)" : "1px solid var(--border-1)",
-              }}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors ${
+                t === targetPerDay 
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]" 
+                  : "bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white/80"
+              }`}
             >
               {t}m/day
             </div>
@@ -83,17 +83,16 @@ export function WeeklyGoal({ user, targetPerDay = 30 }: { user: User; targetPerD
         </div>
       </div>
 
-      <div className="flex items-end gap-2 h-[110px] px-1 relative">
+      <div className="flex items-end gap-2 h-[110px] px-1 relative z-10">
         <div
           className="absolute left-0 right-0 border-t border-dashed pointer-events-none"
           style={{
             bottom: `${(targetPerDay / max) * 100}%`,
-            borderColor: "color-mix(in srgb, var(--g) 45%, transparent)",
+            borderColor: "rgba(16, 185, 129, 0.4)",
           }}
         >
           <span
-            className="absolute right-0 -top-4 text-[10px] font-mono px-1.5 py-0.5 rounded"
-            style={{ background: "color-mix(in srgb, var(--g) 14%, transparent)", color: "var(--g)" }}
+            className="absolute right-0 -top-4 text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-medium"
           >
             target {targetPerDay}m
           </span>
@@ -105,20 +104,20 @@ export function WeeklyGoal({ user, targetPerDay = 30 }: { user: User; targetPerD
           return (
             <div key={d.day} className="flex-1 flex flex-col items-center gap-1 min-w-0">
               <div
-                className="w-full rounded-t-[6px] transition-all"
+                className="w-full rounded-t-[6px] transition-all duration-500 ease-out"
                 style={{
                   height: `${Math.max(h, 2)}%`,
                   background: hit
-                    ? "linear-gradient(180deg, var(--g), var(--g-hover))"
-                    : "var(--surface-3)",
-                  outline: isToday ? "2px solid var(--g)" : "none",
+                    ? "linear-gradient(180deg, #10b981, #047857)"
+                    : "rgba(255, 255, 255, 0.05)",
+                  outline: isToday ? "2px solid #10b981" : "none",
                   outlineOffset: 2,
+                  boxShadow: hit && isToday ? "0 0 12px rgba(16, 185, 129, 0.4)" : "none"
                 }}
                 title={`${d.day}: ${d.minutes} min`}
               />
               <div
-                className="text-[10px] font-bold uppercase tracking-wider"
-                style={{ color: isToday ? "var(--g)" : "var(--text-3)" }}
+                className={`text-[10px] font-bold uppercase tracking-wider ${isToday ? "text-emerald-400" : "text-white/40"}`}
               >
                 {d.day}
               </div>
@@ -127,19 +126,22 @@ export function WeeklyGoal({ user, targetPerDay = 30 }: { user: User; targetPerD
         })}
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-4">
+      <div className="mt-5 flex items-center justify-between gap-4 relative z-10">
         <div className="flex-1 min-w-0">
-          <div className="progress-bar">
-            <span style={{ width: `${weekPct}%` }} />
+          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000" 
+              style={{ width: `${weekPct}%` }} 
+            />
           </div>
-          <div className="text-[11px] mt-1" style={{ color: "var(--text-3)" }}>
+          <div className="text-[11px] mt-2 text-white/50">
             {weekPct}% of weekly target · {Math.max(targetWeek - totalMins, 0)} min to go
           </div>
         </div>
         {suggestion && next?.t && (
           <a
             href={`/learn/${next.t.slug}/${suggestion.id}`}
-            className="btn btn-primary btn-sm shrink-0"
+            className="px-4 py-2 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.15)] shrink-0"
           >
             +{parseInt(suggestion.duration) || 10}m now →
           </a>

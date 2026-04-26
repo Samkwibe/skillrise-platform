@@ -25,7 +25,7 @@ export function EnrollButton({ trackSlug, inviteToken }: { trackSlug: string; in
             setErr(b.error || "Could not enroll.");
             return;
           }
-          router.refresh();
+          router.push("/my-courses");
         }}
         className="btn btn-primary w-full justify-center"
       >
