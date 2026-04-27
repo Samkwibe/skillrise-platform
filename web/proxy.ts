@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { securityHeaders } from "@/lib/security/headers";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-skillrise-pathname", req.nextUrl.pathname);
   const res = NextResponse.next({ request: { headers: requestHeaders } });

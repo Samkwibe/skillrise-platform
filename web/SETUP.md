@@ -118,7 +118,7 @@ video uploads, add S3 later:
 - **Today:** SkillRise uses its own opaque session cookies + bcrypt-hashed
   passwords. **No external auth key required.** Security is handled by
   `lib/auth.ts`, `lib/security/password.ts`, `lib/security/rate-limit.ts`,
-  and the middleware.
+  and `proxy.ts` (security / pathname headers for rate limiting and CSP).
 - **If you later want AWS Cognito / Google / GitHub:** set up a Cognito User
   Pool and an App Client, then add:
   ```

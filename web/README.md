@@ -44,7 +44,7 @@ All demo accounts use the password `demo1234`.
 - `bcryptjs` (cost 12) for password hashing — `lib/security/password.ts`
 - `zod` validation on every API route — `lib/validators/index.ts`
 - LRU in-process rate limiting — `lib/security/rate-limit.ts`
-- CSP + HSTS + Frame-Options + Permissions-Policy via edge middleware — `middleware.ts`
+- CSP + HSTS + Frame-Options + Permissions-Policy — `proxy.ts` (Next.js request proxy)
 - HTTP-only, SameSite=Lax, Secure cookies with 192-bit random session tokens
 
 ### Data layer — pluggable
@@ -172,7 +172,7 @@ web/
 │   ├── about.ts            # About Me config
 │   ├── auth.ts             # session management (cookie → DbAdapter)
 │   └── store.ts            # in-memory seed data (used by memory adapter)
-├── middleware.ts           # edge middleware for security headers
+├── proxy.ts                # request proxy: security + pathname hint headers
 ├── Dockerfile              # multi-stage, standalone, non-root
 ├── infra/terraform/        # AWS IaC (DynamoDB, S3, Cognito, ECR, App Runner, CloudWatch)
 ├── DEPLOYMENT.md           # step-by-step deploy guide

@@ -198,7 +198,7 @@ Set `domain_name = "app.skillrise.dev"` in `terraform.tfvars`, then run `terrafo
 
 - Passwords are bcrypt-hashed (`bcryptjs`, cost 12) — never stored plaintext.
 - All auth routes are rate-limited (`lib/security/rate-limit.ts`) and validated with Zod.
-- Edge middleware (`middleware.ts`) adds CSP, HSTS, Frame-Options, Permissions-Policy.
+- The Next.js `proxy.ts` file adds CSP, HSTS, Frame-Options, Permissions-Policy.
 - Sessions are HTTP-only, Secure, SameSite=Lax; tokens are 192-bit random.
 - Secrets live in AWS Secrets Manager, **never** in the container image.
 - ECR scans every image on push; `IMMUTABLE` tag policy prevents silent rewrites.
