@@ -52,11 +52,11 @@ function isPortalType(v: string | null): v is PortalType {
 }
 
 export function LoginPortalView({
-  showGoogle,
-  showGitHub,
+  showGoogle = true,
+  showGitHub = true,
 }: {
-  showGoogle: boolean;
-  showGitHub: boolean;
+  showGoogle?: boolean;
+  showGitHub?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();

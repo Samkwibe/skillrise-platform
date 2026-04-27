@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createSession } from "@/lib/auth";
-import { getGitHubProfileFromCode, GITHUB_NEXT_COOKIE, GITHUB_STATE_COOKIE, oauthCookieOptions } from "@/lib/auth/github-oauth";
+import {
+  getGitHubProfileFromCode,
+  GITHUB_NEXT_COOKIE,
+  GITHUB_SOURCE_COOKIE,
+  GITHUB_STATE_COOKIE,
+  oauthCookieOptions,
+} from "@/lib/auth/github-oauth";
 import { getPublicOrigin } from "@/lib/auth/google-oauth";
 import { getDb } from "@/lib/db";
 import { appendSecurityNotification } from "@/lib/security/security-notifications";
@@ -18,20 +24,25 @@ const GRADIENTS = [
   "c2410c:f97316",
 ];
 
-function errRedirect(req: Request, code: string) {
-  const u = new URL("/login", getPublicOrigin(req));
+function errRedirect(req: Request, code: string, oauthSource: string | null) {
+  const path = oauthSource === "signup" ? "/signup" : "/login";
+  const u = new URL(path, getPublicOrigin(req));
   u.searchParams.set("error", code);
-  return NextResponse.redirect(u);
+  const res = NextResponse.redirect(u);
+  res.cookies.set(GITHUB_SOURCE_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
+  return res;
 }
 
 export async function GET(req: Request) {
   const jar = await cookies();
   const url = new URL(req.url);
+  const oauthSource = jar.get(GITHUB_SOURCE_COOKIE)?.value ?? null;
   const oauthErr = url.searchParams.get("error");
   if (oauthErr) {
     jar.delete(GITHUB_STATE_COOKIE);
     jar.delete(GITHUB_NEXT_COOKIE);
-    return errRedirect(req, oauthErr === "access_denied" ? "github_denied" : "github");
+    jar.delete(GITHUB_SOURCE_COOKIE);
+    return errRedirect(req, oauthErr === "access_denied" ? "github_denied" : "github", oauthSource);
   }
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
@@ -39,15 +50,16 @@ export async function GET(req: Request) {
   const nextPath = jar.get(GITHUB_NEXT_COOKIE)?.value || "/dashboard";
   jar.delete(GITHUB_STATE_COOKIE);
   jar.delete(GITHUB_NEXT_COOKIE);
+  jar.delete(GITHUB_SOURCE_COOKIE);
   if (!code || !state || !expected || state !== expected) {
-    return errRedirect(req, "github_state");
+    return errRedirect(req, "github_state", oauthSource);
   }
 
   let profile: Awaited<ReturnType<typeof getGitHubProfileFromCode>>;
   try {
     profile = await getGitHubProfileFromCode(req, code);
   } catch {
-    return errRedirect(req, "github_token");
+    return errRedirect(req, "github_token", oauthSource);
   }
 
   const db = getDb();
@@ -65,7 +77,7 @@ export async function GET(req: Request) {
   const byEmail = await db.findUserByEmail(profile.email);
   if (byEmail) {
     if (byEmail.githubId && byEmail.githubId !== profile.id) {
-      return errRedirect(req, "github_conflict");
+      return errRedirect(req, "github_conflict", oauthSource);
     }
     const updated = await db.updateUser(byEmail.id, {
       githubId: profile.id,
@@ -74,7 +86,7 @@ export async function GET(req: Request) {
       emailVerificationExpiresAt: undefined,
       avatarUrl: profile.avatarUrl ?? byEmail.avatarUrl,
     });
-    if (!updated) return errRedirect(req, "github_link");
+    if (!updated) return errRedirect(req, "github_link", oauthSource);
     await appendSecurityNotification(updated.id, {
       kind: "github_account_linked",
       title: "GitHub sign-in linked",
@@ -122,5 +134,6 @@ function redirectToNext(req: Request, nextPath: string) {
   const res = NextResponse.redirect(dest, 302);
   res.cookies.set(GITHUB_STATE_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
   res.cookies.set(GITHUB_NEXT_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
+  res.cookies.set(GITHUB_SOURCE_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
   return res;
 }

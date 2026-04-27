@@ -2,14 +2,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { GoogleSignInCta, googleSignInErrorMessages } from "@/components/auth/google-sign-in-cta";
-import { GitHubSignInCta, githubSignInErrorMessages } from "@/components/auth/github-sign-in-cta";
+import { GoogleSignInCta } from "@/components/auth/google-sign-in-cta";
+import { GitHubSignInCta } from "@/components/auth/github-sign-in-cta";
+import { oauthUrlErrorMessages } from "@/components/auth/oauth-url-errors";
 import { AuthPasswordInput } from "@/components/auth/auth-password-input";
-
-const oauthErrors: Record<string, string> = {
-  ...googleSignInErrorMessages,
-  ...githubSignInErrorMessages,
-};
 
 export function LoginForm({
   showGoogle = false,
@@ -32,7 +28,7 @@ export function LoginForm({
   useEffect(() => {
     const code = params.get("error");
     if (!code) return;
-    const msg = oauthErrors[code];
+    const msg = oauthUrlErrorMessages[code];
     setErr(msg || "Sign-in could not be completed. Try again.");
     const path = new URLSearchParams(params.toString());
     path.delete("error");

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { signupSchema, teacherIntroSchema, formatZodError } from "@/lib/validators";
 import { publicUser, id, type User } from "@/lib/store";
-import { createSession } from "@/lib/auth";
+import { createSession, isEmailVerificationSkipped } from "@/lib/auth";
 import { hashPassword } from "@/lib/security/password";
 import { randomUrlToken, hashToken } from "@/lib/security/tokens";
 import { sendEmailVerificationEmail } from "@/lib/email/transactional";
@@ -86,7 +86,8 @@ export async function POST(req: Request) {
 
   const hash = await hashPassword(password);
   const now = Date.now();
-  const rawVerify = randomUrlToken();
+  const skipVerify = isEmailVerificationSkipped();
+  const rawVerify = skipVerify ? "" : randomUrlToken();
   const verifyTtl = 48 * 60 * 60 * 1000;
   const user: User = {
     id: `u_${id()}`,
@@ -98,8 +99,12 @@ export async function POST(req: Request) {
     avatar: `${initials}|${grad}`,
     createdAt: now,
     preferredVerificationChannel,
-    emailVerificationTokenHash: hashToken(rawVerify),
-    emailVerificationExpiresAt: now + verifyTtl,
+    ...(skipVerify
+      ? { emailVerifiedAt: now }
+      : {
+          emailVerificationTokenHash: hashToken(rawVerify),
+          emailVerificationExpiresAt: now + verifyTtl,
+        }),
     ...(teacherIntro
       ? {
           teacherIntro,
@@ -113,15 +118,17 @@ export async function POST(req: Request) {
   await db.createUser(user);
   await createSession(user.id, { userAgent: clientUserAgent(req), ip: clientIp(req) });
 
-  let emailDelivery: "ses" | "console" | "unknown" | "failed" = "unknown";
-  try {
-    await sendEmailVerificationEmail(user.email, user.email, rawVerify);
-    const d = getAuthEmailDispatch();
-    emailDelivery = d === "ses" ? "ses" : d === "dev" ? "console" : "unknown";
-  } catch (err) {
-    emailDelivery = "failed";
-    // eslint-disable-next-line no-console
-    console.error("[signup] verification email", err);
+  let emailDelivery: "ses" | "console" | "unknown" | "failed" | "skipped" = skipVerify ? "skipped" : "unknown";
+  if (!skipVerify) {
+    try {
+      await sendEmailVerificationEmail(user.email, user.email, rawVerify);
+      const d = getAuthEmailDispatch();
+      emailDelivery = d === "ses" ? "ses" : d === "dev" ? "console" : "unknown";
+    } catch (err) {
+      emailDelivery = "failed";
+      // eslint-disable-next-line no-console
+      console.error("[signup] verification email", err);
+    }
   }
 
   const signupPayload: {
@@ -129,7 +136,7 @@ export async function POST(req: Request) {
     emailDelivery: typeof emailDelivery;
     devVerificationLink?: string;
   } = { user: publicUser(user), emailDelivery };
-  if (shouldExposeDevEmailLinkInApi() && emailDelivery !== "failed") {
+  if (!skipVerify && shouldExposeDevEmailLinkInApi() && emailDelivery !== "failed") {
     signupPayload.devVerificationLink = buildEmailVerificationUrl(user.email, rawVerify);
   }
   return NextResponse.json(signupPayload, { status: 201, headers: rateLimitHeaders(limit) });

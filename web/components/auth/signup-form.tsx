@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { GoogleSignInCta } from "@/components/auth/google-sign-in-cta";
 import { GitHubSignInCta } from "@/components/auth/github-sign-in-cta";
+import { oauthUrlErrorMessages } from "@/components/auth/oauth-url-errors";
 import { PasswordStrength } from "@/components/auth/password-strength";
 import { AuthPasswordInput } from "@/components/auth/auth-password-input";
 
@@ -28,6 +29,8 @@ export function SignupForm({
   onRoleChange: (r: Role) => void;
 }) {
   const router = useRouter();
+  const urlParams = useSearchParams();
+  const [oauthUrlErr, setOauthUrlErr] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,8 +43,26 @@ export function SignupForm({
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    const code = urlParams.get("error");
+    if (!code) return;
+    const msg = oauthUrlErrorMessages[code];
+    setOauthUrlErr(msg || "Sign-up could not be completed. Try again.");
+    const path = new URLSearchParams(urlParams.toString());
+    path.delete("error");
+    const q = path.toString();
+    if (typeof window === "undefined") return;
+    const base = window.location.pathname;
+    router.replace(q ? `${base}?${q}` : base, { scroll: false });
+  }, [urlParams, router]);
+
   return (
     <div>
+      {oauthUrlErr ? (
+        <div className="pill pill-red w-full justify-center text-center mb-4" role="alert" aria-live="polite">
+          {oauthUrlErr}
+        </div>
+      ) : null}
       <div className="space-y-3 mb-4">
         <GoogleSignInCta enabled={showGoogle} defaultNext="/onboarding" source="signup" label="Sign up with Google" />
         <GitHubSignInCta enabled={showGitHub} defaultNext="/onboarding" source="signup" label="Sign up with GitHub" />
@@ -87,12 +108,16 @@ export function SignupForm({
                     : undefined,
               }),
             });
-            const body = await res.json();
+            const body = (await res.json()) as {
+              error?: string;
+              user?: { emailVerified?: boolean };
+              devVerificationLink?: string;
+            };
             if (!res.ok) {
               setErr(body.error || "Could not create account.");
               return;
             }
-            const dev = (body as { devVerificationLink?: string }).devVerificationLink;
+            const dev = body.devVerificationLink;
             if (typeof dev === "string" && dev.length > 0) {
               try {
                 sessionStorage.setItem("skillrise:devEmailVerificationLink", dev);
@@ -100,7 +125,11 @@ export function SignupForm({
                 // ignore
               }
             }
-            router.push("/verify-email/required");
+            if (body.user?.emailVerified) {
+              router.push("/onboarding");
+            } else {
+              router.push("/verify-email/required");
+            }
             router.refresh();
           } finally {
             setBusy(false);

@@ -66,11 +66,11 @@ function isRole(v: string | null): v is Role {
 }
 
 export function SignupPortalView({
-  showGoogle,
-  showGitHub,
+  showGoogle = true,
+  showGitHub = true,
 }: {
-  showGoogle: boolean;
-  showGitHub: boolean;
+  showGoogle?: boolean;
+  showGitHub?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();

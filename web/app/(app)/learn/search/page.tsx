@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, isEmailVerified } from "@/lib/auth";
 import { findUserById } from "@/lib/store";
 import { ResourceSearch } from "@/components/resources/resource-search";
 import { FEATURED_PLATFORMS } from "@/lib/resources/providers/deeplink";
@@ -14,7 +14,7 @@ export default async function LearnSearchPage({
 }) {
   const session = await getCurrentUser();
   if (!session) redirect("/login?redirect=/learn/search");
-  if (!session.emailVerifiedAt) redirect("/verify-email/required");
+  if (!isEmailVerified(session)) redirect("/verify-email/required");
   // Employers and schools have no reason to search the learner catalog.
   if (session.role === "employer" || session.role === "school") {
     redirect("/dashboard");

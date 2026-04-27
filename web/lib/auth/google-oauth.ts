@@ -3,6 +3,8 @@ import { OAuth2Client } from "google-auth-library";
 
 export const GOOGLE_STATE_COOKIE = "sr_go_state";
 export const GOOGLE_NEXT_COOKIE = "sr_go_next";
+/** "signup" | "login" — used to send OAuth errors back to the right page. */
+export const GOOGLE_SOURCE_COOKIE = "sr_go_src";
 
 const OAUTH_MAX_AGE_SEC = 600;
 
@@ -10,16 +12,49 @@ export function isGoogleOAuthConfigured(): boolean {
   return Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID && process.env.GOOGLE_OAUTH_CLIENT_SECRET);
 }
 
-/**
- * Public URL of the app (no trailing slash). Used for a stable OAuth redirect (Google console must match).
- * Falls back to request Host when unset (local dev).
- */
-export function getPublicOrigin(req: Request): string {
-  const envBase = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
-  if (envBase) return envBase;
+function requestOriginFromHeaders(req: Request): string {
   const proto = req.headers.get("x-forwarded-proto") || "http";
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "localhost:3000";
   return `${proto}://${host}`;
+}
+
+function isLocalDevHost(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]" ||
+    hostname.endsWith(".local")
+  );
+}
+
+/**
+ * Public origin (no trailing slash) for OAuth redirect_uri and same-origin redirects.
+ * Uses the **incoming request** host when you open the app on localhost, even if
+ * `NEXT_PUBLIC_APP_URL` points at production — avoids sending dev users to an unreachable domain.
+ * In production, prefers `NEXT_PUBLIC_APP_URL` when the request host matches that URL’s hostname.
+ */
+export function getPublicOrigin(req: Request): string {
+  const requestOrigin = requestOriginFromHeaders(req);
+  const envBase = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
+  if (!envBase) return requestOrigin;
+
+  let requestHostname: string;
+  try {
+    requestHostname = new URL(requestOrigin).hostname;
+  } catch {
+    return requestOrigin;
+  }
+
+  if (isLocalDevHost(requestHostname)) return requestOrigin;
+
+  try {
+    const envHost = new URL(envBase).hostname;
+    if (requestHostname !== envHost) return requestOrigin;
+  } catch {
+    return requestOrigin;
+  }
+
+  return envBase;
 }
 
 export function getGoogleRedirectUri(req: Request): string {

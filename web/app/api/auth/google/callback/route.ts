@@ -4,6 +4,7 @@ import { createSession } from "@/lib/auth";
 import {
   getGoogleProfileFromCode,
   GOOGLE_NEXT_COOKIE,
+  GOOGLE_SOURCE_COOKIE,
   GOOGLE_STATE_COOKIE,
   getPublicOrigin,
   oauthCookieOptions,
@@ -23,20 +24,25 @@ const GRADIENTS = [
   "c2410c:f97316",
 ];
 
-function errRedirect(req: Request, code: string) {
-  const u = new URL("/login", getPublicOrigin(req));
+function errRedirect(req: Request, code: string, oauthSource: string | null) {
+  const path = oauthSource === "signup" ? "/signup" : "/login";
+  const u = new URL(path, getPublicOrigin(req));
   u.searchParams.set("error", code);
-  return NextResponse.redirect(u);
+  const res = NextResponse.redirect(u);
+  res.cookies.set(GOOGLE_SOURCE_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
+  return res;
 }
 
 export async function GET(req: Request) {
   const jar = await cookies();
   const url = new URL(req.url);
+  const oauthSource = jar.get(GOOGLE_SOURCE_COOKIE)?.value ?? null;
   const oauthErr = url.searchParams.get("error");
   if (oauthErr) {
     jar.delete(GOOGLE_STATE_COOKIE);
     jar.delete(GOOGLE_NEXT_COOKIE);
-    return errRedirect(req, oauthErr === "access_denied" ? "google_denied" : "google");
+    jar.delete(GOOGLE_SOURCE_COOKIE);
+    return errRedirect(req, oauthErr === "access_denied" ? "google_denied" : "google", oauthSource);
   }
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
@@ -44,8 +50,9 @@ export async function GET(req: Request) {
   const nextPath = jar.get(GOOGLE_NEXT_COOKIE)?.value || "/dashboard";
   jar.delete(GOOGLE_STATE_COOKIE);
   jar.delete(GOOGLE_NEXT_COOKIE);
+  jar.delete(GOOGLE_SOURCE_COOKIE);
   if (!code || !state || !expected || state !== expected) {
-    return errRedirect(req, "google_state");
+    return errRedirect(req, "google_state", oauthSource);
   }
 
   let profile: Awaited<ReturnType<typeof getGoogleProfileFromCode>>;
@@ -53,8 +60,8 @@ export async function GET(req: Request) {
     profile = await getGoogleProfileFromCode(req, code);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
-    if (msg === "email_not_verified") return errRedirect(req, "google_unverified");
-    return errRedirect(req, "google_token");
+    if (msg === "email_not_verified") return errRedirect(req, "google_unverified", oauthSource);
+    return errRedirect(req, "google_token", oauthSource);
   }
 
   const db = getDb();
@@ -72,7 +79,7 @@ export async function GET(req: Request) {
   const byEmail = await db.findUserByEmail(profile.email);
   if (byEmail) {
     if (byEmail.googleSub && byEmail.googleSub !== profile.sub) {
-      return errRedirect(req, "google_conflict");
+      return errRedirect(req, "google_conflict", oauthSource);
     }
     const updated = await db.updateUser(byEmail.id, {
       googleSub: profile.sub,
@@ -81,7 +88,7 @@ export async function GET(req: Request) {
       emailVerificationExpiresAt: undefined,
       avatarUrl: profile.picture ?? byEmail.avatarUrl,
     });
-    if (!updated) return errRedirect(req, "google_link");
+    if (!updated) return errRedirect(req, "google_link", oauthSource);
     await appendSecurityNotification(updated.id, {
       kind: "google_account_linked",
       title: "Google sign-in linked",
@@ -129,5 +136,6 @@ function redirectToNext(req: Request, nextPath: string) {
   const res = NextResponse.redirect(dest, 302);
   res.cookies.set(GOOGLE_STATE_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
   res.cookies.set(GOOGLE_NEXT_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
+  res.cookies.set(GOOGLE_SOURCE_COOKIE, "", { ...oauthCookieOptions(), maxAge: 0 });
   return res;
 }

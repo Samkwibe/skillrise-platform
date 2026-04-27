@@ -2,19 +2,25 @@ import { NextResponse } from "next/server";
 import {
   GOOGLE_STATE_COOKIE,
   GOOGLE_NEXT_COOKIE,
+  GOOGLE_SOURCE_COOKIE,
   isGoogleOAuthConfigured,
   newOAuthState,
   buildGoogleAuthUrl,
   safeOAuthNextPath,
   oauthCookieOptions,
+  getPublicOrigin,
 } from "@/lib/auth/google-oauth";
 import { rateLimit, clientKey, rateLimitHeaders } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const isSignup = url.searchParams.get("source") === "signup";
   if (!isGoogleOAuthConfigured()) {
-    return NextResponse.json({ error: "Google sign-in is not configured." }, { status: 503 });
+    const u = new URL(isSignup ? "/signup" : "/login", getPublicOrigin(req));
+    u.searchParams.set("error", "oauth_google_not_configured");
+    return NextResponse.redirect(u, 302);
   }
   const limit = rateLimit(clientKey(req, "google-oauth-start"), 20, 15 * 60 * 1000);
   if (!limit.ok) {
@@ -23,9 +29,7 @@ export async function GET(req: Request) {
       { status: 429, headers: rateLimitHeaders(limit) },
     );
   }
-  const url = new URL(req.url);
   const nextRaw = url.searchParams.get("next");
-  const isSignup = url.searchParams.get("source") === "signup";
   const nextPath = safeOAuthNextPath(
     nextRaw,
     isSignup ? "/onboarding" : "/dashboard",
@@ -39,5 +43,6 @@ export async function GET(req: Request) {
   }
   res.cookies.set(GOOGLE_STATE_COOKIE, state, opts);
   res.cookies.set(GOOGLE_NEXT_COOKIE, nextPath, opts);
+  res.cookies.set(GOOGLE_SOURCE_COOKIE, isSignup ? "signup" : "login", opts);
   return res;
 }

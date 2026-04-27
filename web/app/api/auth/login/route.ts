@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { loginSchema, formatZodError } from "@/lib/validators";
 import { publicUser } from "@/lib/store";
-import { createSession } from "@/lib/auth";
+import { createSession, isEmailVerified } from "@/lib/auth";
 import { verifyPassword } from "@/lib/security/password";
 import { rateLimit, clientKey, rateLimitHeaders } from "@/lib/security/rate-limit";
 import { getDb } from "@/lib/db";
@@ -51,5 +51,9 @@ export async function POST(req: Request) {
   }
 
   await createSession(user.id, { userAgent: clientUserAgent(req), ip: clientIp(req) });
-  return NextResponse.json({ user: publicUser(user) }, { headers: rateLimitHeaders(limit) });
+  const pu = publicUser(user);
+  return NextResponse.json(
+    { user: { ...pu, emailVerified: isEmailVerified(user) } },
+    { headers: rateLimitHeaders(limit) },
+  );
 }

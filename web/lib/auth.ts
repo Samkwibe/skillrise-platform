@@ -60,7 +60,16 @@ export async function requireUser(): Promise<User> {
   return user;
 }
 
+/**
+ * When `SKILLRISE_SKIP_EMAIL_VERIFICATION=1`, all signed-in users are treated as verified
+ * (for local/staging testing). Remove before production.
+ */
+export function isEmailVerificationSkipped(): boolean {
+  return process.env.SKILLRISE_SKIP_EMAIL_VERIFICATION === "1";
+}
+
 export function isEmailVerified(user: User): boolean {
+  if (isEmailVerificationSkipped()) return true;
   return Boolean(user.emailVerifiedAt);
 }
 

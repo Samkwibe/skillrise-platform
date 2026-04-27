@@ -7,6 +7,7 @@ import {
 
 export const GITHUB_STATE_COOKIE = "sr_gh_state";
 export const GITHUB_NEXT_COOKIE = "sr_gh_next";
+export const GITHUB_SOURCE_COOKIE = "sr_gh_src";
 
 export { oauthCookieOptions, safeOAuthNextPath, newOAuthState };
 
