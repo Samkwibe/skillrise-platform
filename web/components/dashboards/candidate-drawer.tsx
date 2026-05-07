@@ -116,23 +116,22 @@ export function CandidateDrawerProvider({
           <aside
             role="dialog"
             aria-modal="true"
-            className="absolute right-0 top-0 h-full w-full sm:w-[480px] overflow-y-auto animate-fade-in-up"
+            className="absolute right-0 top-0 h-full w-full sm:w-[480px] overflow-y-auto animate-fade-in-up bg-slate-900/80 backdrop-blur-2xl text-white"
             style={{
-              background: "var(--surface-1)",
-              borderLeft: "1px solid var(--border-2)",
-              boxShadow: "-30px 0 80px rgba(15,23,42,0.18)",
+              borderLeft: "1px solid rgba(255,255,255,0.1)",
+              boxShadow: "-30px 0 80px rgba(0,0,0,0.5)",
             }}
           >
-            <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid var(--border-1)" }}>
-              <div className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: "var(--text-3)" }}>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+              <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/40">
                 Candidate
               </div>
               <div className="flex items-center gap-2">
                 <span
                   className="text-[11px] font-bold px-2 py-0.5 rounded-full"
                   style={{
-                    background: "color-mix(in srgb, var(--g) 12%, transparent)",
-                    color: "var(--g)",
+                    background: "color-mix(in srgb, #34d399 12%, transparent)",
+                    color: "#34d399",
                   }}
                 >
                   {STAGE_LABEL[openData.status]}
@@ -141,8 +140,7 @@ export function CandidateDrawerProvider({
                   type="button"
                   aria-label="Close"
                   onClick={() => setOpenData(null)}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[18px] leading-none hover:bg-[var(--surface-2)]"
-                  style={{ color: "var(--text-2)" }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[18px] leading-none hover:bg-white/10 text-white/70"
                 >
                   ×
                 </button>
@@ -154,7 +152,7 @@ export function CandidateDrawerProvider({
                 <div
                   className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-[20px]"
                   style={{
-                    background: `linear-gradient(135deg, var(--g), var(--blue))`,
+                    background: `linear-gradient(135deg, #34d399, #60a5fa)`,
                     color: "#fff",
                   }}
                 >
@@ -162,30 +160,29 @@ export function CandidateDrawerProvider({
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-[17px] font-extrabold leading-tight">{openData.applicantName}</div>
-                  <div className="text-[12.5px]" style={{ color: "var(--text-2)" }}>
+                  <div className="text-[12.5px] text-white/70">
                     {openData.neighborhood}
                   </div>
-                  <div className="text-[12px] mt-0.5 truncate" style={{ color: "var(--text-3)" }}>
+                  <div className="text-[12px] mt-0.5 truncate text-white/40">
                     {openData.email}
                   </div>
                 </div>
               </div>
 
               <div
-                className="rounded-[10px] p-3 mb-4"
-                style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)" }}
+                className="rounded-[10px] p-3 mb-4 bg-white/[0.03] border border-white/10"
               >
-                <div className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: "var(--text-3)" }}>
+                <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/40">
                   Applying for
                 </div>
                 <div className="text-[14px] font-semibold mt-0.5">{openData.role}</div>
-                <div className="text-[11.5px] mt-0.5" style={{ color: "var(--text-3)" }}>
+                <div className="text-[11.5px] mt-0.5 text-white/40">
                   Submitted {new Date(openData.appliedAt).toLocaleDateString()}
                 </div>
               </div>
 
               <section className="mb-5">
-                <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-2" style={{ color: "var(--text-3)" }}>
+                <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-2 text-white/40">
                   Match score
                 </div>
                 <MatchBar
@@ -201,10 +198,10 @@ export function CandidateDrawerProvider({
                         className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
                         style={{
                           background: matched
-                            ? "color-mix(in srgb, var(--g) 14%, transparent)"
-                            : "var(--surface-2)",
-                          color: matched ? "var(--g)" : "var(--text-3)",
-                          border: matched ? "1px solid var(--g)" : "1px solid var(--border-1)",
+                            ? "rgba(52,211,153,0.15)"
+                            : "rgba(255,255,255,0.05)",
+                          color: matched ? "#34d399" : "rgba(255,255,255,0.4)",
+                          border: matched ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(255,255,255,0.1)",
                         }}
                       >
                         {matched ? "✓ " : ""}
@@ -217,7 +214,7 @@ export function CandidateDrawerProvider({
 
               {openData.certificates.length > 0 && (
                 <section className="mb-5">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-2" style={{ color: "var(--text-3)" }}>
+                  <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-2 text-white/40">
                     Verified certificates
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -225,12 +222,11 @@ export function CandidateDrawerProvider({
                       <Link
                         key={c.id}
                         href={`/verify/${c.id}`}
-                        className="flex items-center gap-2 p-2 rounded-[8px]"
-                        style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)" }}
+                        className="flex items-center gap-2 p-2 rounded-[8px] bg-white/[0.03] border border-white/10"
                       >
                         <span className="text-[18px]">🏅</span>
                         <span className="flex-1 text-[13px] font-semibold">{c.track}</span>
-                        <span className="text-[11px]" style={{ color: "var(--text-3)" }}>
+                        <span className="text-[11px] text-white/40">
                           {new Date(c.issuedAt).toLocaleDateString()}
                         </span>
                       </Link>
@@ -240,19 +236,18 @@ export function CandidateDrawerProvider({
               )}
 
               <section className="mb-5">
-                <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-2" style={{ color: "var(--text-3)" }}>
+                <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-2 text-white/40">
                   Candidate note
                 </div>
                 <div
-                  className="text-[13px] leading-relaxed p-3 rounded-[8px]"
-                  style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)", color: "var(--text-2)" }}
+                  className="text-[13px] leading-relaxed p-3 rounded-[8px] bg-white/[0.03] border border-white/10 text-white/70"
                 >
-                  {openData.note || <span style={{ color: "var(--text-3)" }}>No note left.</span>}
+                  {openData.note || <span className="text-white/40">No note left.</span>}
                 </div>
               </section>
 
               <section>
-                <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-2" style={{ color: "var(--text-3)" }}>
+                <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-2 text-white/40">
                   Move to stage
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -264,9 +259,9 @@ export function CandidateDrawerProvider({
                       disabled={s === openData.status}
                       className="text-[12px] font-semibold px-3 py-1.5 rounded-full disabled:opacity-100 disabled:cursor-default"
                       style={{
-                        background: s === openData.status ? "var(--g)" : "var(--surface-2)",
-                        color: s === openData.status ? "#fff" : "var(--text-2)",
-                        border: s === openData.status ? "1px solid var(--g)" : "1px solid var(--border-1)",
+                        background: s === openData.status ? "#34d399" : "rgba(255,255,255,0.05)",
+                        color: s === openData.status ? "#000" : "rgba(255,255,255,0.7)",
+                        border: s === openData.status ? "1px solid #34d399" : "1px solid rgba(255,255,255,0.1)",
                       }}
                     >
                       {STAGE_LABEL[s]}
@@ -285,8 +280,7 @@ export function CandidateDrawerProvider({
                 <button
                   type="button"
                   onClick={() => setStatus("rejected")}
-                  className="btn btn-ghost btn-sm"
-                  style={{ color: "var(--red)", borderColor: "color-mix(in srgb, var(--red) 40%, transparent)" }}
+                  className="btn btn-ghost btn-sm text-red-400 border-red-500/40 hover:bg-red-500/10"
                 >
                   Reject
                 </button>
@@ -304,19 +298,19 @@ function MatchBar({ matched, total }: { matched: number; total: number }) {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1">
-        <div className="text-[22px] font-extrabold" style={{ color: pct > 60 ? "var(--g)" : "var(--amber)" }}>
+        <div className="text-[22px] font-extrabold" style={{ color: pct > 60 ? "#34d399" : "#fbbf24" }}>
           {pct}%
         </div>
-        <div className="text-[11.5px]" style={{ color: "var(--text-3)" }}>
+        <div className="text-[11.5px] text-white/40">
           {matched} of {total} skills matched
         </div>
       </div>
-      <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--surface-2)" }}>
+      <div className="h-2 rounded-full overflow-hidden bg-white/10">
         <div
           className="h-full rounded-full"
           style={{
             width: `${pct}%`,
-            background: `linear-gradient(90deg, ${pct > 60 ? "var(--g)" : "var(--amber)"}, ${pct > 60 ? "var(--blue)" : "var(--red)"})`,
+            background: `linear-gradient(90deg, ${pct > 60 ? "#34d399" : "#fbbf24"}, ${pct > 60 ? "#60a5fa" : "#f87171"})`,
             transition: "width 0.6s ease",
           }}
         />

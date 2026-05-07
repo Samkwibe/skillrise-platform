@@ -120,25 +120,24 @@ export function EmployerDashboard({ user }: { user: User }) {
 
   return (
     <CandidateDrawerProvider cards={bindings}>
-    <div className="px-4 sm:px-5 md:px-7 py-5 md:py-6">
+    <div className="px-4 sm:px-5 md:px-7 py-5 md:py-6 animate-in fade-in duration-500 pb-12 text-white">
       {/* Page title + meta */}
       <div className="flex items-end justify-between mb-5 flex-wrap gap-3">
         <div>
-          <div className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: "var(--g)" }}>
+          <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-400">
             Recruiting dashboard
           </div>
           <h1 className="text-[26px] font-extrabold mt-1" style={{ letterSpacing: "-0.015em" }}>
             {user.company || user.name}
           </h1>
-          <div className="text-[13.5px] mt-0.5" style={{ color: "var(--text-2)" }}>
+          <div className="text-[13.5px] mt-0.5 text-white/70">
             {myJobs.length} roles · {myApps.length} applicants · {openJobs.length} open
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href="/employers/post"
-            className="inline-flex items-center gap-1 px-3 py-2 rounded-[8px] text-[13px] font-semibold"
-            style={{ background: "var(--g)", color: "#fff" }}
+            className="inline-flex items-center gap-1 px-3 py-2 rounded-[8px] text-[13px] font-semibold bg-emerald-500 hover:bg-emerald-400 text-white transition-colors"
           >
             + New role
           </Link>
@@ -147,21 +146,19 @@ export function EmployerDashboard({ user }: { user: User }) {
 
       {applicantUsers.length > 0 ? (
         <section
-          className="mb-5 md:mb-6 p-4 rounded-[10px]"
-          style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }}
+          className="mb-5 md:mb-6 p-4 rounded-[10px] bg-white/[0.02] border border-white/10 backdrop-blur-xl relative overflow-hidden group hover:bg-white/[0.04] transition-colors"
         >
-          <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-2" style={{ color: "var(--text-3)" }}>
+          <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-2 text-white/40">
             People in your pipeline
           </div>
-          <p className="text-[12.5px] mb-3" style={{ color: "var(--text-2)" }}>
+          <p className="text-[12.5px] mb-3 text-white/70">
             Real applicants who applied to your open roles.
           </p>
           <div className="flex flex-wrap gap-2">
             {applicantUsers.map((u) => (
               <div
                 key={u.id}
-                className="flex items-center gap-2 rounded-lg px-2 py-1.5"
-                style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)" }}
+                className="flex items-center gap-2 rounded-lg px-2 py-1.5 bg-black/20 border border-white/10"
               >
                 <Avatar spec={u.avatar} photoUrl={u.avatarUrl} name={u.name} size={36} />
                 <span className="text-[13px] font-semibold truncate max-w-[120px]">{u.name}</span>
@@ -181,10 +178,9 @@ export function EmployerDashboard({ user }: { user: User }) {
         ].map((m) => (
           <div
             key={m.label}
-            className="p-4 rounded-[10px]"
-            style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }}
+            className="p-4 rounded-[10px] bg-white/[0.02] border border-white/10 backdrop-blur-xl relative overflow-hidden group hover:bg-white/[0.04] transition-colors"
           >
-            <div className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: "var(--text-3)" }}>
+            <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/40">
               {m.label}
             </div>
             <div
@@ -193,7 +189,7 @@ export function EmployerDashboard({ user }: { user: User }) {
             >
               {m.value}
             </div>
-            <div className="text-[11.5px] mt-1" style={{ color: "var(--text-3)" }}>
+            <div className="text-[11.5px] mt-1 text-white/40">
               {m.sub}
             </div>
           </div>
@@ -204,7 +200,7 @@ export function EmployerDashboard({ user }: { user: User }) {
       <section className="mb-8">
         <div className="flex items-baseline justify-between mb-3">
           <h2 className="text-[16px] font-bold">Applicant pipeline</h2>
-          <Link href="/employers/dashboard" className="text-[12.5px] underline" style={{ color: "var(--text-2)" }}>
+          <Link href="/employers/dashboard" className="text-[12.5px] underline text-white/70">
             Open full board →
           </Link>
         </div>
@@ -216,23 +212,22 @@ export function EmployerDashboard({ user }: { user: User }) {
           {STAGES.map((s) => {
             const cards = groupedByStage[s.key] ?? [];
             return (
-              <div key={s.key} className="kanban-col w-[260px] shrink-0 md:w-auto md:shrink">
+              <div key={s.key} className="kanban-col w-[260px] shrink-0 md:w-auto md:shrink p-3 rounded-2xl bg-white/[0.01] border border-white/5 backdrop-blur-md">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full" style={{ background: s.accent }} />
-                    <span className="text-[11.5px] font-bold uppercase tracking-wider" style={{ color: "var(--text-2)" }}>
+                    <span className="text-[11.5px] font-bold uppercase tracking-wider text-white/70">
                       {s.label}
                     </span>
                   </div>
                   <span
-                    className="text-[11px] font-bold px-1.5 py-0.5 rounded"
-                    style={{ background: "var(--surface-1)", color: "var(--text-2)" }}
+                    className="text-[11px] font-bold px-1.5 py-0.5 rounded shadow-inner border border-white/5 bg-white/5 text-white/70"
                   >
                     {cards.length}
                   </span>
                 </div>
                 {cards.length === 0 ? (
-                  <div className="text-[12px] py-4 text-center" style={{ color: "var(--text-3)" }}>
+                  <div className="text-[12px] py-4 text-center text-white/40">
                     —
                   </div>
                 ) : (
@@ -248,12 +243,12 @@ export function EmployerDashboard({ user }: { user: User }) {
                       <CandidateCardButton
                         key={a.id}
                         appId={a.id}
-                        className="kanban-card"
+                        className="kanban-card p-3 rounded-xl bg-black/20 border border-white/10 hover:bg-white/[0.05] hover:border-emerald-500/30 transition-all shadow-lg group text-left w-full mb-3 flex items-start gap-3"
                       >
                         {applicant && (
                           <Avatar spec={applicant.avatar} photoUrl={applicant.avatarUrl} name={applicant.name} size={34} />
                         )}
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 group-hover:translate-x-1 transition-transform">
                           <div className="flex items-center justify-between gap-2">
                             <div className="text-[13px] font-semibold truncate">
                               {applicant?.name ?? "Applicant"}
@@ -270,7 +265,7 @@ export function EmployerDashboard({ user }: { user: User }) {
                               </span>
                             )}
                           </div>
-                          <div className="text-[11.5px] truncate mt-0.5" style={{ color: "var(--text-3)" }}>
+                          <div className="text-[11.5px] truncate mt-0.5 text-white/40">
                             {job?.title ?? "Role"}
                           </div>
                           <div className="flex items-center gap-1 mt-1.5 flex-wrap">
@@ -284,8 +279,7 @@ export function EmployerDashboard({ user }: { user: User }) {
                               </span>
                             ))}
                             <span
-                              className="text-[10px] ml-auto"
-                              style={{ color: "var(--text-3)" }}
+                              className="text-[10px] ml-auto text-white/40"
                             >
                               {daysAgo(a.appliedAt)}
                             </span>
@@ -296,7 +290,7 @@ export function EmployerDashboard({ user }: { user: User }) {
                   })
                 )}
                 {cards.length > 4 && (
-                  <div className="text-[11px] text-center pt-1" style={{ color: "var(--text-3)" }}>
+                  <div className="text-[11px] text-center pt-1 text-white/40">
                     +{cards.length - 4} more
                   </div>
                 )}
@@ -310,10 +304,9 @@ export function EmployerDashboard({ user }: { user: User }) {
       {/* Funnel + Roles */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
         <section
-          className="p-5 rounded-[10px]"
-          style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }}
+          className="p-5 rounded-[10px] bg-white/[0.02] border border-white/10 backdrop-blur-xl relative overflow-hidden group hover:bg-white/[0.04] transition-colors"
         >
-          <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-3" style={{ color: "var(--text-3)" }}>
+          <div className="text-[11px] font-bold uppercase tracking-[0.12em] mb-3 text-white/40">
             Funnel (applicants this cycle)
           </div>
           <div className="flex flex-col gap-2">
@@ -323,12 +316,11 @@ export function EmployerDashboard({ user }: { user: User }) {
                 const pct = Math.round((count / funnelTotal) * 100);
                 return (
                   <div key={s.key} className="flex items-center gap-3">
-                    <div className="w-[90px] text-[12px] font-semibold" style={{ color: "var(--text-2)" }}>
+                    <div className="w-[90px] text-[12px] font-semibold text-white/70">
                       {s.label}
                     </div>
                     <div
-                      className="flex-1 h-7 rounded-[6px] overflow-hidden"
-                      style={{ background: "var(--surface-2)" }}
+                      className="flex-1 h-7 rounded-[6px] overflow-hidden bg-black/20"
                     >
                       <div
                         className="h-full flex items-center px-2 text-[11px] font-bold"
@@ -350,21 +342,20 @@ export function EmployerDashboard({ user }: { user: User }) {
         </section>
 
         <section
-          className="p-5 rounded-[10px]"
-          style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }}
+          className="p-5 rounded-[10px] bg-white/[0.02] border border-white/10 backdrop-blur-xl relative overflow-hidden group hover:bg-white/[0.04] transition-colors"
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: "var(--text-3)" }}>
+            <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/40">
               Open roles
             </div>
-            <Link href="/employers/post" className="text-[12px] underline" style={{ color: "var(--text-2)" }}>
+            <Link href="/employers/post" className="text-[12px] underline text-white/70">
               + Post
             </Link>
           </div>
           {myJobs.length === 0 ? (
-            <div className="text-[13px] py-4 text-center" style={{ color: "var(--text-3)" }}>
+            <div className="text-[13px] py-4 text-center text-white/40">
               No roles yet.{" "}
-              <Link href="/employers/post" className="underline" style={{ color: "var(--g)" }}>
+              <Link href="/employers/post" className="underline text-emerald-400">
                 Post your first
               </Link>
               .
@@ -377,27 +368,27 @@ export function EmployerDashboard({ user }: { user: User }) {
                   <Link
                     key={j.id}
                     href={`/jobs/${j.id}`}
-                    className="flex items-center justify-between gap-3 p-3 rounded-[8px] hover:bg-[var(--surface-2)] transition-colors"
-                    style={{ border: "1px solid var(--border-1)" }}
+                    className="flex items-center justify-between gap-3 p-3 rounded-[8px] bg-black/20 border border-white/10 hover:bg-white/[0.04] transition-colors"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="text-[13.5px] font-semibold truncate">{j.title}</div>
-                      <div className="text-[11.5px] truncate" style={{ color: "var(--text-3)" }}>
+                      <div className="text-[11.5px] truncate text-white/40">
                         {j.neighborhood} · ${j.wageFrom}–${j.wageTo}/{j.wageUnit} · {j.type}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-[11.5px] font-semibold" style={{ color: "var(--text-2)" }}>
+                      <span className="text-[11.5px] font-semibold text-white/70">
                         {apps.length} apps
                       </span>
                       <span
-                        className="text-[11px] px-2 py-0.5 rounded-full font-bold"
+                        className="text-[11px] px-2 py-0.5 rounded-full font-bold shadow-inner"
                         style={{
                           background:
                             j.status === "open"
                               ? "color-mix(in srgb, var(--g) 15%, transparent)"
-                              : "var(--surface-3)",
-                          color: j.status === "open" ? "var(--g)" : "var(--text-3)",
+                              : "rgba(255,255,255,0.05)",
+                          color: j.status === "open" ? "var(--g)" : "rgba(255,255,255,0.4)",
+                          border: j.status === "open" ? "1px solid rgba(52,211,153,0.2)" : "1px solid rgba(255,255,255,0.05)",
                         }}
                       >
                         {j.status}
