@@ -9,8 +9,7 @@ export function CohortChart({ classes }: { classes: SchoolClass[] }) {
   if (classes.length === 0) {
     return (
       <div
-        className="p-5 rounded-[6px] text-center text-[13px]"
-        style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)", color: "var(--text-3)" }}
+        className="p-5 rounded-xl text-center text-[13px] bg-white/[0.02] border border-white/10 text-white/40"
       >
         No classes yet — create one to see cohort completion.
       </div>
@@ -54,33 +53,30 @@ export function CohortChart({ classes }: { classes: SchoolClass[] }) {
 
   return (
     <section
-      className="rounded-[6px] overflow-hidden mb-5"
-      style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }}
+      className="rounded-xl overflow-hidden mb-5 bg-white/[0.02] border border-white/10 backdrop-blur-md relative"
       id="cohort-chart"
     >
       <div
-        className="flex items-center justify-between px-4 py-2.5"
-        style={{ borderBottom: "1px solid var(--border-1)", background: "var(--surface-2)" }}
+        className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-black/20"
       >
         <div className="flex items-center gap-3">
-          <div className="text-[12.5px] font-bold" style={{ color: "var(--text-2)" }}>
+          <div className="text-[12.5px] font-bold text-white/70">
             Cohort completion
           </div>
           <span
-            className="text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums"
-            style={{ background: "color-mix(in srgb, var(--g) 14%, transparent)", color: "var(--g)" }}
+            className="text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums bg-emerald-500/15 text-emerald-400"
           >
             {overallPct}% overall
           </span>
         </div>
-        <div className="flex items-center gap-3 text-[11px]" style={{ color: "var(--text-3)" }}>
-          <LegendDot color="var(--g)" label={`Certified (${overall.cert})`} />
-          <LegendDot color="var(--blue)" label={`In progress (${overall.ip})`} />
-          <LegendDot color="var(--surface-3)" label={`Missed (${overall.miss})`} />
+        <div className="flex items-center gap-3 text-[11px] text-white/40">
+          <LegendDot color="#34d399" label={`Certified (${overall.cert})`} />
+          <LegendDot color="#60a5fa" label={`In progress (${overall.ip})`} />
+          <LegendDot color="rgba(255,255,255,0.1)" label={`Missed (${overall.miss})`} />
         </div>
       </div>
 
-      <div className="divide-y" style={{ borderColor: "var(--border-1)" }}>
+      <div className="divide-y divide-white/10">
         {rows.map((r) => {
           const certPct = (r.certified / r.total) * 100;
           const ipPct = (r.inProgress / r.total) * 100;
@@ -88,45 +84,39 @@ export function CohortChart({ classes }: { classes: SchoolClass[] }) {
           return (
             <div
               key={r.id}
-              className="grid grid-cols-[180px_1fr_auto] items-center gap-3 px-4 py-2.5"
-              style={{ borderTop: "1px solid var(--border-1)" }}
+              className="grid grid-cols-[180px_1fr_auto] items-center gap-3 px-4 py-2.5 hover:bg-white/[0.02] transition-colors"
             >
               <div className="min-w-0">
                 <div className="text-[13px] font-semibold truncate">{r.name}</div>
-                <div className="text-[11px] truncate" style={{ color: "var(--text-3)" }}>
+                <div className="text-[11px] truncate text-white/40">
                   {r.track}
                 </div>
               </div>
 
               <div
-                className="h-6 rounded-[3px] overflow-hidden flex"
-                style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)" }}
+                className="h-6 rounded-[3px] overflow-hidden flex bg-black/20 border border-white/5"
                 title={`${r.certified} certified · ${r.inProgress} in progress · ${r.missed} missed`}
               >
                 {r.certified > 0 && (
                   <div
-                    className="h-full flex items-center justify-center text-[10.5px] font-bold tabular-nums text-white"
-                    style={{ width: `${certPct}%`, background: "var(--g)" }}
+                    className="h-full flex items-center justify-center text-[10.5px] font-bold tabular-nums text-white bg-emerald-500"
+                    style={{ width: `${certPct}%` }}
                   >
                     {certPct > 8 ? r.certified : ""}
                   </div>
                 )}
                 {r.inProgress > 0 && (
                   <div
-                    className="h-full flex items-center justify-center text-[10.5px] font-bold tabular-nums text-white"
-                    style={{ width: `${ipPct}%`, background: "var(--blue)" }}
+                    className="h-full flex items-center justify-center text-[10.5px] font-bold tabular-nums text-white bg-blue-500"
+                    style={{ width: `${ipPct}%` }}
                   >
                     {ipPct > 8 ? r.inProgress : ""}
                   </div>
                 )}
                 {r.missed > 0 && (
                   <div
-                    className="h-full flex items-center justify-center text-[10.5px] font-bold tabular-nums"
-                    style={{
-                      width: `${missPct}%`,
-                      background: "var(--surface-3)",
-                      color: "var(--text-2)",
-                    }}
+                    className="h-full flex items-center justify-center text-[10.5px] font-bold tabular-nums bg-white/5 text-white/40"
+                    style={{ width: `${missPct}%` }}
                   >
                     {missPct > 8 ? r.missed : ""}
                   </div>
@@ -134,8 +124,7 @@ export function CohortChart({ classes }: { classes: SchoolClass[] }) {
               </div>
 
               <div
-                className="text-[12.5px] font-bold tabular-nums text-right w-[60px]"
-                style={{ color: "var(--text-2)" }}
+                className="text-[12.5px] font-bold tabular-nums text-right w-[60px] text-white/70"
               >
                 {Math.round(certPct)}%
               </div>
@@ -145,8 +134,7 @@ export function CohortChart({ classes }: { classes: SchoolClass[] }) {
       </div>
 
       <div
-        className="flex items-center justify-between px-4 py-2 text-[11px]"
-        style={{ borderTop: "1px solid var(--border-1)", background: "var(--surface-2)", color: "var(--text-3)" }}
+        className="flex items-center justify-between px-4 py-2 text-[11px] border-t border-white/10 bg-black/20 text-white/40"
       >
         <span>{rows.length} classes · {overall.total} students</span>
         <span className="tabular-nums">
@@ -160,7 +148,7 @@ export function CohortChart({ classes }: { classes: SchoolClass[] }) {
 function LegendDot({ color, label }: { color: string; label: string }) {
   return (
     <span className="flex items-center gap-1.5">
-      <span className="w-2.5 h-2.5 rounded-sm" style={{ background: color, border: "1px solid var(--border-1)" }} />
+      <span className="w-2.5 h-2.5 rounded-sm border border-white/10" style={{ background: color }} />
       <span>{label}</span>
     </span>
   );

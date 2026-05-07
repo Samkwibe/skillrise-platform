@@ -59,11 +59,11 @@ export function SchoolDashboard({ user }: { user: User }) {
     .slice(0, 8);
 
   return (
-    <div className="px-4 sm:px-5 md:px-7 py-4 md:py-5">
+    <div className="px-4 sm:px-5 md:px-7 py-4 md:py-5 animate-in fade-in duration-500 pb-12 text-white">
       {/* Header band */}
       <div className="flex items-end justify-between flex-wrap gap-3 mb-4">
         <div>
-          <div className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: "var(--text-3)" }}>
+          <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/40">
             Administration · Overview
           </div>
           <h1 className="text-[24px] font-bold mt-1" style={{ letterSpacing: "-0.01em" }}>
@@ -74,10 +74,9 @@ export function SchoolDashboard({ user }: { user: User }) {
 
       {studentRows.some((r) => r.u) ? (
         <section
-          className="mb-4 md:mb-5 p-4 rounded-[6px] flex flex-wrap items-center gap-3"
-          style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }}
+          className="mb-4 md:mb-5 p-4 rounded-xl flex flex-wrap items-center gap-3 bg-white/[0.02] border border-white/10 backdrop-blur-xl relative overflow-hidden"
         >
-          <div className="text-[11px] font-bold uppercase tracking-[0.1em] w-full sm:w-auto" style={{ color: "var(--text-3)" }}>
+          <div className="text-[11px] font-bold uppercase tracking-[0.1em] w-full sm:w-auto text-white/40">
             Students on roster
           </div>
           <div className="flex flex-wrap gap-2">
@@ -111,13 +110,12 @@ export function SchoolDashboard({ user }: { user: User }) {
         ].map((k) => (
           <div
             key={k.label}
-            className="p-4 rounded-[6px]"
-            style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }}
+            className="p-4 rounded-xl bg-white/[0.02] border border-white/10 backdrop-blur-xl relative overflow-hidden hover:bg-white/[0.04] transition-colors"
           >
-            <div className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: "var(--text-3)" }}>
+            <div className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/40">
               {k.label}
             </div>
-            <div className="text-[26px] font-bold mt-1 leading-none" style={{ color: k.accent ?? "var(--text-1)" }}>
+            <div className="text-[26px] font-bold mt-1 leading-none" style={{ color: k.accent ?? "#fff" }}>
               {k.value}
             </div>
           </div>
@@ -129,21 +127,21 @@ export function SchoolDashboard({ user }: { user: User }) {
 
       {/* Bulk action bar */}
       <div className="admin-action-bar mb-3 flex-wrap" id="students">
-        <div className="text-[12.5px] font-bold" style={{ color: "var(--text-2)" }}>
+        <div className="text-[12.5px] font-bold text-white/70">
           Students · {studentRows.length} records
         </div>
         <div className="flex-1 hidden sm:block" />
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <button type="button" className="text-[12px] px-3 py-1.5 rounded-[4px]" style={{ border: "1px solid var(--border-2)", color: "var(--text-2)" }}>
+          <button type="button" className="text-[12px] px-3 py-1.5 rounded-[4px] border border-white/20 text-white/70 hover:bg-white/5 transition-colors">
             Filter
           </button>
-          <button type="button" className="hidden sm:inline-flex text-[12px] px-3 py-1.5 rounded-[4px]" style={{ border: "1px solid var(--border-2)", color: "var(--text-2)" }}>
+          <button type="button" className="hidden sm:inline-flex text-[12px] px-3 py-1.5 rounded-[4px] border border-white/20 text-white/70 hover:bg-white/5 transition-colors">
             Bulk enroll
           </button>
-          <button type="button" className="hidden md:inline-flex text-[12px] px-3 py-1.5 rounded-[4px]" style={{ border: "1px solid var(--border-2)", color: "var(--text-2)" }}>
+          <button type="button" className="hidden md:inline-flex text-[12px] px-3 py-1.5 rounded-[4px] border border-white/20 text-white/70 hover:bg-white/5 transition-colors">
             Export CSV
           </button>
-          <button type="button" className="text-[12px] px-3 py-1.5 rounded-[4px] font-semibold whitespace-nowrap ml-auto sm:ml-0" style={{ background: "var(--g)", color: "#fff" }}>
+          <button type="button" className="text-[12px] px-3 py-1.5 rounded-[4px] font-semibold whitespace-nowrap ml-auto sm:ml-0 bg-emerald-500 text-white hover:bg-emerald-400 transition-colors">
             + Add student
           </button>
         </div>
@@ -167,7 +165,7 @@ export function SchoolDashboard({ user }: { user: User }) {
           <tbody>
             {studentRows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center" style={{ color: "var(--text-3)" }}>
+                <td colSpan={6} className="text-center text-white/40">
                   No students yet.
                 </td>
               </tr>
@@ -178,28 +176,28 @@ export function SchoolDashboard({ user }: { user: User }) {
                     <input type="checkbox" aria-label={`Select ${u?.name ?? ""}`} />
                   </td>
                   <td className="font-semibold">{u?.name ?? "—"}</td>
-                  <td style={{ color: "var(--text-2)" }}>{cls?.name ?? "—"}</td>
-                  <td style={{ color: "var(--text-2)" }}>{track?.title ?? "—"}</td>
+                  <td className="text-white/70">{cls?.name ?? "—"}</td>
+                  <td className="text-white/70">{track?.title ?? "—"}</td>
                   <td>
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--surface-3)" }}>
-                        <div className="h-full" style={{ width: `${pct}%`, background: "var(--g)" }} />
+                      <div className="flex-1 h-1.5 rounded-full overflow-hidden bg-white/5">
+                        <div className="h-full bg-emerald-500" style={{ width: `${pct}%` }} />
                       </div>
-                      <span className="text-[11.5px] w-[34px] text-right" style={{ color: "var(--text-2)" }}>
+                      <span className="text-[11.5px] w-[34px] text-right text-white/70">
                         {pct}%
                       </span>
                     </div>
                   </td>
                   <td>
-                    <span
-                      className="text-[11px] px-2 py-0.5 rounded-full font-semibold"
-                      style={{
-                        background: hasCert
-                          ? "color-mix(in srgb, var(--g) 15%, transparent)"
-                          : "var(--surface-2)",
-                        color: hasCert ? "var(--g)" : "var(--text-3)",
-                      }}
-                    >
+                      <span
+                        className="text-[11px] px-2 py-0.5 rounded-full font-semibold shadow-inner"
+                        style={{
+                          background: hasCert
+                            ? "rgba(52,211,153,0.15)"
+                            : "rgba(255,255,255,0.05)",
+                          color: hasCert ? "#34d399" : "rgba(255,255,255,0.4)",
+                        }}
+                      >
                       {hasCert ? "Certified" : pct === 100 ? "Awaiting cert" : "In progress"}
                     </span>
                   </td>
@@ -214,11 +212,11 @@ export function SchoolDashboard({ user }: { user: User }) {
       <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-4 md:gap-5" id="reports">
         <section>
           <div className="admin-action-bar mb-3">
-            <div className="text-[12.5px] font-bold" style={{ color: "var(--text-2)" }}>
+            <div className="text-[12.5px] font-bold text-white/70">
               Classes · {classes.length}
             </div>
             <div className="flex-1" />
-            <button type="button" className="text-[12px] px-3 py-1.5 rounded-[4px] font-semibold" style={{ background: "var(--g)", color: "#fff" }}>
+            <button type="button" className="text-[12px] px-3 py-1.5 rounded-[4px] font-semibold bg-emerald-500 text-white hover:bg-emerald-400 transition-colors">
               + Add class
             </button>
           </div>
@@ -235,7 +233,7 @@ export function SchoolDashboard({ user }: { user: User }) {
             <tbody>
               {classes.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center" style={{ color: "var(--text-3)" }}>
+                  <td colSpan={4} className="text-center text-white/40">
                     No classes yet.
                   </td>
                 </tr>
@@ -248,12 +246,12 @@ export function SchoolDashboard({ user }: { user: User }) {
                   return (
                     <tr key={c.id}>
                       <td className="font-semibold">{c.name}</td>
-                      <td style={{ color: "var(--text-2)" }}>{t?.title ?? c.trackSlug}</td>
+                      <td className="text-white/70">{t?.title ?? c.trackSlug}</td>
                       <td>{c.studentIds.length}</td>
                       <td>
                         <div className="flex items-center gap-2">
-                          <span style={{ color: "var(--g)", fontWeight: 600 }}>{certCount}</span>
-                          <span style={{ color: "var(--text-3)" }}>/ {c.studentIds.length}</span>
+                          <span className="text-emerald-400 font-semibold">{certCount}</span>
+                          <span className="text-white/40">/ {c.studentIds.length}</span>
                         </div>
                       </td>
                     </tr>
@@ -267,40 +265,35 @@ export function SchoolDashboard({ user }: { user: User }) {
 
         <section id="audit">
           <div className="admin-action-bar mb-3">
-            <div className="text-[12.5px] font-bold" style={{ color: "var(--text-2)" }}>
+            <div className="text-[12.5px] font-bold text-white/70">
               Audit log · last {auditEvents.length}
             </div>
             <div className="flex-1" />
-            <Link href="#audit" className="text-[12px] underline" style={{ color: "var(--text-2)" }}>
+            <Link href="#audit" className="text-[12px] underline text-white/70 hover:text-white transition-colors">
               Full log
             </Link>
           </div>
           <div
-            className="rounded-[6px]"
-            style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }}
+            className="rounded-xl bg-white/[0.02] border border-white/10 backdrop-blur-md relative overflow-hidden"
           >
             {auditEvents.length === 0 ? (
-              <div className="text-[13px] py-5 text-center" style={{ color: "var(--text-3)" }}>
+              <div className="text-[13px] py-5 text-center text-white/40">
                 No activity yet.
               </div>
             ) : (
               auditEvents.map((e, i) => (
                 <div
                   key={e.id}
-                  className="flex items-center gap-3 px-4 py-2.5 text-[13px]"
-                  style={{
-                    borderBottom: i === auditEvents.length - 1 ? "none" : "1px solid var(--border-1)",
-                  }}
+                  className={`flex items-center gap-3 px-4 py-2.5 text-[13px] hover:bg-white/[0.04] transition-colors ${i === auditEvents.length - 1 ? "" : "border-b border-white/10"}`}
                 >
                   <span
-                    className="text-[11px] font-mono w-[80px] shrink-0"
-                    style={{ color: "var(--text-3)" }}
+                    className="text-[11px] font-mono w-[80px] shrink-0 text-white/40"
                   >
                     {fmt(e.at)}
                   </span>
-                  <span className="font-semibold">{e.who}</span>
-                  <span style={{ color: "var(--text-2)" }}>{e.action}</span>
-                  <span style={{ color: "var(--g)", fontWeight: 600 }}>{e.target}</span>
+                  <span className="font-semibold text-white/90">{e.who}</span>
+                  <span className="text-white/70">{e.action}</span>
+                  <span className="text-emerald-400 font-semibold">{e.target}</span>
                 </div>
               ))
             )}
