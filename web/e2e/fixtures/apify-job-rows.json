@@ -1,0 +1,86 @@
+{
+  "indeed": [
+    {
+      "result_type": "job",
+      "jobId": "a1b2c3d4e5f60718",
+      "jobTitle": "Junior Data Analyst",
+      "companyName": "Northwind Analytics",
+      "location": "Remote",
+      "jobUrl": "https://www.indeed.com/viewjob?jk=a1b2c3d4e5f60718",
+      "applyUrl": "https://careers.northwind.example/apply/1187",
+      "datePosted": "2026-10-20T00:00:00.000Z",
+      "jobType": "Full-time",
+      "salaryText": "$55,000 - $65,000 a year",
+      "salaryMin": 55000,
+      "salaryMax": 65000,
+      "salaryPeriod": "YEARLY",
+      "descriptionText": "Support the reporting team with weekly dashboards and data cleaning.",
+      "searchKeyword": "data analyst"
+    },
+    {
+      "result_type": "job",
+      "jobId": "0f1e2d3c4b5a6978",
+      "jobTitle": "Electrician Apprentice",
+      "companyName": "Bright Line Electric",
+      "location": "Austin, TX",
+      "jobUrl": "https://www.indeed.com/viewjob?jk=0f1e2d3c4b5a6978",
+      "datePosted": "2026-10-18T00:00:00.000Z",
+      "jobType": "Full-time",
+      "descriptionText": "Paid apprenticeship. Work alongside licensed electricians on residential jobs.",
+      "searchKeyword": "electrician"
+    },
+    {
+      "result_type": "error",
+      "sourceInput": "data analyst",
+      "error_message": "No jobs found for this keyword and location."
+    },
+    {
+      "free_tier_notice": true,
+      "notice": "free_tier_limit_reached",
+      "message": "Free monthly usage limit reached for this actor. This run returned 2 result(s) before stopping.",
+      "allowance_resets_on": "2026-11-01",
+      "how_to_continue": "Notice text from the actor, not a job."
+    },
+    {
+      "free_tier_notice": true,
+      "message": "Free monthly usage limit reached for this actor."
+    }
+  ],
+  "linkedin": [
+    {
+      "result_type": "job",
+      "jobId": "4300000001",
+      "jobUrl": "https://www.linkedin.com/jobs/view/4300000001",
+      "title": "Junior Python Developer",
+      "companyName": "Harbor Labs",
+      "location": "New York, NY",
+      "description": "Build internal tools in Python. Mentorship from senior engineers.",
+      "seniorityLevel": "Entry level",
+      "employmentType": "Full-time",
+      "salary": "$80,000.00/yr - $95,000.00/yr",
+      "salaryMin": 80000,
+      "salaryMax": 95000,
+      "salaryCurrency": "USD",
+      "postedDate": "2026-10-19T00:00:00.000Z",
+      "applyUrl": "https://jobs.harborlabs.example/python-dev",
+      "applyType": "external"
+    },
+    {
+      "result_type": "error",
+      "error_type": "CollectionError",
+      "sourceUrl": "python developer",
+      "error_message": "LinkedIn returned no results for this search."
+    },
+    {
+      "free_tier_notice": true,
+      "message": "Free monthly usage limit reached for this actor."
+    }
+  ],
+  "linkedinErrorOnly": [
+    {
+      "result_type": "error",
+      "error_type": "MissingRequiredParameter",
+      "error_message": "Provide a keyword or at least one job URL."
+    }
+  ]
+}
