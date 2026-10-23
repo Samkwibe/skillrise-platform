@@ -171,8 +171,10 @@ export async function getRunDatasetItems<T = unknown>(
 export const ACTORS = {
   mediaExtractor:
     process.env.APIFY_ACTOR_MEDIA_EXTRACTOR || "abotapi~universal-media-extractor",
+  // One actor id or a comma-separated list. LinkedIn and Indeed are two
+  // separate actors; jobs-scraper.ts runs each one and merges the rows.
   jobScraper:
-    process.env.APIFY_ACTOR_JOB_SCRAPER || "potent_xenoblast~linkedin-indeed-scraper",
+    process.env.APIFY_ACTOR_JOB_SCRAPER || "johnvc~indeed-jobs-api,johnvc~linkedin-jobs-api",
   googleJobs:
     process.env.APIFY_ACTOR_GOOGLE_JOBS || "orgupdate~google-jobs-scraper",
   contentProcessor:
