@@ -17,7 +17,14 @@ async function main() {
     process.exit(1);
   }
 
-  const rows = Object.entries(ACTORS).map(([label, id]) => ({ label, id }));
+  // jobScraper can hold a comma-separated list; check each id on its own.
+  const rows = Object.entries(ACTORS).flatMap(([label, value]) =>
+    value
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean)
+      .map((id) => ({ label, id })),
+  );
   console.log("Checking", rows.length, "actor IDs …\n");
 
   const results = await Promise.all(
